@@ -76,7 +76,7 @@
     const draw = (msg, ok) => {
       const keep = {name: $("mwName")?.value || "", email: $("mwEmail")?.value || ""};
       el.innerHTML = `<div class="in">
-        <div><span class="eyebrow">Enoteca di casa</span><h1>Meerstraat <em>wines</em></h1></div>
+        <div><span class="eyebrow">Enoteca di casa</span><h1>Mijn <em>wijnkelder</em></h1></div>
         ${invite ? `<div class="box tonight"><b>Je bent uitgenodigd voor een gedeelde kelder.</b><span class="hint">Meld je aan of maak een account, dan word je meteen lid.</span></div>` : ""}
         ${note ? `<p class="hint">${esc(note)}</p>` : ""}
         <div class="seg" role="group"><button type="button" data-m="in" aria-pressed="${mode === "in"}">Aanmelden</button><button type="button" data-m="up" aria-pressed="${mode === "up"}">Account maken</button></div>
@@ -265,7 +265,7 @@
         drawSheet(); return;
       }
       if(a === "copy"){ try{ await navigator.clipboard.writeText(inviteLink); b.textContent = "Gekopieerd"; }catch{ $("mwLink").select(); } return; }
-      if(a === "share"){ try{ await navigator.share({title: "Meerstraat wines", text: `${cloud.me.name} nodigt je uit voor de wijnkelder "${c.name}".`, url: inviteLink}); }catch{} return; }
+      if(a === "share"){ try{ await navigator.share({title: "Mijn wijnkelder", text: `${cloud.me.name} nodigt je uit voor de wijnkelder "${c.name}".`, url: inviteLink}); }catch{} return; }
       if(a === "kick"){
         const uid = b.dataset.uid, m = (c.members || {})[uid] || {};
         if(!confirm(`${m.name || "Dit lid"} verwijderen uit "${c.name}"?`)) return;

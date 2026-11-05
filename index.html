@@ -5,11 +5,11 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Meerstraat">
+<meta name="apple-mobile-web-app-title" content="Wijnkelder">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<title>Meerstraat wines</title><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Mijn wijnkelder</title><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;0,6..96,600;1,6..96,500&family=Titillium+Web:wght@400;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
@@ -298,7 +298,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
 
 <div class="wrap">
   <header>
-    <div class="brand"><span class="eyebrow">Enoteca di casa · Londerzeel</span><h1>Meerstraat <em>wines</em></h1></div>
+    <div class="brand"><span class="eyebrow">Enoteca di casa · Londerzeel</span><h1>Mijn <em>wijnkelder</em></h1></div>
     <span class="count" id="count"></span>
   </header>
   <nav class="tabs" role="tablist" aria-label="Weergave">
@@ -862,7 +862,7 @@ Noem de Belgische importeur als je die met zekerheid kent, en het soort winkels 
         doc.setFont("helvetica","normal"); doc.setTextColor(...ink); const ls = doc.splitTextToSize(lat(f[1]), CW-42); doc.text(ls, M+42, y); y += (ls.length-1)*4.6; });
     }
     doc.setFont("helvetica","normal"); doc.setFontSize(8); doc.setTextColor(...muted);
-    doc.text(lat("Uit Meerstraat wines · " + new Date().toLocaleDateString("nl-BE",{day:"numeric",month:"long",year:"numeric"})), M, 297-10);
+    doc.text(lat("Uit Mijn wijnkelder · " + new Date().toLocaleDateString("nl-BE",{day:"numeric",month:"long",year:"numeric"})), M, 297-10);
     const slug = (w.name + (w.vintage?"-"+w.vintage:"")).normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^A-Za-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,60) || "wijn";
     await downloads.save({filename: slug + ".pdf", data: doc.output("blob")});
   }
@@ -1048,7 +1048,7 @@ Antwoord met ALLEEN één JSON-object in deze vorm: ${HOUSE_FIELDS}`;
         ${value.length? `<div class="eyebrow" style="margin-top:6px">Beste koop: meeste sterren per euro</div><div class="drinkrow">${value.map(x=>`<button class="drink" type="button" data-goto="${x.w.id}"><span class="t"><b>${esc(x.w.name)}</b></span><span class="vint">${x.w.score} ★ · €${Math.round(priceNum(x.w))}</span></button>`).join("")}</div>`:""}
       </div>
       <div class="box"><h2 class="sec">Back-up</h2>
-        <p class="hint">Het back-upbestand (.json) bevat je volledige kelder en verlanglijst, ook foto's, proefmomenten en info over de wijnhuizen. Daarmee zet je alles over naar de Meerstraat wines-app op je telefoon. Excel en csv bevatten alle velden behalve foto's.</p>
+        <p class="hint">Het back-upbestand (.json) bevat je volledige kelder en verlanglijst, ook foto's, proefmomenten en info over de wijnhuizen. Daarmee zet je alles over naar de app Mijn wijnkelder op je telefoon. Excel en csv bevatten alle velden behalve foto's.</p>
         <div class="r" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm" type="button" data-exp="json">Download back-upbestand</button><button class="btn ghost sm" type="button" data-exp="xlsx">Excel</button><button class="btn ghost sm" type="button" data-exp="csv">csv</button></div>
         <div><button class="btn ghost sm" type="button" data-imp="1">Back-up terugzetten</button></div>
         <p class="hint" id="expMsg">${esc(expNote)}</p>
@@ -1225,7 +1225,7 @@ Sleutels (streek|land): ${JSON.stringify(keys.slice(0,60))}`;
     const b = e.target.closest("[data-exp]"); if(!b) return;
     const msg = $("expMsg"); msg.textContent = "";
     if(!downloads){ msg.textContent = "Downloaden kan niet in deze weergave."; return; }
-    const rows = exportRows(); const name = `meerstraat-wines-${TODAY}`;
+    const rows = exportRows(); const name = `mijn-wijnkelder-${TODAY}`;
     try{
       if(b.dataset.exp==="json"){
         const payload = {app:"meerstraat-wines", version:1, exportedAt:new Date().toISOString(), wines: wines.map(w=>({...w}))};
@@ -1234,7 +1234,7 @@ Sleutels (streek|land): ${JSON.stringify(keys.slice(0,60))}`;
       } else if(b.dataset.exp==="xlsx"){
         try{ msg.textContent = "Excel wordt klaargemaakt…"; await loadXlsx(); msg.textContent = ""; }catch{ msg.textContent = "De Excel-module kon niet laden. Probeer opnieuw."; return; }
         const ws = XLSX.utils.json_to_sheet(rows); ws["!cols"] = Object.keys(rows[0]||{}).map(k=>({wch: Math.min(40, Math.max(10, k.length+2))}));
-        const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Meerstraat wines");
+        const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Mijn wijnkelder");
         await downloads.save({filename: name+".xlsx", data: new Blob([XLSX.write(wb,{type:"array",bookType:"xlsx"})], {type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"})});
       } else {
         const cols = Object.keys(rows[0]||{}); const q = v => `"${String(v??"").replace(/"/g,'""')}"`;
@@ -1251,7 +1251,7 @@ Sleutels (streek|land): ${JSON.stringify(keys.slice(0,60))}`;
     if(!col){ setExpMsg("Terugzetten kan niet in deze weergave."); return; }
     let list;
     try{ const j = JSON.parse(await f.text()); list = Array.isArray(j) ? j : j && j.wines; if(!Array.isArray(list)) throw 0; }
-    catch{ setExpMsg("Dit bestand kon niet gelezen worden. Kies het back-upbestand (.json) uit Meerstraat wines."); return; }
+    catch{ setExpMsg("Dit bestand kon niet gelezen worden. Kies het back-upbestand (.json) uit Mijn wijnkelder."); return; }
     const valid = list.filter(w => w && typeof w==="object" && typeof w.name==="string" && w.name.trim());
     if(!valid.length){ setExpMsg("Geen wijnen gevonden in dit bestand."); return; }
     const known = new Set(wines.map(w=>w.id)); let added = 0, updated = 0, failed = 0;
@@ -1456,7 +1456,7 @@ Wijnen (JSON): ${JSON.stringify(cellar)}`;
     const reply = {role:"assistant", content:"", pending:true}; chat.push(reply);
     askCtl = new AbortController(); renderChat(); scrollChat();
     let data = JSON.stringify(cellarData()); if(data.length > 200000) data = data.slice(0, 200000);
-    const rules = `Je bent de assistent van Maarten's wijnapp "Meerstraat wines". Beantwoord vragen over zijn wijnen enkel op basis van de gegevens hieronder. Vandaag is ${TODAY}.
+    const rules = `Je bent de assistent van Maarten's wijnapp "Mijn wijnkelder". Beantwoord vragen over zijn wijnen enkel op basis van de gegevens hieronder. Vandaag is ${TODAY}.
 Regels: antwoord in de taal van de vraag; kort en concreet; noem wijnen bij naam en jaargang; gebruik gewone tekst, eventueel een korte lijst met "- " en **vet** voor wijnnamen; geen tabellen of koppen. "kelder" = wijnen in huis (flessen = aantal in voorraad), "verlanglijst" = nog niet gekocht. Tags zoals "tip van Jan" geven aan van wie een tip kwam. Staat iets niet in de gegevens, zeg dat eerlijk. Algemene wijnkennis mag je erbij geven, maar maak duidelijk wat uit zijn kelder komt.
 Gegevens (JSON):
 ${data}`;

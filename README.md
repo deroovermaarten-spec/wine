@@ -1,4 +1,4 @@
-# Meerstraat wines
+# Mijn wijnkelder
 
 Een wijnkelder-app voor de telefoon: wijnen scannen en invoeren, scores, voorraad,
 drinkvensters, proefmomenten, verlanglijst en inzichten. Gebouwd als installeerbare

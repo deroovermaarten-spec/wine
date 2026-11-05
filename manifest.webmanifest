@@ -1,6 +1,6 @@
 {
-  "name": "Meerstraat wines",
-  "short_name": "Meerstraat",
+  "name": "Mijn wijnkelder",
+  "short_name": "Wijnkelder",
   "description": "Je eigen wijnkelder: scores, voorraad, drinkvensters en proefnotities.",
   "lang": "nl-BE",
   "start_url": "./",
