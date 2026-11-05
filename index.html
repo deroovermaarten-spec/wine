@@ -1,0 +1,1771 @@
+<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Je eigen wijnkelder: scores, voorraad, drinkvensters en proefnotities.">
+<meta name="theme-color" content="#efe9df" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#17110e" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Meerstraat">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<title>Meerstraat wines</title><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;0,6..96,600;1,6..96,500&family=Titillium+Web:wght@400;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: an Italian enoteca ledger; travertine ground, Bodoni (Parma) display with Titillium (Urbino) text; rosso as the one accent, olive as quiet second */
+:root{
+  --bg:#efe9df; --surface:#fbf8f3; --ink:#2a201b; --muted:#76695f; --line:#ded4c6;
+  --accent:#a8232e; --accent-soft:#f3dfdc; --olive:#5f6b32; --gold:#b98a2a; --onaccent:#fffaf4;
+  --shadow:0 1px 2px rgba(60,35,20,.06),0 6px 18px rgba(60,35,20,.06);
+  --red:#7e1d33; --white:#d2ae46; --rose:#de8796; --spark:#8aa6bd; --dessert:#a9692b;
+  --ok:#4f6b2a; --ok-soft:#e8edd9; --warn:#a2610b; --warn-soft:#f8ebd4; --young:#3d6488; --young-soft:#e2eaf1; --late:#8f3434; --late-soft:#f3e0dc; --land:#e2d8c9; --sea:#f5f0e8;
+  --display:"Bodoni Moda",Didot,"Times New Roman",serif;
+  --body:"Titillium Web",system-ui,-apple-system,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#17110e; --surface:#211915; --ink:#f3ebe2; --muted:#ab9d90; --line:#3a2e27;
+  --accent:#e2676f; --accent-soft:#3b1f1f; --olive:#a9b56e; --gold:#e0b65c; --onaccent:#1c0f0e; --shadow:none;
+  --ok:#a9c27a; --ok-soft:#28301b; --warn:#e8b462; --warn-soft:#3a2c17; --young:#8cb8e0; --young-soft:#1c2a38; --late:#e39a9a; --late-soft:#3a2020; --land:#3a2e27; --sea:#1b1411; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#17110e; --surface:#211915; --ink:#f3ebe2; --muted:#ab9d90; --line:#3a2e27;
+  --accent:#e2676f; --accent-soft:#3b1f1f; --olive:#a9b56e; --gold:#e0b65c; --onaccent:#1c0f0e; --shadow:none;
+  --ok:#a9c27a; --ok-soft:#28301b; --warn:#e8b462; --warn-soft:#3a2c17; --young:#8cb8e0; --young-soft:#1c2a38; --late:#e39a9a; --late-soft:#3a2020; --land:#3a2e27; --sea:#1b1411; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--body);-webkit-font-smoothing:antialiased}
+.wrap{max-width:640px;margin:0 auto;padding-block:28px 120px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;gap:18px}
+header{display:flex;align-items:end;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-bottom:12px;border-bottom:3px double var(--line)}
+header .brand{display:flex;flex-direction:column;gap:6px}
+h1{font:600 2.5rem/1 var(--display);margin:0;letter-spacing:-.01em;text-wrap:balance}
+h1 em{font-style:italic;font-weight:500;color:var(--accent)}
+h2.sec{font:italic 500 1.3rem var(--display);margin:0}
+.count{font:700 .74rem var(--body);color:var(--olive);letter-spacing:.14em;text-transform:uppercase}
+.eyebrow{font:700 .7rem var(--body);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+button{font:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{border:0;border-radius:6px;letter-spacing:.02em;padding:12px 20px;font-weight:600;background:var(--accent);color:var(--onaccent);display:inline-flex;align-items:center;gap:8px;justify-content:center}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn.sm{padding:8px 14px;font-size:.88rem;border-radius:6px}
+.btn:disabled{opacity:.5;cursor:default}
+/* tabs */
+.tabs{display:flex;border-bottom:1px solid var(--line);gap:2px;position:sticky;top:env(safe-area-inset-top,0px);z-index:6;background:var(--bg);margin-inline:-4px;padding-inline:4px;transition:box-shadow .2s}
+.tabs.stuck{box-shadow:0 8px 14px -10px rgba(60,35,20,.35)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.totop{width:50px;height:50px;padding:0!important;border-radius:50%!important;flex:none;opacity:0;transform:translateY(12px) scale(.9);pointer-events:none;transition:opacity .25s,transform .25s}
+.totop.show{opacity:1;transform:none;pointer-events:auto}
+.scanbar:has(#collapseAll:not([hidden])):has(.totop:not([hidden])) .lbl-long,.scanbar:has(#cmpCancel:not([hidden])):has(.totop:not([hidden])) .lbl-long{display:none}
+@media (prefers-reduced-motion:reduce){.totop{transition:none}}
+.scanbar{flex-wrap:nowrap}
+.scanbar .btn{white-space:nowrap}
+.tabs button{flex:1;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;background:none;color:var(--muted);padding:10px 4px 11px;border-radius:0;font-weight:600;font-size:.86rem;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tabs .n{font:500 .72rem var(--mono);opacity:.8;margin-left:3px}
+.scanbar{position:fixed;left:0;right:0;bottom:0;z-index:5;display:flex;justify-content:center;
+  padding:14px max(16px,env(safe-area-inset-right,0px)) calc(14px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));
+  background:linear-gradient(to top,var(--bg) 60%,transparent)}
+.scanbar{gap:10px;align-items:center}
+.scanbar .btn{padding:15px 28px;font-size:1rem;border-radius:999px;box-shadow:0 8px 24px rgba(110,20,25,.28)}
+.scanbar .btn.ghost{background:var(--surface);padding:15px 18px;font-size:.92rem;box-shadow:var(--shadow);border-color:var(--line)}
+/* panels */
+.box{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px}
+.tonight{background:var(--accent-soft);border-color:transparent;box-shadow:none}
+.tonight form{display:flex;gap:8px;flex-wrap:wrap}
+.tonight input{flex:1 1 200px;min-width:0;padding:10px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit}
+.picks{display:flex;flex-direction:column;gap:8px}
+.pick{display:grid;grid-template-columns:auto 1fr;gap:10px;background:var(--surface);border-radius:12px;padding:10px;border:0;text-align:left;color:var(--ink);width:100%}
+.pick b{font-family:var(--display);font-weight:400;font-size:1rem}
+.pick span{font-size:.86rem;color:var(--muted)}
+.pick .rank{font:500 .8rem var(--mono);color:var(--accent)}
+.drinkrow{display:flex;flex-direction:column;gap:6px}
+.drink{display:flex;justify-content:space-between;align-items:center;gap:10px;border:0;background:none;padding:6px 0;border-bottom:1px solid var(--line);color:var(--ink);text-align:left;width:100%}
+.drink:last-child{border-bottom:0}
+.drink .t{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tools{display:flex;gap:8px;flex-wrap:wrap}
+.tools input[type=search]{flex:1 1 180px;min-width:0;padding:10px 14px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit}
+.tools select{padding:10px 12px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;max-width:100%}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 11px;font-size:.82rem;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--onaccent);border-color:var(--accent)}
+.list{display:flex;flex-direction:column;gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);overflow:hidden;scroll-margin-top:64px}
+.card.flash{box-shadow:0 0 0 2px var(--accent)}
+.row{display:grid;grid-template-columns:72px 1fr;gap:16px;padding:16px}
+.thumb{width:72px;height:96px;border-radius:4px;object-fit:cover;background:var(--accent-soft)}
+.thumb.ph{display:grid;place-items:center;color:var(--accent);font:400 1.6rem var(--display)}
+.meta{min-width:0;display:flex;flex-direction:column;gap:5px}
+.prod{font:700 .72rem var(--body);letter-spacing:.14em;color:var(--olive);text-transform:uppercase;color:var(--muted)}
+.name{font:600 1.3rem/1.15 var(--display);margin:0;text-wrap:balance}
+.sub{color:var(--muted);font-size:.88rem;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.pill{font-size:.72rem;font-weight:600;padding:2px 8px;border-radius:999px;border:1px solid var(--line);display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.dot.rood{background:var(--red)}.dot.wit{background:var(--white)}.dot.rose{background:var(--rose)}.dot.mousserend{background:var(--spark)}.dot.dessert{background:var(--dessert)}
+.badge{font-size:.72rem;font-weight:600;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.b-ok{background:var(--ok-soft);color:var(--ok)}.b-warn{background:var(--warn-soft);color:var(--warn)}
+.b-young{background:var(--young-soft);color:var(--young)}.b-late{background:var(--late-soft);color:var(--late)}
+.vint{font:italic 500 .95rem var(--display);color:var(--ink)}
+.tier{font:500 .85rem var(--mono);color:var(--gold);letter-spacing:.05em}
+.tier s{text-decoration:none;color:var(--line)}
+.line2{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.stars{display:flex;gap:2px}
+.stars button{border:0;background:none;padding:2px;color:var(--line);font-size:1.35rem;line-height:1}
+.stars button.on{color:var(--gold)}
+.stars.ro{pointer-events:none}.stars.ro button{font-size:.95rem;padding:0}
+.stock{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.stock button{border:0;background:none;color:var(--ink);width:32px;height:30px;font-size:1.05rem}
+.stock span{font:500 .82rem var(--mono);padding:0 4px;min-width:58px;text-align:center;font-variant-numeric:tabular-nums}
+.stock.zero span{color:var(--muted)}
+.openchip{border:1px solid var(--line);background:none;color:var(--muted);border-radius:999px;padding:5px 11px;font-size:.8rem;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+.openchip i{width:8px;height:8px;border-radius:50%;border:1.5px solid currentColor}
+.openchip.on{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.openchip.on i{background:currentColor}
+.ctrls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.toggle{width:100%;border:0;border-top:1px solid var(--line);background:none;color:var(--accent);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;font-weight:600;font-size:.88rem}
+.toggle .chev{transition:transform .3s}
+.card.open .toggle .chev{transform:rotate(180deg)}
+.roll{display:grid;grid-template-rows:0fr;transition:grid-template-rows .35s ease}
+.card.open .roll{grid-template-rows:1fr}
+.roll>div{overflow:hidden;min-height:0}
+.desc{padding:4px 16px 16px;display:flex;flex-direction:column;gap:14px}
+.desc p{margin:0;max-width:62ch}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 16px;margin:0}
+.facts dt{font:500 .68rem var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.facts dd{margin:0;font-size:.9rem}
+.note{border-left:2px solid var(--gold);padding-left:10px;font-style:italic;color:var(--muted)}
+.tastings{display:flex;flex-direction:column;gap:8px}
+.house{display:flex;flex-direction:column;gap:10px;background:var(--bg);border-radius:12px;padding:14px}
+.house h4{font:400 1.05rem var(--display);margin:0}
+.house .src{font-size:.75rem;color:var(--muted);margin:0}
+.links{display:flex;gap:6px;flex-wrap:wrap}
+.tags{display:flex;gap:5px;flex-wrap:wrap}
+.tag{border:0;background:var(--accent-soft);color:var(--accent);border-radius:6px;padding:2px 8px;font-size:.76rem;font-weight:600}
+.tag[aria-pressed="true"]{background:var(--accent);color:var(--onaccent)}
+.tagsugg{display:flex;gap:5px;flex-wrap:wrap}
+.tagsugg button{border:1px dashed var(--line);background:none;color:var(--muted);border-radius:6px;padding:2px 8px;font-size:.76rem}
+.sharebox{display:flex;flex-direction:column;gap:10px;padding:14px;border:1px solid var(--line);border-radius:12px}
+.sharebox h3{margin:0;font-size:1rem}
+.sharebox p{margin:0;font-size:.86rem;color:var(--muted)}
+.urlrow{display:flex;gap:8px;flex-wrap:wrap}
+.urlrow input{flex:1 1 200px;min-width:0;font:500 .8rem var(--mono)}
+.shared{border:2px solid var(--accent)}
+.loc{font-size:.8rem;color:var(--muted);display:inline-flex;align-items:center;gap:4px}
+.dup{background:var(--warn-soft);color:var(--ink);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;font-size:.9rem}
+.dup .r{display:flex;gap:8px;flex-wrap:wrap}
+.cmpwrap{overflow-x:auto}
+.cmp{width:100%;border-collapse:collapse;font-size:.88rem;min-width:420px}
+.cmp th,.cmp td{text-align:left;vertical-align:top;padding:8px 6px;border-bottom:1px solid var(--line)}
+.cmp th{font:500 .68rem var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);width:24%}
+.cmp td{width:38%}
+.cmp .nm{font:400 1.05rem/1.2 var(--display)}
+.cmp img{width:56px;height:74px;object-fit:cover;border-radius:6px}
+.cmp .better{color:var(--ok);font-weight:600}
+.money{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+@media (max-width:460px){.money{grid-template-columns:1fr 1fr}}
+.money div{background:var(--bg);border-radius:10px;padding:10px}
+.money b{display:block;font:400 1.3rem/1.1 var(--display);font-variant-numeric:tabular-nums}
+.chat{display:flex;flex-direction:column;gap:10px}
+.msg{max-width:88%;padding:10px 13px;border-radius:14px;font-size:.93rem;line-height:1.5;overflow-wrap:anywhere}
+.msg.me{align-self:flex-end;background:var(--accent);color:var(--onaccent);border-bottom-right-radius:4px}
+.msg.ai{align-self:flex-start;background:var(--surface);border:1px solid var(--line);border-bottom-left-radius:4px}
+.msg.ai p{margin:0 0 6px}.msg.ai p:last-child{margin:0}
+.msg.ai ul{margin:4px 0 6px;padding-left:18px}
+.msg.err{color:var(--late)}
+.askform{display:flex;gap:8px;align-items:flex-end}
+.askform textarea{flex:1;min-width:0;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:10px 14px;resize:none;min-height:44px;max-height:140px}
+.starters{display:flex;flex-direction:column;gap:6px}
+.starters button{text-align:left;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:9px 12px;font-size:.88rem}
+.fact{border-left:3px solid var(--accent)}
+.fact h3{font:italic 500 1.15rem/1.25 var(--display);margin:0}
+.fact p{margin:0;max-width:62ch}
+.fact .foot{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.mapwrap{position:relative;border-radius:6px;overflow:hidden;background:var(--sea);border:1px solid var(--line)}
+.mapwrap svg{display:block;width:100%;height:auto;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.mapwrap svg.zoomed{touch-action:none;cursor:grab}
+.mapwrap svg.drag{cursor:grabbing}
+.mapzoom{position:absolute;top:8px;right:8px;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--surface);box-shadow:var(--shadow)}
+.mapzoom button{width:34px;height:34px;border:0;background:none;color:var(--ink);font-size:1.15rem;line-height:1;display:grid;place-items:center}
+.mapzoom button+button{border-top:1px solid var(--line)}
+.mapzoom button:disabled{color:var(--line);cursor:default}
+.mapwrap .land{fill:var(--land);stroke:var(--sea);stroke-width:.6;vector-effect:non-scaling-stroke}
+.mapwrap .land.has{fill:var(--accent);cursor:pointer}
+.mapwrap .land.sel{stroke:var(--ink);stroke-width:1.4}
+.mapwrap .pin{fill:var(--gold);stroke:var(--surface);stroke-width:1.4;vector-effect:non-scaling-stroke;cursor:pointer}
+.mapwrap .pin.wish{fill:var(--surface);stroke:var(--gold);stroke-width:1.6}
+.mapwrap .pin.sel{stroke:var(--ink);stroke-width:2.2}
+.maptools{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.seg.mini{padding:3px;display:inline-flex}
+.seg.mini button{padding:5px 12px;font-size:.82rem;flex:none}
+.maplegend{display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);align-items:center}
+.maplegend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.maplist{display:flex;flex-direction:column}
+.maplist .drink b{font-weight:600}
+.guide{border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.guide summary{cursor:pointer;padding:10px 12px;font-weight:600;color:var(--accent);list-style:none;display:flex;justify-content:space-between;gap:8px}
+.guide summary::-webkit-details-marker{display:none}
+.guide[open] summary .chev{transform:rotate(180deg)}
+.guide .gbody{padding:0 12px 12px;display:flex;flex-direction:column;gap:12px}
+.gstep{display:flex;flex-direction:column;gap:6px}
+.gstep h5{margin:0;font:italic 500 1rem var(--display)}
+.gstep .hint{margin-top:-2px}
+.ach{display:flex;flex-wrap:wrap;gap:5px}
+.ach .grp{flex-basis:100%;font:700 .64rem var(--body);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+.ach button{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:4px 10px;font-size:.8rem;position:relative}
+.ach button[aria-pressed="true"]{background:var(--accent);color:var(--onaccent);border-color:var(--accent)}
+.ach button.exp::after{content:"";position:absolute;top:-2px;right:-2px;width:7px;height:7px;border-radius:50%;background:var(--gold);border:1.5px solid var(--surface)}
+.swatch{width:26px;height:26px;border-radius:50%;padding:0!important;border:2px solid var(--surface)!important;box-shadow:0 0 0 1px var(--line)}
+.swatch[aria-pressed="true"]{box-shadow:0 0 0 2px var(--accent)}
+.scale{display:grid;grid-template-columns:88px 1fr;gap:6px 10px;align-items:center;font-size:.85rem}
+.scale .seg{padding:3px}
+.scale .seg button{padding:5px 4px;font-size:.78rem}
+.tsum{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
+.tsum span{font-size:.72rem;padding:1px 7px;border-radius:999px;background:var(--bg);color:var(--muted)}
+.tastings li .tn{display:flex;flex-direction:column}
+.pair{display:flex;flex-direction:column;gap:10px;background:var(--bg);border-radius:12px;padding:14px}
+.pair .out p{margin:0 0 6px}.pair .out ul{margin:2px 0 8px;padding-left:18px}.pair .out b{font-family:var(--display);font-size:1.02rem}
+.sharedhead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.links a{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;font-size:.84rem;font-weight:600;text-decoration:none}
+.cityrow{display:flex;gap:8px;flex-wrap:wrap}
+.cityrow input{flex:1 1 160px;min-width:0;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:8px 14px}
+.shops{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.shops li{padding:9px 0;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:2px;font-size:.88rem;min-width:0}
+.shops li:last-child{border-bottom:0}
+.shops b{font-weight:600}
+.shops .addr{color:var(--muted)}
+.shops .ct{display:flex;gap:12px;flex-wrap:wrap;font-size:.82rem}
+.shops a{color:var(--accent);overflow-wrap:anywhere}
+.shops .tel{font:500 .8rem var(--mono);user-select:all}
+.tastings ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.tastings li{display:grid;grid-template-columns:84px auto 1fr;gap:10px;align-items:baseline;padding:6px 0;border-bottom:1px solid var(--line);font-size:.88rem}
+.tastings li:last-child{border-bottom:0}
+.tastings time{font:500 .78rem var(--mono);color:var(--muted)}
+.tastings .tn{color:var(--muted);min-width:0}
+.tform{display:flex;flex-direction:column;gap:8px;background:var(--bg);border-radius:10px;padding:12px}
+.tform .r{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.tform input,.tform textarea{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-width:0}
+.cardfoot{display:flex;gap:8px;justify-content:flex-end;align-items:center;flex-wrap:wrap}
+.link{border:0;background:none;color:var(--muted);font-size:.82rem;text-decoration:underline;padding:4px}
+.empty{text-align:center;padding:40px 20px;border:1px dashed var(--line);border-radius:14px;display:flex;flex-direction:column;gap:8px;align-items:center}
+.empty .big{font:400 1.4rem var(--display)}
+.empty p{margin:0;color:var(--muted);max-width:38ch}
+.status{font-size:.85rem;color:var(--muted)}
+/* stats */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+@media (max-width:460px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px}
+.kpi b{display:block;font:400 1.6rem/1.1 var(--display);font-variant-numeric:tabular-nums}
+.bars{display:flex;flex-direction:column;gap:9px}
+.bar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;font-size:.88rem}
+.bar .lbl{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar .val{font:500 .8rem var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.bar .track{grid-column:1/-1;height:6px;border-radius:3px;background:var(--bg);overflow:hidden}
+.bar .fill{height:100%;border-radius:3px;background:var(--accent)}
+.bar .fill.gold{background:var(--gold)}
+.stack{display:flex;height:12px;border-radius:6px;overflow:hidden;background:var(--bg)}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:.82rem;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.hint{font-size:.82rem;color:var(--muted);margin:0}
+/* sheet */
+.sheet{position:fixed;inset:0;z-index:20;background:rgba(20,10,18,.5);display:flex;align-items:flex-end;justify-content:center}
+.panel{background:var(--surface);width:100%;max-width:640px;max-height:92%;overflow:auto;border-radius:18px 18px 0 0;
+  padding:20px max(18px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(18px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:14px}
+.panel h2{font:400 1.4rem var(--display);margin:0}
+.preview{display:flex;gap:14px;align-items:flex-start}
+.preview img{width:90px;height:120px;object-fit:cover;border-radius:8px;flex:none}
+.thinking{display:flex;flex-direction:column;gap:6px;min-width:0}
+.pour{height:4px;border-radius:2px;background:var(--accent-soft);overflow:hidden;width:160px;max-width:100%}
+.pour i{display:block;height:100%;width:40%;background:var(--accent);animation:pour 1.4s ease-in-out infinite}
+@keyframes pour{0%{transform:translateX(-100%)}100%{transform:translateX(260%)}}
+@media (prefers-reduced-motion:reduce){.pour i{animation:none}.roll,.toggle .chev{transition:none}}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:420px){.grid2{grid-template-columns:1fr}}
+label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:600;color:var(--muted);min-width:0}
+.panel input,.panel textarea,.panel select{font:inherit;font-size:.95rem;font-weight:400;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 11px;min-width:0}
+.panel textarea{resize:vertical;min-height:70px}
+.seg{display:flex;gap:4px;background:var(--bg);border-radius:999px;padding:4px}
+.seg button{flex:1;border:0;background:none;color:var(--muted);padding:8px;border-radius:999px;font-weight:600}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.err{color:var(--accent);font-size:.88rem}
+.confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:.85rem}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="brand"><span class="eyebrow">Enoteca di casa · Londerzeel</span><h1>Meerstraat <em>wines</em></h1></div>
+    <span class="count" id="count"></span>
+  </header>
+  <nav class="tabs" role="tablist" aria-label="Weergave">
+    <button role="tab" id="t_kelder" data-tab="kelder" aria-selected="true">Kelder<span class="n" id="n_kelder"></span></button>
+    <button role="tab" id="t_wens" data-tab="wens" aria-selected="false">Verlanglijst<span class="n" id="n_wens"></span></button>
+    <button role="tab" id="t_stats" data-tab="stats" aria-selected="false">Inzichten</button>
+    <button role="tab" id="t_ask" data-tab="ask" aria-selected="false">Vraag</button>
+  </nav>
+  <div class="status" id="status">Je wijnen worden geladen…</div>
+  <section id="sharedView" hidden></section>
+
+  <section id="v_list" style="display:flex;flex-direction:column;gap:18px">
+    <div class="box fact" id="factbox" hidden></div>
+    <div class="box tonight" id="tonight" hidden>
+      <h2 class="sec">Wat drink ik vanavond?</h2>
+      <form id="tform">
+        <input id="meal" placeholder="Wat eet je? bv. lamsstoofpot met rozemarijn" aria-label="Wat eet je vanavond">
+        <button class="btn sm" id="pickBtn" type="submit">Kies een fles</button>
+      </form>
+      <div id="picks" class="picks"></div>
+    </div>
+    <div class="box" id="drinkbox" hidden></div>
+    <div class="tools" id="tools" hidden>
+      <input id="q" type="search" placeholder="Zoek op naam, streek, druif…" aria-label="Zoeken">
+      <select id="sort" aria-label="Sorteren">
+        <option value="score">Hoogste score</option>
+        <option value="recent">Recent toegevoegd</option>
+        <option value="name">Naam A–Z</option>
+        <option value="price">Prijs laag–hoog</option>
+        <option value="drink">Eerst te drinken</option>
+      </select>
+      <select id="country" aria-label="Land"><option value="">Alle landen</option></select>
+      <select id="grape" aria-label="Druif"><option value="">Alle druiven</option></select>
+    </div>
+    <div class="chips" id="chips" hidden></div>
+    <div class="list" id="list"></div>
+  </section>
+
+  <section id="v_stats" hidden style="display:flex;flex-direction:column;gap:18px"></section>
+
+  <section id="v_ask" hidden style="display:flex;flex-direction:column;gap:14px">
+    <div class="box">
+      <h2 class="sec">Vraag het aan je kelder</h2>
+      <p class="hint">Stel een vraag over je wijnen, je proefnotities of je verlanglijst. Liever spreken? Tik op de microfoon van je toetsenbord en dicteer je vraag.</p>
+    </div>
+    <div class="starters" id="starters">
+      <button type="button">Welke rode wijnen heb ik nog onder de €20?</button>
+      <button type="button">Wat vond ik de vorige keer van mijn best gescoorde wijn?</button>
+      <button type="button">Welke flessen moet ik dit jaar nog drinken?</button>
+      <button type="button">Welke wijnen op mijn verlanglijst kreeg ik als tip, en van wie?</button>
+    </div>
+    <div class="chat" id="chat" aria-live="polite"></div>
+    <form class="askform" id="askform">
+      <textarea id="askq" rows="1" placeholder="Stel je vraag…" aria-label="Je vraag"></textarea>
+      <button class="btn" type="submit" id="askBtn">Vraag</button>
+    </form>
+    <div style="display:flex;gap:12px;justify-content:flex-end"><button class="link" type="button" id="askStop" hidden>Stop</button><button class="link" type="button" id="askNew" hidden>Nieuw gesprek</button></div>
+  </section>
+</div>
+
+<div class="scanbar">
+  <button class="btn ghost totop" id="toTop" type="button" aria-label="Terug naar boven" hidden>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+  </button>
+  <button class="btn ghost" id="cmpCancel" type="button" hidden>Vergelijken annuleren</button>
+  <button class="btn ghost" id="collapseAll" type="button" hidden>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M7 14l5-5 5 5"/></svg>
+    Toeklappen
+  </button>
+  <button class="btn" id="scanBtn" type="button">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3.2"/></svg>
+    <span>Scan<span class="lbl-long"> een fles</span></span>
+  </button>
+  <input id="file" type="file" accept="image/*" capture="environment" hidden>
+  <input id="impFile" type="file" accept=".json,application/json" hidden>
+</div>
+
+<div class="sheet" id="cmp" hidden>
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="cmpTitle">
+    <h2 id="cmpTitle">Vergelijken</h2>
+    <div class="cmpwrap" id="cmpBody"></div>
+    <div class="actions"><button class="btn ghost" type="button" id="cmpClose">Sluiten</button></div>
+  </div>
+</div>
+
+<div class="sheet" id="share" hidden>
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="shareTitle">
+    <h2 id="shareTitle">Wijn delen</h2>
+    <div id="shareBody" style="display:flex;flex-direction:column;gap:12px"></div>
+    <div class="actions"><button class="btn ghost" type="button" id="shareClose">Sluiten</button></div>
+  </div>
+</div>
+
+<div class="sheet" id="sheet" hidden>
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <h2 id="sheetTitle">Nieuwe wijn</h2>
+    <div class="preview">
+      <img id="pimg" alt="Foto van de fles">
+      <div class="thinking" id="thinking">
+        <strong>Etiket lezen…</strong>
+        <span class="status">Claude herkent de wijn en schrijft een beschrijving.</span>
+        <div class="pour"><i></i></div>
+      </div>
+    </div>
+    <div class="err" id="err" hidden></div>
+    <div class="dup" id="dup" hidden></div>
+    <form id="form" hidden>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="seg" id="f_target" role="group" aria-label="Bewaren in">
+          <button type="button" data-t="kelder" aria-pressed="true">In mijn kelder</button>
+          <button type="button" data-t="wens" aria-pressed="false">Op verlanglijst</button>
+        </div>
+        <label>Naam<input id="f_name" required></label>
+        <div class="grid2">
+          <label>Producent<input id="f_producer"></label>
+          <label>Jaargang<input id="f_vintage" inputmode="numeric" placeholder="bv. 2019"></label>
+          <label>Streek<input id="f_region"></label>
+          <label>Land<input id="f_country"></label>
+          <label>Druif<input id="f_grape"></label>
+          <label>Type<select id="f_color"><option value="rood">Rood</option><option value="wit">Wit</option><option value="rose">Rosé</option><option value="mousserend">Mousserend</option><option value="dessert">Dessert / versterkt</option></select></label>
+        </div>
+        <label>Beschrijving<textarea id="f_desc" rows="4"></textarea></label>
+        <div class="grid2">
+          <label>Aroma's &amp; smaak<input id="f_taste"></label>
+          <label>Past bij<input id="f_food"></label>
+          <label>Schenktemperatuur<input id="f_temp"></label>
+          <label id="l_stock">Flessen in voorraad<input id="f_stock" type="number" min="0" inputmode="numeric" value="1"></label>
+          <label>Drinken vanaf (jaar)<input id="f_from" inputmode="numeric" placeholder="bv. 2025"></label>
+          <label>Drinken tot (jaar)<input id="f_to" inputmode="numeric" placeholder="bv. 2032"></label>
+          <label>Prijsklasse<select id="f_tier"><option value="0">Onbekend</option><option value="1">€ · Budget (tot €10)</option><option value="2">€€ · Middenklasse (€10–25)</option><option value="3">€€€ · Premium (€25–60)</option><option value="4">€€€€ · Topwijn (boven €60)</option></select></label>
+          <label>Geschatte prijs<input id="f_price" placeholder="bv. €18–22"></label>
+          <label>Zelf betaald (per fles)<input id="f_paid" placeholder="bv. €19,50"></label>
+          <label id="l_loc">Plaats in kelder<input id="f_loc" placeholder="bv. rek 2, vak 4"></label>
+          <label id="l_shop">Gekocht bij<input id="f_shop" placeholder="bv. Wijnhandel Les Vignes"></label>
+          <label id="l_bought">Aankoopdatum<input id="f_bought" type="date"></label>
+          <label id="l_qty">Aantal gekocht<input id="f_qty" type="number" min="0" inputmode="numeric"></label>
+        </div>
+        <label>Jouw score<div class="stars" id="f_stars"></div></label>
+        <label>Eigen notitie<textarea id="f_note" rows="2" placeholder="Waar gedronken, met wie, wat viel op…"></textarea></label>
+        <label>Tags<input id="f_tags" placeholder="bv. tip van Jan, kerst, bbq" autocomplete="off"></label>
+        <div class="tagsugg" id="f_tagsugg"></div>
+      </div>
+      <div class="actions" style="margin-top:14px">
+        <button class="btn ghost" type="button" id="cancel">Annuleren</button>
+        <button class="btn" type="submit" id="save">Bewaar wijn</button>
+      </div>
+    </form>
+    <div class="actions" id="cancelOnly"><button class="btn ghost" type="button" id="cancel2">Annuleren</button></div>
+  </div>
+</div>
+
+<script src="store.js"></script>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const YEAR = new Date().getFullYear();
+  const TODAY = new Date().toISOString().slice(0,10);
+  const TIERS = {1:"Budget",2:"Middenklasse",3:"Premium",4:"Topwijn"};
+  const COLORS = {rood:"Rood",wit:"Wit",rose:"Rosé",mousserend:"Mousserend",dessert:"Dessert"};
+  let db=null, sample=null, col=null, wines=[], openIds=new Set();
+  let compareIds=[], dupFor=null;
+  let tagFilter="", shareFor=null, shareMsg="", sharedId="", downloads=null; const APP_URL="https://claude.ai/artifact/PYMK2uNrCPb2GZpHEmpRrY";
+  let tab="kelder", typeFilter="", draft=null, scanCtl=null, editingId=null, pendingDelete=null, tastingFor=null, tastingScore=0, target="kelder";
+  let pickCtl=null, lastPicks=null; const houseBusy=new Map();
+  let mcp=null; const shopOpen=new Set(), shopRes=new Map(), tipRes=new Map();
+  let city = ""; try{ city = localStorage.getItem("wk_city") || ""; }catch{}
+
+  const libs = {};
+  function loadLib(name, url, test){
+    if(test()) return Promise.resolve();
+    return libs[name] ||= new Promise((res, rej) => { const sc = document.createElement("script"); sc.src = url; sc.async = true;
+      sc.onload = () => test() ? res() : rej(new Error("nolib")); sc.onerror = () => { delete libs[name]; rej(new Error("nolib")); }; document.head.appendChild(sc); });
+  }
+  const loadPdf = () => loadLib("pdf","https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js",()=>!!window.jspdf);
+  const loadXlsx = () => loadLib("xlsx","https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js",()=>!!window.XLSX);
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const yr = v => { const n = parseInt(v,10); return n>1900 && n<2200 ? n : 0; };
+  const shortDate = d => { try{ return new Date(d+"T12:00:00").toLocaleDateString("nl-BE",{day:"numeric",month:"short"}); }catch{ return d; } };
+  const fmtDate = d => { try{ return new Date(d+"T12:00:00").toLocaleDateString("nl-BE",{day:"numeric",month:"short",year:"numeric"}); }catch{ return d; } };
+
+  // Normalize older records (status, stock, drink window years)
+  function norm(w){
+    w.status = w.status==="wens" ? "wens" : "kelder";
+    w.stock = Number.isFinite(+w.stock) ? Math.max(0,+w.stock) : (w.status==="kelder"?1:0);
+    w.tastings = Array.isArray(w.tastings) ? w.tastings : [];
+    w.openedAt = typeof w.openedAt==="string" ? w.openedAt : "";
+    w.tags = Array.isArray(w.tags) ? w.tags.map(String).filter(Boolean) : [];
+    w.shareId = typeof w.shareId==="string" ? w.shareId : "";
+    w.boughtQty = Math.max(0, parseInt(w.boughtQty)||0);
+    let from = yr(w.from), to = yr(w.to);
+    if(!from && !to && w.window){
+      const ys = (String(w.window).match(/\d{4}/g)||[]).map(Number);
+      if(/\bnu\b/i.test(w.window)) from = new Date(w.createdAt||Date.now()).getFullYear();
+      if(ys.length>=2){ from=ys[0]; to=ys[1]; } else if(ys.length===1){ if(/tot|until|-|–/.test(w.window)) to=ys[0]; else from=ys[0]; }
+    }
+    w.from = from||0; w.to = to||0;
+    return w;
+  }
+  const nrm = s => String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"");
+  const paidNum = w => { const p = String(w.paid||"").replace(",",".").match(/\d+(\.\d+)?/); return p ? +p[0] : 0; };
+  const eur = n => "€" + Math.round(n).toLocaleString("nl-BE");
+  function grapesOf(w){
+    return String(w.grape||"").split(/,|\/|&|\+|;| en | and /i)
+      .map(x=>x.replace(/\(.*?\)|\d+\s*%/g,"").replace(/\b(waarschijnlijk|vermoedelijk|vooral|onder andere|o\.a\.|mogelijk)\b/gi,"").replace(/\s+/g," ").trim())
+      .filter(x=>x.length>1 && x.split(" ").length<=3 && !/^(blend|assemblage|onbekend)$/i.test(x))
+      .map(x=>x[0].toUpperCase()+x.slice(1));
+  }
+  function priceNum(w){
+    const p = String(w.paid||"").replace(",",".").match(/\d+(\.\d+)?/);
+    if(p) return +p[0];
+    const r = String(w.price||"").match(/\d+/g);
+    if(r) return r.length>1 ? (+r[0] + +r[1])/2 : +r[0];
+    return 0;
+  }
+  function drinkState(w){
+    if(!w.from && !w.to) return null;
+    if(w.from && w.from > YEAR) return {cls:"b-young", label:`Te jong · vanaf ${w.from}`, k:3};
+    if(w.to && w.to < YEAR) return {cls:"b-late", label:`Over hoogtepunt · ${w.to}`, k:0};
+    if(w.to && w.to - YEAR <= 1) return {cls:"b-warn", label:`Drink snel · tot ${w.to}`, k:1};
+    return {cls:"b-ok", label: w.to?`Op dronk · tot ${w.to}`:"Op dronk", k:2};
+  }
+  function windowText(w){ return w.from && w.to ? `${w.from}–${w.to}` : w.from ? `vanaf ${w.from}` : w.to ? `tot ${w.to}` : (w.window||""); }
+
+  function starsHTML(n, ro){
+    let h = `<div class="stars${ro?" ro":""}" ${ro?`aria-label="${n} van 5"`:'role="group" aria-label="Score"'}>`;
+    for(let i=1;i<=5;i++) h+=`<button type="button" data-s="${i}" class="${i<=n?"on":""}" ${ro?'tabindex="-1" aria-hidden="true"':`aria-label="${i} ster${i>1?"ren":""}"`}>★</button>`;
+    return h+"</div>";
+  }
+  const thumb = w => w.photo?`<img class="thumb" src="${w.photo}" alt="">`:`<div class="thumb ph">${esc((w.name||"?")[0])}</div>`;
+
+  // ---------- render ----------
+  function render(){
+    $("collapseAll").hidden = true;
+    const kelder = wines.filter(w=>w.status==="kelder"), wens = wines.filter(w=>w.status==="wens");
+    const bottles = kelder.reduce((s,w)=>s+w.stock,0);
+    $("count").textContent = wines.length ? `${bottles} fles${bottles===1?"":"sen"} in huis` : "";
+    $("n_kelder").textContent = kelder.length ? kelder.length : "";
+    $("n_wens").textContent = wens.length ? wens.length : "";
+    document.querySelectorAll(".tabs button").forEach(b=>b.setAttribute("aria-selected", b.dataset.tab===tab));
+    $("v_list").hidden = tab==="stats" || tab==="ask"; $("v_stats").hidden = tab!=="stats"; $("v_ask").hidden = tab!=="ask";
+    if(tab==="ask"){ updateCollapse(); return renderChat(); }
+    if(tab==="stats"){ updateCollapse(); return renderStats(); }
+
+    const pool = tab==="kelder" ? kelder : wens;
+    $("tonight").hidden = !(tab==="kelder" && kelder.length && sample);
+    renderDrinkBox(tab==="kelder" ? kelder : []);
+    renderFact();
+    renderPicks();
+
+    // filters
+    $("tools").hidden = pool.length < 2; $("chips").hidden = pool.length < 2;
+    const types = [...new Set(pool.map(w=>w.color).filter(c=>COLORS[c]))];
+    $("chips").innerHTML = `<button class="chip" data-type="" aria-pressed="${!typeFilter}">Alles</button>` +
+      types.map(t=>`<button class="chip" data-type="${t}" aria-pressed="${typeFilter===t}"><span class="dot ${t}"></span>${COLORS[t]}</button>`).join("") +
+      (tab==="kelder" ? `<button class="chip" data-type="__stock" aria-pressed="${typeFilter==="__stock"}">Op voorraad</button>` : "");
+    const allTags = [...new Set(pool.flatMap(w=>w.tags))].sort((a,b)=>a.localeCompare(b,"nl"));
+    if(tagFilter && !allTags.includes(tagFilter)) tagFilter="";
+    if(allTags.length){ $("chips").hidden=false; $("chips").innerHTML += `<span style="flex-basis:100%;height:0"></span>` + allTags.map(t=>`<button class="tag" data-tag="${esc(t)}" aria-pressed="${tagFilter===t}">#${esc(t)}</button>`).join(""); }
+    const cSel = $("country"), cur = cSel.value;
+    const countries = [...new Set(pool.map(w=>w.country).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"nl"));
+    cSel.innerHTML = `<option value="">Alle landen</option>` + countries.map(c=>`<option ${c===cur?"selected":""}>${esc(c)}</option>`).join("");
+    cSel.hidden = countries.length < 2;
+
+    const gSel = $("grape"), gCur = gSel.value;
+    const grapeList = [...new Set(pool.flatMap(grapesOf))].sort((a,b)=>a.localeCompare(b,"nl"));
+    gSel.innerHTML = `<option value="">Alle druiven</option>` + grapeList.map(g=>`<option ${g===gCur?"selected":""}>${esc(g)}</option>`).join("");
+    gSel.hidden = grapeList.length < 2;
+    const grape = grapeList.includes(gCur) ? gCur : "";
+    const q = $("q").value.trim().toLowerCase(), sort = $("sort").value, country = cSel.value;
+    let rows = pool.filter(w =>
+      (!q || [w.name,w.producer,w.region,w.country,w.grape,w.vintage,w.loc,w.shop,...w.tags].join(" ").toLowerCase().includes(q)) &&
+      (!tagFilter || w.tags.includes(tagFilter)) &&
+      (!typeFilter || (typeFilter==="__stock" ? w.stock>0 : w.color===typeFilter)) &&
+      (!country || w.country===country) &&
+      (!grape || grapesOf(w).includes(grape)));
+    const ds = w => { const d=drinkState(w); return d? d.k*10000 + (w.to||9999) : 99999; };
+    rows.sort((a,b)=> sort==="score" ? (b.score||0)-(a.score||0) || (b.createdAt||0)-(a.createdAt||0)
+      : sort==="price" ? (priceNum(a)||999)-(priceNum(b)||999) || (a.tier||9)-(b.tier||9)
+      : sort==="drink" ? ds(a)-ds(b)
+      : sort==="recent" ? (b.createdAt||0)-(a.createdAt||0) : String(a.name).localeCompare(String(b.name),"nl"));
+
+    const list = $("list");
+    if(!pool.length){
+      list.innerHTML = tab==="kelder"
+        ? `<div class="empty"><div class="big">Je kelder is nog leeg</div><p>Tik op "Scan een fles" om het etiket te fotograferen en vul de gegevens in. Al wijnen in de Claude-versie? Zet hier je back-upbestand terug.</p><div><button class="btn ghost sm" type="button" data-imp="1">Back-up terugzetten</button></div></div>`
+        : `<div class="empty"><div class="big">Nog geen wensen</div><p>Proefde je ergens iets lekkers? Scan het etiket en kies "Op verlanglijst". Zo vind je het terug in de winkel.</p></div>`;
+      return;
+    }
+    if(!rows.length){ list.innerHTML = `<div class="empty"><p>Geen wijn gevonden met deze filters.</p></div>`; return; }
+    const kn = $("tf_note")?.value, kd = $("tf_date")?.value, focused = document.activeElement?.id;
+    list.innerHTML = rows.map(cardHTML).join("");
+    updateCollapse();
+    if($("tf_note")){ if(kn!==undefined) $("tf_note").value = kn; if(kd) $("tf_date").value = kd; if(focused==="tf_note"||focused==="tf_date") $(focused).focus(); }
+  }
+
+  function cardHTML(w){
+    const open = openIds.has(w.id), d = drinkState(w), isK = w.status==="kelder";
+    const facts = [["Druif",w.grape],["Streek",[w.region,w.country].filter(Boolean).join(", ")],
+      ["Prijsklasse",[w.tier?TIERS[w.tier]:"",w.price].filter(Boolean).join(" · ")],["Zelf betaald",w.paid],
+      ["Aroma's & smaak",w.taste],["Past bij",w.food],["Schenken op",w.temp],["Drinkvenster",windowText(w)],
+      ["Plaats in kelder", isK ? w.loc : ""],["Gekocht",[w.shop, w.bought?fmtDate(w.bought):"", w.boughtQty?w.boughtQty+" fl.":""].filter(Boolean).join(" · ")]].filter(f=>f[1]);
+    const ts = [...w.tastings].sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+    const del = pendingDelete===w.id
+      ? `<span class="confirm">Verwijderen? <button class="btn ghost sm" data-act="del-yes" data-id="${w.id}" type="button">Ja</button><button class="link" data-act="del-no" type="button">Nee</button></span>`
+      : `<button class="link" data-act="cmp" data-id="${w.id}" type="button">${compareIds.includes(w.id)?"Gekozen om te vergelijken":"Vergelijk"}</button><button class="link" data-act="share" data-id="${w.id}" type="button">Delen</button><button class="link" data-act="edit" data-id="${w.id}" type="button">Bewerken</button><button class="link" data-act="del" data-id="${w.id}" type="button">Verwijderen</button>`;
+    const tform = tastingFor===w.id ? `<div class="tform">
+        <div class="r"><input type="date" id="tf_date" value="${TODAY}" aria-label="Datum"><div data-act="tstar">${starsHTML(tastingScore,false)}</div></div>
+        ${guideHTML(w)}
+        <textarea id="tf_note" rows="2" placeholder="Hoe smaakte hij deze keer?" aria-label="Notitie"></textarea>
+        <div class="cardfoot"><button class="link" type="button" data-act="t-cancel">Annuleren</button><button class="btn sm" type="button" data-act="t-save" data-id="${w.id}">Bewaar proefmoment</button></div>
+      </div>` : "";
+    return `<article class="card${open?" open":""}" id="c_${w.id}" data-id="${w.id}">
+      <div class="row">
+        ${thumb(w)}
+        <div class="meta">
+          ${w.producer?`<div class="prod">${esc(w.producer)}</div>`:""}
+          <h3 class="name">${esc(w.name)}</h3>
+          <div class="sub">
+            ${w.vintage?`<span class="vint">${esc(w.vintage)}</span>`:""}
+            <span class="pill"><span class="dot ${esc(w.color)}"></span>${COLORS[w.color]||"Wijn"}</span>
+            ${w.region?`<span>${esc(w.region)}</span>`:""}
+            ${w.tier?`<span class="tier" title="Prijsklasse">${"€".repeat(w.tier)}<s>${"€".repeat(4-w.tier)}</s></span>`:""}
+          </div>
+          ${w.tags.length?`<div class="tags">${w.tags.map(t=>`<button class="tag" type="button" data-act="tagf" data-tag="${esc(t)}" aria-pressed="${tagFilter===t}">#${esc(t)}</button>`).join("")}</div>`:""}
+          ${isK && w.loc ? `<span class="loc"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>${esc(w.loc)}</span>`:""}
+          ${d && isK ? `<div><span class="badge ${d.cls}">${d.label}</span></div>`:""}
+          <div class="line2">
+            <div data-act="rate" data-id="${w.id}">${starsHTML(w.score||0,false)}</div>
+            ${isK ? `<div class="ctrls"><div class="stock${w.stock?"":" zero"}" role="group" aria-label="Voorraad">
+                <button type="button" data-act="minus" data-id="${w.id}" aria-label="Eén fles minder">−</button>
+                <span>${w.stock} fles${w.stock===1?"":"sen"}</span>
+                <button type="button" data-act="plus" data-id="${w.id}" aria-label="Eén fles meer">+</button></div>
+                ${w.stock>0 || w.openedAt ? `<button type="button" class="openchip${w.openedAt?" on":""}" data-act="opentoggle" data-id="${w.id}" aria-pressed="${!!w.openedAt}" title="${w.openedAt?"Tik als de fles op is":"Tik als je een fles opentrekt"}"><i></i>${w.openedAt?`Geopend · ${esc(shortDate(w.openedAt))}`:"Niet geopend"}</button>`:""}</div>`
+              : `<button class="btn sm" type="button" data-act="bought" data-id="${w.id}">Gekocht</button>`}
+          </div>
+        </div>
+      </div>
+      <button class="toggle" type="button" data-act="toggle" data-id="${w.id}" aria-expanded="${open}">
+        <span>${open?"Beschrijving inklappen":"Lees de beschrijving"}</span><span class="chev" aria-hidden="true">▾</span>
+      </button>
+      <div class="roll"><div><div class="desc">
+        ${w.desc?`<p>${esc(w.desc)}</p>`:""}
+        ${facts.length?`<dl class="facts">${facts.map(f=>`<div><dt>${f[0]}</dt><dd>${esc(f[1])}</dd></div>`).join("")}</dl>`:""}
+        ${w.note?`<p class="note">${esc(w.note)}</p>`:""}
+        ${houseHTML(w)}
+        ${shopHTML(w)}
+        ${pairHTML(w)}
+        <div class="tastings">
+          <div class="eyebrow">Proefmomenten${ts.length?` · ${ts.length}`:""}</div>
+          ${ts.length?`<ol>${ts.map(t=>`<li><time>${esc(fmtDate(t.date))}</time>${starsHTML(t.score||0,true)}<span class="tn">${t.note?`<span>${esc(t.note)}</span>`:""}${tastingSummary(t)}</span></li>`).join("")}</ol>`:`<p class="hint">Nog geen proefmomenten. Voeg er een toe telkens je deze wijn drinkt.</p>`}
+          ${tform}
+        </div>
+        <div class="cardfoot">
+          ${tastingFor!==w.id ? `<button class="btn ghost sm" type="button" data-act="t-new" data-id="${w.id}">Proefmoment</button>`:""}
+        </div>
+        <div class="cardfoot">${del}</div>
+      </div></div></div>
+    </article>`;
+  }
+
+  function houseLinks(w){
+    const h = w.house || {};
+    const who = w.producer || w.name; if(!who) return "";
+    const place = [h.location, w.region, w.country].filter(Boolean).join(", ");
+    const q = encodeURIComponent([who, place].filter(Boolean).join(", "));
+    const iq = encodeURIComponent([who, "wijndomein", w.region || w.country].filter(Boolean).join(" "));
+    const L = [
+      ["Op de kaart", `https://www.google.com/maps/search/?api=1&query=${q}`],
+      ["Foto's van het domein", `https://www.google.com/search?tbm=isch&q=${iq}`],
+      ["Omgeving & streek", `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([w.region, w.country].filter(Boolean).join(", ") || place)}`],
+      ["Website", `https://www.google.com/search?q=${encodeURIComponent(who + " wijn officiële website")}`]];
+    return `<div class="links">${L.map(l=>`<a href="${l[1]}" target="_blank" rel="noopener">${l[0]} ↗</a>`).join("")}</div>`;
+  }
+  function houseHTML(w){
+    const h = w.house;
+    const who = esc(w.producer || "het wijnhuis");
+    if(h && (h.about || h.founded || h.location)){
+      const f = [["Opgericht",h.founded],["Ligging",h.location],["Eigenaar & wijnmaker",h.people],["Wijngaarden",h.size],["Werkwijze",h.farming],["Bekend om",h.known]].filter(x=>x[1]);
+      return `<section class="house"><div class="eyebrow">Het wijnhuis</div><h4>${who}</h4>
+        ${h.about?`<p>${esc(h.about)}</p>`:""}
+        ${f.length?`<dl class="facts">${f.map(x=>`<div><dt>${x[0]}</dt><dd>${esc(x[1])}</dd></div>`).join("")}</dl>`:""}
+        ${houseLinks(w)}
+        <p class="src">Uit de kennis van Claude, zonder live opzoeking. Details kunnen verouderd zijn.</p></section>`;
+    }
+    if(h && h.unknown) return `<section class="house"><div class="eyebrow">Het wijnhuis</div><p class="hint">Claude vond geen betrouwbare informatie over ${who}.</p>${houseLinks(w)}</section>`;
+    if(!sample) return "";
+    const busy = houseBusy.get(w.id);
+    return `<section class="house"><div class="eyebrow">Het wijnhuis</div>
+      ${busy==="err" ? `<p class="hint">Info ophalen lukte niet. Probeer opnieuw.</p>`:""}
+      <div><button class="btn ghost sm" type="button" data-act="house" data-id="${w.id}" ${busy===true?"disabled":""}>${busy===true?"Info wordt verzameld…":`Meer over ${who}`}</button></div>${houseLinks(w)}</section>`;
+  }
+  function shopHTML(w){
+    const q = [w.producer, w.name, w.vintage].filter(Boolean).join(" ");
+    if(!shopOpen.has(w.id)) return `<div><button class="btn ghost sm" type="button" data-act="shop" data-id="${w.id}">Waar te koop?</button></div>`;
+    const enc = encodeURIComponent(q);
+    const links = [
+      ["Wine-Searcher", `https://www.wine-searcher.com/find/${q.split(/\s+/).map(encodeURIComponent).join("+")}/1/belgium`],
+      ["Vivino", `https://www.vivino.com/search/wines?q=${enc}`],
+      ["Google Shopping", `https://www.google.com/search?tbm=shop&gl=be&q=${enc}`],
+      ["Website wijnhuis", `https://www.google.com/search?q=${encodeURIComponent((w.producer||w.name)+" wijn officiële website")}`]];
+    const tip = tipRes.get(w.id), sres = shopRes.get(w.id);
+    let tipBlock = "";
+    if(sample){
+      if(!tip) tipBlock = `<div><button class="btn ghost sm" type="button" data-act="shoptip" data-id="${w.id}">Vraag Claude naar importeur en winkels</button></div>`;
+      else if(tip.busy) tipBlock = `<p class="hint">Claude denkt na…</p>`;
+      else if(tip.err) tipBlock = `<p class="hint">${esc(tip.err)}</p><div><button class="btn ghost sm" type="button" data-act="shoptip" data-id="${w.id}">Opnieuw</button></div>`;
+      else tipBlock = `<p>${esc(tip.text)}</p><p class="src">Uit de kennis van Claude, niet live gecontroleerd. Bel of kijk online of de wijn nog in het gamma zit.</p>`;
+    }
+    let near = "";
+    if(mcp){
+      let list = "";
+      if(sres?.busy) list = `<p class="hint">Wijnhandels zoeken…</p>`;
+      else if(sres?.err) list = `<p class="hint">${esc(sres.err)}</p>`;
+      else if(sres?.shops) list = sres.shops.length ? `<ul class="shops">${sres.shops.map(x=>`<li><b>${esc(x.name)}</b><span class="addr">${esc(x.addr)}</span><span class="ct">${x.phone?`<span class="tel">${esc(x.phone)}</span>`:""}${x.url?`<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.url.replace(/^https?:\/\/(www\.)?/,"").replace(/\/$/,""))}</a>`:""}</span></li>`).join("")}</ul><p class="src">Dit zijn wijnhandels in de buurt. Of ze deze fles hebben, vraag je best even na.</p>` : `<p class="hint">Geen wijnhandels gevonden bij "${esc(sres.city)}".</p>`;
+      near = `<div class="eyebrow">Wijnhandels in de buurt</div>
+        <form class="cityrow" data-shopform="${w.id}"><input id="city_${w.id}" value="${esc(city)}" placeholder="Gemeente of postcode" aria-label="Gemeente"><button class="btn sm" type="submit">Zoek</button></form>${list}`;
+    }
+    return `<section class="house"><div class="eyebrow">Waar te koop</div><h4>${esc(w.name)}</h4>
+      <div class="links">${links.map(l=>`<a href="${l[1]}" target="_blank" rel="noopener">${l[0]} ↗</a>`).join("")}</div>
+      ${tipBlock}${near}
+      <div><button class="link" type="button" data-act="shopclose" data-id="${w.id}">Sluiten</button></div></section>`;
+  }
+
+  async function fetchTip(w){
+    tipRes.set(w.id,{busy:true}); render();
+    const prompt = `Je bent een wijnkenner in België. Waar kan iemand in België (of anders online in Europa) deze wijn waarschijnlijk kopen? Wijn: ${w.name}${w.vintage?" "+w.vintage:""}, producent: ${w.producer||"onbekend"}, streek: ${[w.region,w.country].filter(Boolean).join(", ")||"onbekend"}.
+Noem de Belgische importeur als je die met zekerheid kent, en het soort winkels of ketens waar zo'n wijn meestal ligt. Verzin geen namen: zeg het eerlijk als je het niet weet. Schrijf in het Nederlands, maximaal 4 zinnen, gewone tekst zonder opmaak.`;
+    try{ const r = await sample(prompt); tipRes.set(w.id,{text:r.text.trim()}); }
+    catch(e){ if(e?.code==="cancelled") return; tipRes.set(w.id,{err: e?.code==="rate_limited" ? "Claude is even niet beschikbaar (gebruikslimiet of te veel aanvragen). Probeer later opnieuw." : e?.code==="not_granted" ? "Je gaf geen toestemming om Claude te gebruiken." : "Dat lukte niet. Probeer opnieuw."}); }
+    render();
+  }
+
+  async function fetchShops(w, c){
+    city = c; try{ localStorage.setItem("wk_city", c); }catch{}
+    shopRes.set(w.id,{busy:true}); render();
+    try{
+      const res = await mcp.callTool("TomTom Maps","tomtom-fuzzy-search",{query:"wijnhandel "+c, countries:["BE","NL"], idxSet:"POI", limit:8, language:"nl-BE"});
+      const feats = res?.payload?.features || [];
+      const shops = feats.map(f=>{ const p=f.properties||{}; return {name:p.poi?.name||"", addr:p.address?.freeformAddress||"", phone:p.poi?.phone||"", url: /^https?:\/\//.test(p.poi?.url||"") ? p.poi.url : (p.poi?.url ? "https://"+p.poi.url : "")}; }).filter(x=>x.name);
+      shopRes.set(w.id,{shops, city:c});
+    }catch(e){
+      shopRes.set(w.id,{err: e?.code==="server_not_connected" ? "De kaartdienst is niet gekoppeld aan je account." : e?.code==="not_granted"||e?.code==="denied" ? "Je gaf geen toestemming om de kaartdienst te gebruiken." : "Zoeken lukte niet. Probeer opnieuw."});
+    }
+    render();
+  }
+
+  // ---------- sharing ----------
+  function publicCopy(w){
+    const o = {}; ["name","producer","vintage","region","country","grape","color","desc","taste","food","temp","from","to","tier","price","score","photo"].forEach(k=>{ if(w[k]) o[k]=w[k]; });
+    if(w.house && !w.house.unknown) o.house = w.house;
+    o.sharedAt = Date.now(); return o;
+  }
+  function shareText(w){
+    const L = [`${w.name}${w.vintage?" "+w.vintage:""}`];
+    if(w.producer) L.push(w.producer);
+    const where=[COLORS[w.color], w.grape, [w.region,w.country].filter(Boolean).join(", ")].filter(Boolean).join(" · "); if(where) L.push(where);
+    if(w.score) L.push(`Mijn score: ${"★".repeat(w.score)}${"☆".repeat(5-w.score)}`);
+    if(w.desc) L.push("", w.desc);
+    if(w.food) L.push("", "Past bij: "+w.food);
+    if(w.price) L.push("Prijs: "+w.price);
+    if(w.shareId) L.push("", APP_URL+"#w-"+w.shareId);
+    return L.join("\n");
+  }
+  function openShare(w){ shareFor = w.id; shareMsg=""; $("share").hidden=false; renderShare(); }
+  $("shareClose").onclick = () => { $("share").hidden=true; shareFor=null; };
+  function renderShare(){
+    const w = wines.find(x=>x.id===shareFor); if(!w){ $("share").hidden=true; return; }
+    $("shareTitle").textContent = w.name;
+    const url = w.shareId ? APP_URL+"#w-"+w.shareId : "";
+    $("shareBody").innerHTML = `
+      ${shareMsg?`<p class="err">${esc(shareMsg)}</p>`:""}
+      <div class="sharebox"><h3>Als pdf</h3><p>Een nette fiche met foto, beschrijving, score en info over het wijnhuis. Handig om te mailen of door te sturen via WhatsApp. Je eigen notities en tags staan er niet in.</p>
+        <div><button class="btn sm" type="button" data-sh="pdf">Download pdf</button></div></div>
+      <div class="sharebox"><h3>Als tekst</h3><p>Kopieer een korte samenvatting om te plakken in een bericht.</p>
+        <div><button class="btn ghost sm" type="button" data-sh="text">Kopieer tekst</button></div>
+        <textarea id="sh_text" rows="5" hidden readonly style="font:inherit;font-size:.85rem;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--bg);color:var(--ink)"></textarea></div>
+      <div class="sharebox"><h3>Publieke link</h3>
+        ${url ? `<div class="urlrow"><input id="sh_url" readonly value="${esc(url)}" aria-label="Deellink"><button class="btn sm" type="button" data-sh="copyurl">Kopieer</button></div>
+          <p>Werkt pas als je de app openzet: tik rechtsboven op Delen en kies iedereen met de link. Wie de link opent, moet aangemeld zijn bij Claude. Je persoonlijke wijnen blijven privé: ze zien enkel deze wijn.</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost sm" type="button" data-sh="link">Werk bij met laatste info</button><button class="link" type="button" data-sh="unlink">Stop met delen</button></div>`
+        : `<p>Maak een link naar deze wijn. Je eigen notities, tags en wat je betaalde worden niet gedeeld.</p><div><button class="btn ghost sm" type="button" data-sh="link">Maak deellink</button></div>`}
+      </div>`;
+    if(window.claude?.local) $("shareBody").querySelectorAll(".sharebox")[2]?.remove();
+  }
+  $("shareBody").addEventListener("click", async e => {
+    const b = e.target.closest("[data-sh]"); if(!b) return;
+    const w = wines.find(x=>x.id===shareFor); if(!w) return;
+    const a = b.dataset.sh;
+    if(a==="text"){
+      const txt = shareText(w);
+      try{ await navigator.clipboard.writeText(txt); b.textContent="Gekopieerd"; }
+      catch{ const ta=$("sh_text"); ta.hidden=false; ta.value=txt; ta.focus(); ta.select(); b.textContent="Selecteer en kopieer hieronder"; }
+    } else if(a==="copyurl"){
+      try{ await navigator.clipboard.writeText($("sh_url").value); b.textContent="Gekopieerd"; }
+      catch{ $("sh_url").focus(); $("sh_url").select(); }
+    } else if(a==="link"){
+      b.disabled = true;
+      try{
+        const sid = w.shareId || Array.from(crypto.getRandomValues(new Uint8Array(9)),x=>"abcdefghijkmnpqrstuvwxyz23456789"[x%32]).join("");
+        await db.doc("shared/"+sid).set(publicCopy(w));
+        if(!w.shareId){ w.shareId = sid; await col.doc(w.id).update({shareId:sid}); }
+        shareMsg="";
+      }catch(err){ shareMsg = "De link kon niet gemaakt worden. Probeer opnieuw."; }
+      renderShare();
+    } else if(a==="unlink"){
+      try{ await db.doc("shared/"+w.shareId).delete(); await col.doc(w.id).update({shareId:""}); w.shareId=""; shareMsg=""; }
+      catch{ shareMsg="Stoppen met delen lukte niet."; }
+      renderShare();
+    } else if(a==="pdf"){
+      b.disabled = true; b.textContent = "Pdf maken…";
+      try{ await makePdf(w); b.textContent = "Download pdf"; }
+      catch(err){ shareMsg = err?.code==="declined" ? "" : err?.message==="nolib" ? "De pdf-module kon niet laden. Herlaad de pagina." : (err?.code==="unavailable"||err?.code==="not_granted") ? "Downloaden kan niet in deze weergave." : "De pdf kon niet gemaakt worden."; renderShare(); }
+      b.disabled = false;
+    }
+  });
+
+  async function makePdf(w){
+    await loadPdf();
+    if(!downloads) throw {code:"unavailable"};
+    const lat = s => String(s||"").replace(/[★☆]/g,"").replace(/[^\x20-\xFF€–—‘’“”…•\n]/g,"");
+    const doc = new window.jspdf.jsPDF({unit:"mm", format:"a4"});
+    const W=210, M=18, CW=W-2*M; let y=M;
+    const claret=[168,35,46], muted=[110,100,114], ink=[34,26,36];
+    const ensure = h => { if(y+h > 297-M){ doc.addPage(); y=M; } };
+    const para = (txt, size=10.5, color=ink, style="normal", lh=1.45) => {
+      doc.setFont("helvetica",style); doc.setFontSize(size); doc.setTextColor(...color);
+      const lines = doc.splitTextToSize(lat(txt), CW);
+      lines.forEach(l=>{ ensure(size*0.3528*lh); y += size*0.3528*lh; doc.text(l, M, y); });
+    };
+    const label = t => { ensure(10); y+=6; doc.setFont("helvetica","bold"); doc.setFontSize(8); doc.setTextColor(...muted); doc.text(lat(t).toUpperCase(), M, y); y+=1; };
+    // header
+    let tx = M, top = y;
+    if(w.photo){ try{ doc.addImage(w.photo,"JPEG",M,y,38,51); tx = M+44; }catch{} }
+    const tw = W-M-tx; let ty = y+4;
+    doc.setFont("helvetica","bold"); doc.setFontSize(8.5); doc.setTextColor(...muted);
+    if(w.producer){ doc.text(doc.splitTextToSize(lat(w.producer).toUpperCase(), tw), tx, ty); ty+=6; }
+    doc.setFont("times","bold"); doc.setFontSize(20); doc.setTextColor(...ink);
+    const nl = doc.splitTextToSize(lat(w.name), tw); doc.text(nl, tx, ty+3); ty += 3 + nl.length*8;
+    doc.setFont("helvetica","normal"); doc.setFontSize(10.5); doc.setTextColor(...muted);
+    const sub = [w.vintage, COLORS[w.color], w.region, w.country].filter(Boolean).join(" · ");
+    if(sub){ doc.text(doc.splitTextToSize(lat(sub), tw), tx, ty); ty+=7; }
+    if(w.score){ doc.setFont("helvetica","bold"); doc.setTextColor(...claret); doc.text(`Score ${w.score}/5`, tx, ty); ty+=6; }
+    if(w.tier || w.price){ doc.setFont("helvetica","normal"); doc.setTextColor(...ink); doc.text(lat([w.tier?"€".repeat(w.tier)+" "+TIERS[w.tier]:"", w.price].filter(Boolean).join(" · ")), tx, ty); ty+=6; }
+    y = Math.max(ty, w.photo ? top+51 : ty) + 4;
+    doc.setDrawColor(225,219,227); doc.line(M,y,W-M,y); y+=2;
+    if(w.desc){ label("Beschrijving"); para(w.desc, 11); }
+    const facts = [["Druif",w.grape],["Aroma's & smaak",w.taste],["Past bij",w.food],["Schenktemperatuur",w.temp],["Drinkvenster",windowText(w)]].filter(f=>f[1]);
+    if(facts.length){ label("Kenmerken"); facts.forEach(f=>{ ensure(7); y+=5.5; doc.setFont("helvetica","bold"); doc.setFontSize(9.5); doc.setTextColor(...muted); doc.text(lat(f[0]), M, y);
+      doc.setFont("helvetica","normal"); doc.setTextColor(...ink); const ls = doc.splitTextToSize(lat(f[1]), CW-42); doc.text(ls, M+42, y); y += (ls.length-1)*4.6; }); }
+    const h = w.house;
+    if(h && !h.unknown && (h.about||h.founded||h.location)){
+      label("Het wijnhuis" + (w.producer?" · "+w.producer:""));
+      if(h.about) para(h.about, 10.5);
+      [["Opgericht",h.founded],["Ligging",h.location],["Eigenaar & wijnmaker",h.people],["Wijngaarden",h.size],["Werkwijze",h.farming],["Bekend om",h.known]].filter(f=>f[1]).forEach(f=>{
+        ensure(7); y+=5.5; doc.setFont("helvetica","bold"); doc.setFontSize(9.5); doc.setTextColor(...muted); doc.text(lat(f[0]), M, y);
+        doc.setFont("helvetica","normal"); doc.setTextColor(...ink); const ls = doc.splitTextToSize(lat(f[1]), CW-42); doc.text(ls, M+42, y); y += (ls.length-1)*4.6; });
+    }
+    doc.setFont("helvetica","normal"); doc.setFontSize(8); doc.setTextColor(...muted);
+    doc.text(lat("Uit Meerstraat wines · " + new Date().toLocaleDateString("nl-BE",{day:"numeric",month:"long",year:"numeric"})), M, 297-10);
+    const slug = (w.name + (w.vintage?"-"+w.vintage:"")).normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^A-Za-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,60) || "wijn";
+    await downloads.save({filename: slug + ".pdf", data: doc.output("blob")});
+  }
+
+  // ---------- shared view ----------
+  function sharedHTML(w){
+    const f = [["Druif",w.grape],["Streek",[w.region,w.country].filter(Boolean).join(", ")],["Prijs",w.price],["Aroma's & smaak",w.taste],["Past bij",w.food],["Schenken op",w.temp],["Drinkvenster",windowText(w)]].filter(x=>x[1]);
+    return `<article class="card shared open"><div class="row">${thumb(w)}<div class="meta">
+        <div class="eyebrow">Gedeelde wijn</div>
+        ${w.producer?`<div class="prod">${esc(w.producer)}</div>`:""}<h3 class="name">${esc(w.name)}</h3>
+        <div class="sub">${w.vintage?`<span class="vint">${esc(w.vintage)}</span>`:""}<span class="pill"><span class="dot ${esc(w.color)}"></span>${COLORS[w.color]||"Wijn"}</span>${w.region?`<span>${esc(w.region)}</span>`:""}</div>
+        ${w.score?starsHTML(w.score,true):""}</div></div>
+      <div class="desc">${w.desc?`<p>${esc(w.desc)}</p>`:""}
+        ${f.length?`<dl class="facts">${f.map(x=>`<div><dt>${x[0]}</dt><dd>${esc(x[1])}</dd></div>`).join("")}</dl>`:""}
+        ${w.house && (w.house.about||w.house.location)?houseHTML({...w, id:"_shared"}):""}
+        <div class="cardfoot">${col?`<button class="btn sm" type="button" id="sharedSave">Zet op mijn verlanglijst</button>`:""}<button class="link" type="button" id="sharedClose">Sluiten</button></div>
+        <p class="hint" id="sharedMsg"></p></div></article>`;
+  }
+  let sharedDoc = null;
+  async function loadShared(){
+    const m = location.hash.match(/^#w-([a-z0-9]{6,20})$/);
+    sharedId = m ? m[1] : ""; const box = $("sharedView");
+    if(!sharedId){ box.hidden = true; return; }
+    box.hidden = false;
+    if(!db){ box.innerHTML = `<div class="empty"><p>Meld je aan bij Claude om deze gedeelde wijn te bekijken.</p></div>`; return; }
+    box.innerHTML = `<p class="status">Gedeelde wijn laden…</p>`;
+    try{
+      const snap = await db.doc("shared/"+sharedId).get();
+      if(!snap.exists){ box.innerHTML = `<div class="empty"><p>Deze gedeelde wijn bestaat niet meer.</p><button class="link" type="button" id="sharedClose">Sluiten</button></div>`; return; }
+      sharedDoc = norm({...snap.data(), id:"_shared"}); box.innerHTML = sharedHTML(sharedDoc);
+    }catch{ box.innerHTML = `<div class="empty"><p>De gedeelde wijn kon niet geladen worden.</p></div>`; }
+  }
+  $("sharedView").addEventListener("click", async e => {
+    if(e.target.id==="sharedClose"){ $("sharedView").hidden = true; try{ history.replaceState(null,"",location.pathname+location.search); }catch{} return; }
+    if(e.target.id==="sharedSave" && sharedDoc){
+      e.target.disabled = true;
+      const w = {...sharedDoc}; delete w.id; delete w.sharedAt;
+      Object.assign(w,{status:"wens", stock:0, tastings:[], score:0, tags:["gedeeld"], createdAt:Date.now(), shareId:"", openedAt:""});
+      try{ await col.doc().set(w); $("sharedMsg").textContent = "Staat op je verlanglijst."; }
+      catch{ $("sharedMsg").textContent = "Bewaren lukte niet. Je hebt mogelijk geen schrijfrechten op deze app."; e.target.disabled=false; }
+    }
+  });
+  window.addEventListener("hashchange", loadShared);
+
+  const HOUSE_FIELDS = `{"about":"3 tot 4 zinnen over de geschiedenis, de familie of eigenaars en de filosofie van het wijnhuis","founded":"jaar of periode van oprichting","location":"dorp/gemeente en streek","people":"eigenaar(s) en/of wijnmaker","size":"oppervlakte wijngaarden, bv. 25 ha","farming":"bv. biologisch, biodynamisch, duurzaam, conventioneel","known":"waar het huis bekend om staat, bekendste wijnen of erkenningen"}`;
+
+  async function fetchHouse(w){
+    houseBusy.set(w.id,true); render();
+    const prompt = `Je bent een wijnkenner. Geef wat je met zekerheid weet over het wijnhuis/de producent van deze wijn. Schrijf in het Nederlands.
+Wijn: ${w.name}${w.vintage?" "+w.vintage:""}. Producent: ${w.producer||"onbekend"}. Streek: ${[w.region,w.country].filter(Boolean).join(", ")||"onbekend"}.
+Verzin niets: laat een veld leeg ('') als je het niet zeker weet. Ken je dit wijnhuis helemaal niet, antwoord dan {"unknown":true}.
+Antwoord met ALLEEN één JSON-object in deze vorm: ${HOUSE_FIELDS}`;
+    try{
+      const r = await sample.json(prompt);
+      const house = r && r.unknown ? {unknown:true} : cleanHouse(r);
+      houseBusy.delete(w.id); w.house = house; render();
+      await save(w.id,{house});
+    }catch(e){ houseBusy.set(w.id,"err"); render(); }
+  }
+  function cleanHouse(r){
+    const o={}; ["about","founded","location","people","size","farming","known"].forEach(k=>{ if(r && r[k]) o[k]=String(r[k]).slice(0,800); });
+    return Object.keys(o).length ? o : {unknown:true};
+  }
+
+  const reduceMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function toTop(){ window.scrollTo({top:0, behavior: reduceMotion() ? "auto" : "smooth"}); }
+  $("toTop").addEventListener("click", toTop);
+  let scrollTick = false;
+  function onScroll(){
+    if(scrollTick) return; scrollTick = true;
+    requestAnimationFrame(() => {
+      scrollTick = false;
+      const far = scrollY > innerHeight * 1.2;
+      const tt = $("toTop");
+      if(far && tt.hidden){ tt.hidden = false; requestAnimationFrame(()=>tt.classList.add("show")); }
+      else if(!far && !tt.hidden){ tt.classList.remove("show"); tt.hidden = true; }
+      const t = document.querySelector(".tabs"); t.classList.toggle("stuck", t.getBoundingClientRect().top <= (parseFloat(getComputedStyle(document.documentElement).paddingTop)||0) + 1 && scrollY > 40);
+    });
+  }
+  addEventListener("scroll", onScroll, {passive:true});
+  function updateCollapse(){
+    const n = tab==="stats" ? 0 : document.querySelectorAll("#list .card.open").length;
+    $("collapseAll").hidden = n < 2;
+  }
+  $("collapseAll").addEventListener("click", () => {
+    document.querySelectorAll("#list .card.open").forEach(c => openIds.delete(c.dataset.id));
+    tastingFor = null; render();
+    window.scrollTo({top:0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"});
+  });
+
+  function renderDrinkBox(kelder){
+    const box = $("drinkbox");
+    const inStock = kelder.filter(w=>w.stock>0);
+    const soon = inStock.filter(w=>{const d=drinkState(w);return d && (d.k===1||d.k===0);}).sort((a,b)=>(a.to||0)-(b.to||0));
+    const ready = inStock.filter(w=>{const d=drinkState(w);return d && d.k===2;}).sort((a,b)=>(a.to||9999)-(b.to||9999));
+    const opened = kelder.filter(w=>w.openedAt).sort((a,b)=>a.openedAt.localeCompare(b.openedAt));
+    if(!soon.length && !ready.length && !opened.length){ box.hidden=true; return; }
+    box.hidden=false;
+    const row = w => { const d=drinkState(w); return `<button class="drink" type="button" data-goto="${w.id}"><span class="t"><b>${esc(w.name)}</b>${w.vintage?` <span class="vint">${esc(w.vintage)}</span>`:""}</span><span class="badge ${d.cls}">${d.label}</span></button>`; };
+    const days = d => Math.max(0, Math.round((new Date(TODAY) - new Date(d)) / 864e5));
+    box.innerHTML = `<h2 class="sec">Klaar om te drinken</h2>
+      ${opened.length?`<div class="eyebrow">Open flessen</div><div class="drinkrow">${opened.map(w=>{const n=days(w.openedAt);return `<button class="drink" type="button" data-goto="${w.id}"><span class="t"><b>${esc(w.name)}</b>${w.vintage?` <span class="vint">${esc(w.vintage)}</span>`:""}</span><span class="badge ${n>=3?"b-warn":"b-ok"}">${n===0?"vandaag geopend":n===1?"1 dag open":n+" dagen open"}</span></button>`;}).join("")}</div>`:""}
+      ${soon.length?`<div class="eyebrow">Drink binnenkort</div><div class="drinkrow">${soon.slice(0,4).map(row).join("")}</div>`:""}
+      ${ready.length?`<div class="eyebrow">Nu op dronk</div><div class="drinkrow">${ready.slice(0,4).map(row).join("")}</div>`:""}`;
+  }
+
+  function renderPicks(){
+    const el = $("picks");
+    if(!lastPicks){ el.innerHTML=""; return; }
+    if(lastPicks.msg){ el.innerHTML = `<p class="hint">${esc(lastPicks.msg)}</p>`; return; }
+    el.innerHTML = lastPicks.picks.map((p,i)=>{ const w=wines.find(x=>x.id===p.id); if(!w) return "";
+      return `<button class="pick" type="button" data-goto="${w.id}"><span class="rank">${i+1}</span><div><b>${esc(w.name)}</b>${w.vintage?` <span class="vint">${esc(w.vintage)}</span>`:""}<br><span>${esc(p.why)}</span></div></button>`; }).join("")
+      + (lastPicks.tip?`<p class="hint">${esc(lastPicks.tip)}</p>`:"");
+  }
+
+  function groupAvg(rows, keyFn){
+    const m = new Map();
+    rows.forEach(w=>{ if(!w.score) return; keyFn(w).forEach(k=>{ k=k.trim(); if(!k) return; const g=m.get(k)||{n:0,s:0}; g.n++; g.s+=w.score; m.set(k,g); }); });
+    return [...m].map(([k,g])=>({k, n:g.n, avg:g.s/g.n})).sort((a,b)=>b.avg-a.avg || b.n-a.n);
+  }
+  function bars(items, max, fmt, gold){
+    return `<div class="bars">${items.map(i=>`<div class="bar"><span class="lbl">${esc(i.k)}</span><span class="val">${fmt(i)}</span><div class="track"><div class="fill${gold?" gold":""}" style="width:${Math.max(4,Math.round(i.v/max*100))}%"></div></div></div>`).join("")}</div>`;
+  }
+  function renderStats(){
+    const el = $("v_stats");
+    const kelder = wines.filter(w=>w.status==="kelder");
+    if(!kelder.length){ el.innerHTML = `<div class="empty"><div class="big">Nog niets te tellen</div><p>Zodra je een paar wijnen gescand en gescoord hebt, zie je hier je favoriete druiven, streken en waar je de beste prijs-kwaliteit vindt.</p></div>`; return; }
+    const bottles = kelder.reduce((s,w)=>s+w.stock,0);
+    const tcount = wines.reduce((s,w)=>s+w.tastings.length,0);
+    const scored = kelder.filter(w=>w.score);
+    const avg = scored.length ? (scored.reduce((s,w)=>s+w.score,0)/scored.length) : 0;
+    const grapes = groupAvg(kelder, w=>String(w.grape||"").split(/,|\/|&| en /i)).slice(0,5);
+    const regions = groupAvg(kelder, w=>[w.region||w.country||""]).slice(0,5);
+    const byTier = [1,2,3,4].map(t=>{ const r=scored.filter(w=>w.tier===t); return {k:"€".repeat(t)+" "+TIERS[t], n:r.length, v:r.length? r.reduce((s,w)=>s+w.score,0)/r.length:0}; }).filter(x=>x.n);
+    const value = scored.filter(w=>priceNum(w)>0).map(w=>({w, v:w.score/priceNum(w)})).sort((a,b)=>b.v-a.v).slice(0,3);
+    const types = Object.keys(COLORS).map(c=>({c, n:kelder.filter(w=>w.color===c).reduce((s,w)=>s+Math.max(1,w.stock),0)})).filter(x=>x.n);
+    const tsum = types.reduce((s,x)=>s+x.n,0);
+    const priced = kelder.filter(w=>w.stock>0 && (paidNum(w)||priceNum(w)));
+    const worth = priced.reduce((s,w)=>s + (paidNum(w)||priceNum(w))*w.stock, 0);
+    const unpriced = kelder.filter(w=>w.stock>0).length - priced.length;
+    const boughtThisYear = wines.filter(w=>String(w.bought||"").startsWith(String(YEAR)) && paidNum(w));
+    const spent = boughtThisYear.reduce((s,w)=>s + paidNum(w)*(w.boughtQty||1), 0);
+    const pb = kelder.map(w=>paidNum(w)||priceNum(w)).filter(Boolean);
+    const avgBottle = pb.length ? pb.reduce((a,b)=>a+b,0)/pb.length : 0;
+    const colVar = {rood:"--red",wit:"--white",rose:"--rose",mousserend:"--spark",dessert:"--dessert"};
+
+    el.innerHTML = `
+      <div class="kpis">
+        <div class="kpi"><span class="eyebrow">Wijnen</span><b>${kelder.length}</b></div>
+        <div class="kpi"><span class="eyebrow">Flessen</span><b>${bottles}</b></div>
+        <div class="kpi"><span class="eyebrow">Gem. score</span><b>${avg?avg.toFixed(1).replace(".",","):"–"}</b></div>
+        <div class="kpi"><span class="eyebrow">Proefmomenten</span><b>${tcount}</b></div>
+      </div>
+      <div class="box"><h2 class="sec">Waar je wijnen vandaan komen</h2>
+        <div class="maptools">
+          <div class="seg mini" role="group" aria-label="Kaartweergave"><button type="button" data-zoom="fit" aria-pressed="${mapZoom==="fit"}">Ingezoomd</button><button type="button" data-zoom="world" aria-pressed="${mapZoom==="world"}">Wereld</button></div>
+          <div class="maplegend"><span><i style="background:var(--accent)"></i>Land</span><span><i style="background:var(--gold)"></i>Kelder</span><span><i style="background:var(--surface);border:1.5px solid var(--gold)"></i>Verlanglijst</span></div>
+        </div>
+        <div class="mapwrap" id="mapwrap"><p class="hint" style="padding:40px 16px;text-align:center">Kaart laden…</p></div>
+        <p class="hint" id="mapnote"></p>
+        <div id="mapsel"></div>
+      </div>
+      <div class="box"><h2 class="sec">Je kelder in euro</h2>
+        <div class="money">
+          <div><span class="eyebrow">Waarde in huis</span><b>${worth?eur(worth):"–"}</b></div>
+          <div><span class="eyebrow">Uitgegeven in ${YEAR}</span><b>${spent?eur(spent):"–"}</b></div>
+          <div><span class="eyebrow">Gem. per fles</span><b>${avgBottle?eur(avgBottle):"–"}</b></div>
+        </div>
+        <p class="hint">Waarde: zelf betaalde prijs of anders de geschatte prijs, maal het aantal flessen in huis${unpriced?` (${unpriced} wijn${unpriced>1?"en":""} zonder prijs niet meegeteld)`:""}. Uitgaven: betaalde prijs maal aantal gekocht, voor aankopen met een datum in ${YEAR}.</p>
+      </div>
+      <div class="box"><h2 class="sec">Wat ligt er in je kelder</h2>
+        <div class="stack">${types.map(x=>`<div style="width:${x.n/tsum*100}%;background:var(${colVar[x.c]})"></div>`).join("")}</div>
+        <div class="legend">${types.map(x=>`<span><span class="dot ${x.c}"></span>${COLORS[x.c]} · ${x.n}</span>`).join("")}</div>
+      </div>
+      <div class="box"><h2 class="sec">Je favoriete druiven</h2>
+        ${grapes.length? bars(grapes.map(g=>({...g,v:g.avg})),5,i=>`${i.avg.toFixed(1).replace(".",",")} ★ · ${i.n}×`) : `<p class="hint">Geef je wijnen een score om dit te zien.</p>`}
+      </div>
+      <div class="box"><h2 class="sec">Je beste streken</h2>
+        ${regions.length? bars(regions.map(g=>({...g,v:g.avg})),5,i=>`${i.avg.toFixed(1).replace(".",",")} ★ · ${i.n}×`) : `<p class="hint">Geef je wijnen een score om dit te zien.</p>`}
+      </div>
+      <div class="box"><h2 class="sec">Prijs en kwaliteit</h2>
+        ${byTier.length? `<div class="eyebrow">Gemiddelde score per prijsklasse</div>` + bars(byTier,5,i=>`${i.v.toFixed(1).replace(".",",")} ★ · ${i.n}×`,true) : `<p class="hint">Vul prijsklasse en score in om dit te zien.</p>`}
+        ${value.length? `<div class="eyebrow" style="margin-top:6px">Beste koop: meeste sterren per euro</div><div class="drinkrow">${value.map(x=>`<button class="drink" type="button" data-goto="${x.w.id}"><span class="t"><b>${esc(x.w.name)}</b></span><span class="vint">${x.w.score} ★ · €${Math.round(priceNum(x.w))}</span></button>`).join("")}</div>`:""}
+      </div>
+      <div class="box"><h2 class="sec">Back-up</h2>
+        <p class="hint">Het back-upbestand (.json) bevat je volledige kelder en verlanglijst, ook foto's, proefmomenten en info over de wijnhuizen. Daarmee zet je alles over naar de Meerstraat wines-app op je telefoon. Excel en csv bevatten alle velden behalve foto's.</p>
+        <div class="r" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm" type="button" data-exp="json">Download back-upbestand</button><button class="btn ghost sm" type="button" data-exp="xlsx">Excel</button><button class="btn ghost sm" type="button" data-exp="csv">csv</button></div>
+        <div><button class="btn ghost sm" type="button" data-imp="1">Back-up terugzetten</button></div>
+        <p class="hint" id="expMsg">${esc(expNote)}</p>
+      </div>`;
+    drawMap();
+  }
+
+  // ---------- map ----------
+  let worldP = null, mapZoom = "fit", mapSel = null, geoBusy = false, mapVB = null, mapBase = null, mapMeta = null, mapMoved = false;
+  let geo = {}; try{ geo = JSON.parse(localStorage.getItem("wk_geo")||"{}") || {}; }catch{}
+  const ALIAS = {vs:"US",verenigdestaten:"US",verenigdestatenvanamerika:"US",usa:"US",amerika:"US",engeland:"GB",schotland:"GB",verenigdkoninkrijk:"GB",uk:"GB",grootbrittannie:"GB",zuidafrika:"ZA",nieuwzeeland:"NZ",tsjechie:"CZ",noordmacedonie:"MK",macedonie:"MK",bosnie:"BA",moldavie:"MD",rusland:"RU",libanon:"LB",georgie:"GE"};
+  function loadWorld(){ return worldP ||= fetch("world.json").then(r=>{ if(!r.ok) throw 0; return r.json(); }).then(w=>{
+      w.byKey = {}; w.countries.forEach(c=>{ [c.nl,c.en].forEach(n=>{ if(n) w.byKey[nrm(n)] = c; }); if(c.a2) w.byKey["#"+c.a2] = c; }); return w; })
+    .catch(e=>{ worldP = null; throw e; }); }
+  function countryFeat(w, name){ const k = nrm(name); if(!k) return null; return w.byKey[k] || (ALIAS[k] && w.byKey["#"+ALIAS[k]]) || null; }
+  function projLL(m, lon, lat){
+    const l = lon*Math.PI/180, p = lat*Math.PI/180, p2 = p*p, p4 = p2*p2;
+    const x = l*(0.8707 - 0.131979*p2 + p4*(-0.013791 + p4*(0.003971*p2 - 0.001529*p4)));
+    const y = p*(1.007226 + p2*(0.015085 + p4*(-0.044475 + 0.028874*p2 - 0.005916*p4)));
+    return [m.t[0] + m.k*x, m.t[1] - m.k*y];
+  }
+  async function fetchGeo(keys){
+    if(!sample || geoBusy || !keys.length) return; geoBusy = true;
+    const prompt = `Geef de geografische coördinaten (ongeveer het centrum) van deze wijnstreken of appellaties. Antwoord met ALLEEN één JSON-object waarin elke sleutel exact overgenomen is en de waarde [breedtegraad, lengtegraad] is, bv. {"Chablis AOC|Frankrijk":[47.81,3.80]}. Weet je een streek niet, laat ze dan weg.
+Sleutels (streek|land): ${JSON.stringify(keys.slice(0,60))}`;
+    try{
+      const r = await sample.json(prompt, {modelTier:"quick"});
+      let added = 0;
+      for(const k of keys){ const v = r && r[k]; if(Array.isArray(v) && v.length===2 && isFinite(v[0]) && isFinite(v[1]) && Math.abs(v[0])<=90 && Math.abs(v[1])<=180){ geo[k] = [+v[0], +v[1]]; added++; } else geo[k] = geo[k] || 0; }
+      try{ localStorage.setItem("wk_geo", JSON.stringify(geo)); }catch{}
+      geoBusy = false; if(tab==="stats") drawMap();
+    }catch{}
+    geoBusy = false;
+  }
+  async function drawMap(){
+    const box = $("mapwrap"); if(!box) return;
+    let world; try{ world = await loadWorld(); }catch{ box.innerHTML = `<p class="hint" style="padding:30px 16px;text-align:center">De kaart kon niet geladen worden.</p>`; return; }
+    if(!$("mapwrap")) return;
+    const m = world.meta;
+    const pool = wines.filter(w => w.status==="wens" || w.stock>0 || w.tastings.length);
+    const byCountry = new Map(), pins = new Map(), unplaced = [];
+    for(const w of pool){
+      const c = countryFeat(world, w.country);
+      if(!c){ if(w.country || w.region) unplaced.push(w); continue; }
+      const n = w.status==="kelder" ? Math.max(1, w.stock) : 0;
+      const cc = byCountry.get(c) || {c, n:0, wines:[]}; cc.n += n; cc.wines.push(w); byCountry.set(c, cc);
+      const key = (w.region ? w.region : "") + "|" + (w.country||"");
+      const ll = w.region ? geo[key] : 0;
+      const xy = ll ? projLL(m, ll[1], ll[0]) : c.c;
+      const pk = ll ? key : "#"+c.a2+(w.region?"":"");
+      const pin = pins.get(pk) || {key:pk, label: ll ? `${w.region}, ${w.country}` : (c.nl||c.en), xy, n:0, wish:true, wines:[]};
+      pin.n += n; pin.wines.push(w); if(w.status==="kelder") pin.wish = false; pins.set(pk, pin);
+    }
+    const missing = [...new Set(pool.filter(w=>w.region && countryFeat(world,w.country)).map(w=>w.region+"|"+(w.country||"")))].filter(k=>geo[k]===undefined);
+    if(missing.length) fetchGeo(missing);
+    // viewBox
+    let vb = [0,0,m.W,m.H];
+    const pts = [...pins.values()].map(p=>p.xy);
+    if(mapZoom==="fit" && pts.length){
+      let x0=Math.min(...pts.map(p=>p[0])), x1=Math.max(...pts.map(p=>p[0])), y0=Math.min(...pts.map(p=>p[1])), y1=Math.max(...pts.map(p=>p[1]));
+      const pad = 34; x0-=pad; x1+=pad; y0-=pad; y1+=pad;
+      let w = Math.max(x1-x0, 150), h = Math.max(y1-y0, 150*m.H/m.W);
+      const ar = m.W/m.H; if(w/h > ar) h = w/ar; else w = h*ar;
+      const cx = (x0+x1)/2, cy = (y0+y1)/2;
+      w = Math.min(w, m.W); h = Math.min(h, m.H);
+      vb = [Math.max(0, Math.min(m.W-w, cx-w/2)), Math.max(0, Math.min(m.H-h, cy-h/2)), w, h];
+    }
+    mapBase = vb; mapMeta = m;
+    if(mapVB) vb = mapVB;
+    const pxW = box.clientWidth || 600, unit = vb[2]/pxW;
+    const maxN = Math.max(1, ...[...byCountry.values()].map(x=>x.n));
+    const countryPaths = world.countries.map(c=>{ const bc = byCountry.get(c);
+      const op = bc ? (0.25 + 0.55*Math.sqrt(bc.n/maxN)).toFixed(2) : null;
+      return `<path class="land${bc?" has":""}${bc && mapSel==="#"+c.a2?" sel":""}" d="${c.d}"${bc?` data-mk="#${c.a2}" style="fill-opacity:${op}"`:""}><title>${esc(c.nl||c.en)}${bc?` · ${bc.n} fl.`:""}</title></path>`; }).join("");
+    const pinEls = [...pins.values()].sort((a,b)=>b.n-a.n).map(p=>{ const r = (4 + Math.sqrt(p.n)*2.4) * unit;
+      return `<circle class="pin${p.wish?" wish":""}${mapSel===p.key?" sel":""}" cx="${p.xy[0].toFixed(1)}" cy="${p.xy[1].toFixed(1)}" r="${r.toFixed(2)}" data-r0="${(4 + Math.sqrt(p.n)*2.4).toFixed(2)}" data-mk="${esc(p.key)}"><title>${esc(p.label)}</title></circle>`; }).join("");
+    const nC = byCountry.size, bottles = [...byCountry.values()].reduce((s,x)=>s+x.n,0);
+    box.innerHTML = `<svg viewBox="${vb.map(v=>v.toFixed(1)).join(" ")}" role="img" aria-label="Wereldkaart met ${nC} landen waar je wijnen vandaan komen">${countryPaths}${pinEls}</svg>
+      <div class="mapzoom"><button type="button" data-mz="in" aria-label="Inzoomen"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button><button type="button" data-mz="out" aria-label="Uitzoomen"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg></button><button type="button" data-mz="reset" aria-label="Kaart terugzetten"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4h4"/></svg></button></div>`;
+    applyVB(vb, true); bindMapDrag(box.querySelector("svg"));
+    box._pins = pins; box._byCountry = byCountry;
+    $("mapnote").textContent = nC ? `${bottles} fles${bottles===1?"":"sen"} uit ${nC} land${nC===1?"":"en"}${geoBusy?" · streken worden op de kaart gezet…":""}. Tik op een land of stip.` : "Nog geen wijnen met een land om te tonen.";
+    if(unplaced.length) $("mapnote").textContent += ` ${unplaced.length} wijn${unplaced.length>1?"en":""} kon${unplaced.length>1?"den":""} niet op de kaart (land onbekend).`;
+    renderMapSel();
+  }
+  function applyVB(vb, quiet){
+    const box = $("mapwrap"), svg = box?.querySelector("svg"); if(!svg || !mapMeta) return;
+    const m = mapMeta, ar = m.W/m.H;
+    if(!vb || vb.some(v => !isFinite(v))) return;
+    let [x,y,w] = vb; w = Math.max(40, Math.min(m.W, w)); const h = w/ar;
+    x = Math.max(0, Math.min(m.W - w, x)); y = Math.max(0, Math.min(m.H - h, y));
+    vb = [x,y,w,h]; if(!quiet || mapVB) mapVB = vb;
+    svg.setAttribute("viewBox", vb.map(v=>v.toFixed(2)).join(" "));
+    const unit = w / (svg.clientWidth || box.clientWidth || 600);
+    svg.querySelectorAll("circle[data-r0]").forEach(c => c.setAttribute("r", (+c.dataset.r0 * unit).toFixed(2)));
+    svg.classList.toggle("zoomed", w < m.W - 1);
+    const zi = box.querySelector('[data-mz="in"]'), zo = box.querySelector('[data-mz="out"]');
+    if(zi) zi.disabled = w <= 40.5; if(zo) zo.disabled = w >= m.W - 0.5;
+  }
+  function zoomBy(f, cx, cy){
+    const box = $("mapwrap"), svg = box?.querySelector("svg"); if(!svg) return;
+    const [x,y,w,h] = svg.getAttribute("viewBox").split(" ").map(Number);
+    cx = cx ?? x + w/2; cy = cy ?? y + h/2;
+    const nw = w / f, nh = h / f;
+    applyVB([cx - (cx - x) * nw / w, cy - (cy - y) * nh / h, nw, nh]);
+  }
+  function bindMapDrag(svg){
+    if(!svg) return;
+    const pts = new Map(); let start = null;
+    const toVB = (px, py) => { const r = svg.getBoundingClientRect(); if(!r.width) return [NaN, NaN]; const [x,y,w,h] = svg.getAttribute("viewBox").split(" ").map(Number); return [x + (px - r.left) / r.width * w, y + (py - r.top) / r.height * h]; };
+    svg.addEventListener("pointerdown", e => {
+      pts.set(e.pointerId, [e.clientX, e.clientY]); mapMoved = false;
+      start = {vb: svg.getAttribute("viewBox").split(" ").map(Number), pts: new Map(pts)};
+    });
+    svg.addEventListener("pointermove", e => {
+      if(!pts.has(e.pointerId) || !start) return;
+      pts.set(e.pointerId, [e.clientX, e.clientY]);
+      const r = svg.getBoundingClientRect(), [x0,y0,w0,h0] = start.vb;
+      if(pts.size >= 2 && start.pts.size >= 2){
+        const [a,b] = [...pts.values()], [a0,b0] = [...start.pts.values()];
+        const d = Math.hypot(a[0]-b[0], a[1]-b[1]), d0 = Math.hypot(a0[0]-b0[0], a0[1]-b0[1]) || 1;
+        const f = d / d0, mx = (a0[0]+b0[0])/2, my = (a0[1]+b0[1])/2;
+        const cx = x0 + (mx - r.left)/r.width*w0, cy = y0 + (my - r.top)/r.height*h0;
+        const nw = w0 / f, nh = h0 / f; mapMoved = true;
+        try{ for(const id of pts.keys()) if(!svg.hasPointerCapture(id)) svg.setPointerCapture(id); }catch{}
+        applyVB([cx - (cx - x0)*nw/w0, cy - (cy - y0)*nh/h0, nw, nh]);
+      } else if(svg.classList.contains("zoomed")){
+        const p0 = start.pts.get(e.pointerId); if(!p0) return;
+        const dx = e.clientX - p0[0], dy = e.clientY - p0[1];
+        if(!mapMoved && Math.hypot(dx, dy) > 8){ mapMoved = true; svg.classList.add("drag"); try{ svg.setPointerCapture(e.pointerId); }catch{} }
+        if(mapMoved) applyVB([x0 - dx / r.width * w0, y0 - dy / r.height * h0, w0, h0]);
+      }
+    });
+    const end = e => { pts.delete(e.pointerId); svg.classList.remove("drag"); start = pts.size ? {vb: svg.getAttribute("viewBox").split(" ").map(Number), pts: new Map(pts)} : null; };
+    svg.addEventListener("pointerup", end); svg.addEventListener("pointercancel", end);
+    svg.addEventListener("dblclick", e => { e.preventDefault(); const [cx,cy] = toVB(e.clientX, e.clientY); if(isFinite(cx)) zoomBy(2, cx, cy); });
+  }
+  function renderMapSel(){
+    const box = $("mapwrap"), el = $("mapsel"); if(!box || !el) return;
+    if(!mapSel){ el.innerHTML = ""; return; }
+    let label = "", list = [];
+    if(box._pins?.has(mapSel)){ const p = box._pins.get(mapSel); label = p.label; list = p.wines; }
+    else { for(const [c,v] of box._byCountry||[]) if("#"+c.a2===mapSel){ label = c.nl||c.en; list = v.wines; } }
+    if(!list.length){ el.innerHTML = ""; return; }
+    el.innerHTML = `<div class="eyebrow" style="margin-top:4px">${esc(label)}</div><div class="maplist">${list.map(w=>`<button class="drink" type="button" data-goto="${w.id}"><span class="t"><b>${esc(w.name)}</b>${w.vintage?` <span class="vint">${esc(w.vintage)}</span>`:""}${w.region?` · ${esc(w.region)}`:""}</span><span class="badge ${w.status==="kelder"?"b-ok":"b-young"}">${w.status==="kelder"?w.stock+" fl.":"verlanglijst"}</span></button>`).join("")}</div>`;
+  }
+  $("v_stats").addEventListener("click", e => {
+    const z = e.target.closest("[data-zoom]");
+    const mz = e.target.closest("[data-mz]");
+    if(mz){ const a = mz.dataset.mz; if(a==="in") zoomBy(1.8); else if(a==="out") zoomBy(1/1.8); else { mapVB = null; applyVB(mapBase, true); } return; }
+    if(z){ mapZoom = z.dataset.zoom; mapVB = null; z.parentElement.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed", b===z)); drawMap(); return; }
+    const t = e.target.closest("[data-mk]");
+    if(t && e.target.closest("#mapwrap")){ if(mapMoved){ mapMoved = false; return; }
+      mapSel = mapSel===t.dataset.mk ? null : t.dataset.mk;
+      $("mapwrap").querySelectorAll("[data-mk]").forEach(x => x.classList.toggle("sel", x.dataset.mk===mapSel));
+      renderMapSel();
+      if(mapSel) requestAnimationFrame(() => $("mapsel")?.scrollIntoView({block:"nearest", behavior: reduceMotion() ? "auto" : "smooth"}));
+    }
+  });
+
+  let expNote = "";
+  const setExpMsg = t => { expNote = t; const m = $("expMsg"); if(m) m.textContent = t; };
+  function exportRows(){
+    return wines.map(w=>({ "Lijst": w.status==="wens"?"Verlanglijst":"Kelder", "Naam": w.name||"", "Producent": w.producer||"", "Jaargang": w.vintage||"",
+      "Type": COLORS[w.color]||"", "Druif": w.grape||"", "Streek": w.region||"", "Land": w.country||"", "Score": w.score||"",
+      "Flessen in huis": w.status==="kelder"?w.stock:"", "Geopend sinds": w.openedAt||"", "Plaats": w.loc||"",
+      "Drinken vanaf": w.from||"", "Drinken tot": w.to||"", "Prijsklasse": w.tier?TIERS[w.tier]:"", "Geschatte prijs": w.price||"",
+      "Zelf betaald": w.paid||"", "Gekocht bij": w.shop||"", "Aankoopdatum": w.bought||"", "Aantal gekocht": w.boughtQty||"",
+      "Tags": w.tags.join(", "), "Aroma's & smaak": w.taste||"", "Past bij": w.food||"", "Schenktemperatuur": w.temp||"",
+      "Beschrijving": w.desc||"", "Eigen notitie": w.note||"", "Proefmomenten": w.tastings.map(t=>[`${t.date} ${t.score||"-"}/5`, t.note, t.color, (t.aromas||[]).join(", "), Object.entries(t.struct||{}).map(([k,v])=>k+" "+v).join(", ")].filter(Boolean).join(" · ")).join(" | "),
+      "Toegevoegd": w.createdAt ? new Date(w.createdAt).toISOString().slice(0,10) : "" }));
+  }
+  $("v_stats").addEventListener("click", async e => {
+    const b = e.target.closest("[data-exp]"); if(!b) return;
+    const msg = $("expMsg"); msg.textContent = "";
+    if(!downloads){ msg.textContent = "Downloaden kan niet in deze weergave."; return; }
+    const rows = exportRows(); const name = `meerstraat-wines-${TODAY}`;
+    try{
+      if(b.dataset.exp==="json"){
+        const payload = {app:"meerstraat-wines", version:1, exportedAt:new Date().toISOString(), wines: wines.map(w=>({...w}))};
+        await downloads.save({filename: name+".json", data: new Blob([JSON.stringify(payload)], {type:"application/json"})});
+        setExpMsg(`${wines.length} wijn${wines.length===1?"":"en"} in het back-upbestand gezet.`);
+      } else if(b.dataset.exp==="xlsx"){
+        try{ msg.textContent = "Excel wordt klaargemaakt…"; await loadXlsx(); msg.textContent = ""; }catch{ msg.textContent = "De Excel-module kon niet laden. Probeer opnieuw."; return; }
+        const ws = XLSX.utils.json_to_sheet(rows); ws["!cols"] = Object.keys(rows[0]||{}).map(k=>({wch: Math.min(40, Math.max(10, k.length+2))}));
+        const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Meerstraat wines");
+        await downloads.save({filename: name+".xlsx", data: new Blob([XLSX.write(wb,{type:"array",bookType:"xlsx"})], {type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"})});
+      } else {
+        const cols = Object.keys(rows[0]||{}); const q = v => `"${String(v??"").replace(/"/g,'""')}"`;
+        const csv = "\uFEFF" + [cols.map(q).join(";"), ...rows.map(r=>cols.map(c=>q(r[c])).join(";"))].join("\r\n");
+        await downloads.save({filename: name+".csv", data: new Blob([csv], {type:"text/csv"})});
+      }
+    }catch(err){ if(err?.code!=="declined") msg.textContent = "Exporteren lukte niet."; }
+  });
+
+  document.addEventListener("click", e => { if(e.target.closest("[data-imp]")) $("impFile")?.click(); });
+  document.addEventListener("change", async e => {
+    if(e.target.id!=="impFile") return;
+    const f = e.target.files[0]; e.target.value = ""; if(!f) return;
+    if(!col){ setExpMsg("Terugzetten kan niet in deze weergave."); return; }
+    let list;
+    try{ const j = JSON.parse(await f.text()); list = Array.isArray(j) ? j : j && j.wines; if(!Array.isArray(list)) throw 0; }
+    catch{ setExpMsg("Dit bestand kon niet gelezen worden. Kies het back-upbestand (.json) uit Meerstraat wines."); return; }
+    const valid = list.filter(w => w && typeof w==="object" && typeof w.name==="string" && w.name.trim());
+    if(!valid.length){ setExpMsg("Geen wijnen gevonden in dit bestand."); return; }
+    const known = new Set(wines.map(w=>w.id)); let added = 0, updated = 0, failed = 0;
+    setExpMsg(`Bezig met terugzetten… (0 van ${valid.length})`);
+    for(const w of valid){
+      const {id, ...data} = w;
+      const ref = id ? col.doc(String(id)) : col.doc();
+      try{ await ref.set(data); (id && known.has(String(id))) ? updated++ : added++; }catch{ failed++; }
+      setExpMsg(`Bezig met terugzetten… (${added+updated+failed} van ${valid.length})`);
+    }
+    setExpMsg(`Klaar: ${added} nieuwe wijn${added===1?"":"en"}${updated?`, ${updated} bijgewerkt`:""}${failed?`, ${failed} mislukt`:""}.`);
+  });
+
+  // ---------- guided tasting ----------
+  const COLORSWATCH = {
+    rood:[["Paars","#5b1a3d"],["Robijn","#8e1b33"],["Granaat","#7a2a2a"],["Baksteen","#9a4a2e"]],
+    wit:[["Groengeel","#e6e2a1"],["Strogeel","#ecd57a"],["Goud","#d9a93a"],["Amber","#b9772c"]],
+    rose:[["Grijsroze","#ecc7bd"],["Zalm","#ef9f85"],["Framboos","#e06a7d"],["Uienschil","#d88a5c"]],
+    mousserend:[["Bleek","#efe6b9"],["Strogeel","#ecd57a"],["Goud","#d9a93a"],["Roze","#ef9f85"]],
+    dessert:[["Goud","#d9a93a"],["Amber","#b9772c"],["Mahonie","#7a3a1f"],["Tawny","#a2582e"]]};
+  const AROMAS = {
+    "Rood fruit":["kers","aardbei","framboos","rode bes","cranberry"],
+    "Zwart fruit":["braam","cassis","pruim","zwarte kers","vijg"],
+    "Wit & geel fruit":["citroen","limoen","grapefruit","groene appel","peer","perzik","abrikoos"],
+    "Tropisch":["ananas","mango","passievrucht","lychee","meloen"],
+    "Bloemen":["viooltje","roos","vlierbloesem","acacia","oranjebloesem"],
+    "Kruiden & specerijen":["zwarte peper","munt","tijm","eucalyptus","kaneel","kruidnagel","drop"],
+    "Hout & rijping":["vanille","toast","rook","kokos","boter","brioche","noten","koffie","cacao","tabak","leer"],
+    "Aards & mineraal":["paddenstoel","bosgrond","natte steen","krijt","vuursteen","aarde"]};
+  const SCALES = [["zoet","Zoetheid",["droog","halfdroog","zoet"]],["zuur","Frisheid",["laag","middel","hoog"]],["tannine","Tannine",["zacht","middel","stevig"]],["body","Body",["licht","middel","vol"]],["afdronk","Afdronk",["kort","middel","lang"]]];
+  let tDraft = {color:"", aromas:new Set(), struct:{}};
+  function resetDraft(){ tDraft = {color:"", aromas:new Set(), struct:{}}; }
+  const draftCount = () => (tDraft.color?1:0) + tDraft.aromas.size + Object.values(tDraft.struct).filter(Boolean).length;
+  function guideHTML(w){
+    const sw = COLORSWATCH[w.color] || COLORSWATCH.rood;
+    const expTxt = nrm([w.taste, w.desc].join(" "));
+    const scales = SCALES.filter(([k]) => !(k==="tannine" && w.color!=="rood"));
+    const seg = (k, opts) => `<div class="seg" role="group">${opts.map(o=>`<button type="button" data-act="tg" data-k="${k}" data-v="${o}" aria-pressed="${tDraft.struct[k]===o}">${o}</button>`).join("")}</div>`;
+    return `<details class="guide"${draftCount()?" open":""}><summary><span>Begeleid proeven</span><span><span class="hint gcount">${draftCount()?draftCount()+" gekozen":""}</span> <span class="chev" aria-hidden="true">▾</span></span></summary>
+      <div class="gbody">
+        <div class="gstep"><h5>1 · Kijk</h5><p class="hint">Houd het glas schuin tegen een witte achtergrond.</p>
+          <div class="ach">${sw.map(([n,c])=>`<button type="button" class="swatch" style="background:${c}" data-act="tg" data-k="color" data-v="${n}" aria-pressed="${tDraft.color===n}" aria-label="${n}" title="${n}"></button>`).join("")}<span class="hint" style="align-self:center">${esc(tDraft.color)}</span></div></div>
+        <div class="gstep"><h5>2 · Ruik</h5><p class="hint">Walsen, kort ruiken, en nog eens. Kies wat je herkent.${expTxt?' Een gouden stip betekent: die geur wordt bij deze wijn vaak genoemd.':''}</p>
+          <div class="ach">${Object.entries(AROMAS).map(([g,list])=>`<span class="grp">${g}</span>`+list.map(a=>`<button type="button" class="${expTxt.includes(nrm(a))?"exp":""}" data-act="tg" data-k="aroma" data-v="${a}" aria-pressed="${tDraft.aromas.has(a)}">${a}</button>`).join("")).join("")}</div></div>
+        <div class="gstep"><h5>3 · Proef</h5><p class="hint">Laat de wijn even door je mond gaan en let op wat je voelt.</p>
+          <div class="scale">${scales.map(([k,l,o])=>`<span>${l}</span>${seg(k,o)}`).join("")}</div></div>
+      </div></details>`;
+  }
+  function tastingSummary(t){
+    const bits = [t.color, ...(t.aromas||[]), ...Object.entries(t.struct||{}).map(([k,v])=> (SCALES.find(s=>s[0]===k)||[,k])[1].toLowerCase()+" "+v)].filter(Boolean);
+    return bits.length ? `<span class="tsum">${bits.map(b=>`<span>${esc(b)}</span>`).join("")}</span>` : "";
+  }
+
+  // ---------- food pairing ----------
+  const pairRes = new Map(), pairCtl = new Map();
+  function pairHTML(w){
+    if(!sample && !w.pairing) return "";
+    const r = pairRes.get(w.id), saved = w.pairing?.text;
+    let body = "";
+    if(r?.busy) body = `<div class="out">${r.text ? mdLite(r.text) : `<p class="hint">Claude zoekt gerechten bij deze fles…</p>`}</div><div><button class="link" type="button" data-act="pairstop" data-id="${w.id}">Stop</button></div>`;
+    else if(r?.err) body = `<p class="hint">${esc(r.err)}</p>`;
+    else if(saved) body = `<div class="out">${mdLite(saved)}</div>`;
+    const btn = r?.busy ? "" : `<div><button class="btn ${saved?"ghost ":""}sm" type="button" data-act="pair" data-id="${w.id}">${saved?"Andere gerechten":"Wat eet ik bij deze fles?"}</button></div>`;
+    return `<section class="pair"><div class="eyebrow">A tavola · gerechten bij deze wijn</div>${body}${sample?btn:""}</section>`;
+  }
+  async function fetchPair(w){
+    if(!sample || pairRes.get(w.id)?.busy) return;
+    const ctl = new AbortController(); pairCtl.set(w.id, ctl);
+    const r = {busy:true, text:""}; pairRes.set(w.id, r); render();
+    const month = new Date().toLocaleDateString("nl-BE",{month:"long"});
+    const prompt = `Je bent een sommelier en thuiskok. Stel 3 gerechten voor die heel goed passen bij deze wijn, voor 2 personen, haalbaar thuis op een weekavond of in het weekend. Het is ${month} in België: kies seizoensgebonden. Wissel af (bv. één vlees of vis, één vegetarisch, één verrassender combinatie).${w.pairing?.text ? " Kies andere gerechten dan de vorige suggesties." : ""}
+Wijn: ${w.name}${w.vintage?" "+w.vintage:""}, ${COLORS[w.color]||"wijn"}, druif ${w.grape||"onbekend"}, ${[w.region,w.country].filter(Boolean).join(", ")}. Smaak: ${w.taste||"onbekend"}. ${w.food?"Algemeen past hij bij: "+w.food+".":""}
+Schrijf in het Nederlands, in gewone tekst. Per gerecht exact dit formaat:
+**Naam van het gerecht**
+Eén zin waarom het past bij deze wijn.
+- Ingrediënten: kort, op één regel
+- Bereiding: 2 tot 3 korte zinnen
+- Tijd: bv. 30 min
+Laat een lege regel tussen de gerechten. Geen inleiding, geen afsluiter.`;
+    try{
+      const res = await sample(prompt, {cache:false, signal:ctl.signal, onText:({text})=>{ r.text = text; const el = $("c_"+w.id)?.querySelector(".pair .out"); if(el) el.innerHTML = mdLite(text); }});
+      pairRes.delete(w.id); w.pairing = {text:res.text.trim(), at:TODAY}; render(); save(w.id, {pairing:w.pairing});
+    }catch(e){
+      if(e?.code==="cancelled"){ pairRes.delete(w.id); }
+      else pairRes.set(w.id, {err: e?.code==="rate_limited" ? "Claude is even niet beschikbaar (gebruikslimiet of te veel aanvragen). Probeer later opnieuw." : e?.code==="not_granted" ? "Je gaf geen toestemming om Claude te gebruiken." : "Dat lukte niet. Probeer opnieuw."});
+      render();
+    }
+    pairCtl.delete(w.id);
+  }
+
+  // ---------- fact of the day ----------
+  const THEMES = ["een druivenras","een wijnstreek","hoe wijn gemaakt wordt","wijn serveren en bewaren","wijngeschiedenis","Italiaanse wijn","wijn en eten","etiketten en wijnwetten","proeven en aroma's","mousserende of zoete wijn","klimaat, bodem en terroir","een bekende wijnmaker of wijnhuis","glazen, kurken en flessen","een minder bekende wijnstreek"];
+  let fact = null, factBusy = false, factStarted = false, factErr = "", nextFact = null, nextP = null, seenTitles = [];
+  const dayNum = Math.floor((Date.now() - new Date(YEAR,0,0)) / 864e5);
+  function renderFact(){
+    const box = $("factbox");
+    if(tab!=="kelder" || (!fact && !factBusy && !factErr)){ box.hidden = true; return; }
+    box.hidden = false;
+    if(factBusy && !fact){ box.innerHTML = `<span class="eyebrow">Lo sapevi? · Weetje van de dag</span><p class="hint">Weetje wordt ingeschonken…</p>`; return; }
+    if(!fact){ box.innerHTML = `<span class="eyebrow">Lo sapevi? · Weetje van de dag</span><p class="hint">${esc(factErr)}</p><div><button class="btn ghost sm" type="button" data-fact="again">Probeer opnieuw</button></div>`; return; }
+    const linked = factWines(fact);
+    box.innerHTML = `<span class="eyebrow">Lo sapevi? · ${esc(fact.thema || "Weetje van de dag")}</span>
+      <h3>${esc(fact.titel)}</h3><p>${esc(fact.weetje)}</p>
+      ${linked.length ? `<div class="drinkrow"><span class="eyebrow">Proef het zelf</span>${linked.map(w=>`<button class="drink" type="button" data-goto="${w.id}"><span class="t"><b>${esc(w.name)}</b>${w.vintage?` <span class="vint">${esc(w.vintage)}</span>`:""}</span><span class="badge ${w.status==="kelder"&&w.stock?"b-ok":"b-young"}">${w.status==="kelder"? (w.stock?w.stock+" fl. in huis":"op") : "verlanglijst"}</span></button>`).join("")}</div>`
+        : `<p class="hint">Geen wijn in je kelder die hierbij past. Een mooie reden om iets nieuws te proberen.</p>`}
+      <div class="foot"><span class="hint">${fact.extra ? "Extra weetje" : new Date().toLocaleDateString("nl-BE",{weekday:"long",day:"numeric",month:"long"})}</span>
+      <button class="link" type="button" data-fact="more" ${factBusy?"disabled":""}>${factBusy?"Weetje wordt ingeschonken…":"Nog een weetje"}</button></div>`;
+  }
+  function factWines(f){
+    const pool = wines.filter(w => w.status==="wens" || w.stock>0);
+    let hits = (Array.isArray(f.ids) ? f.ids : []).map(id => pool.find(w => w.id===String(id))).filter(Boolean);
+    if(!hits.length && f.wijn){ const w = pool.find(x => nrm(x.name)===nrm(f.wijn)); if(w) hits.push(w); }
+    if(!hits.length){
+      const txt = nrm(f.titel + " " + f.weetje + " " + (f.thema||""));
+      const score = w => { let n = 0;
+        grapesOf(w).forEach(g => { if(g.length>3 && txt.includes(nrm(g))) n += 3; });
+        if(w.region && nrm(w.region).length>3 && txt.includes(nrm(w.region))) n += 2;
+        if(w.producer && nrm(w.producer).length>3 && txt.includes(nrm(w.producer))) n += 4;
+        if(w.country && txt.includes(nrm(w.country))) n += 1;
+        return n; };
+      hits = pool.map(w => ({w, n:score(w)})).filter(x => x.n>=2).sort((a,b)=>b.n-a.n).map(x=>x.w);
+    }
+    return [...new Set(hits)].sort((a,b)=> (b.status==="kelder" && b.stock>0) - (a.status==="kelder" && a.stock>0)).slice(0,3);
+  }
+  function fetchExtra(){
+    const theme = THEMES[Math.floor(Math.random()*THEMES.length)];
+    return askFact(theme, true).catch(() => null);
+  }
+  function prefetch(){ if(sample && !nextP && !nextFact){ nextP = fetchExtra().then(f => { nextFact = f; nextP = null; return f; }); } }
+  async function loadFact(more){
+    const key = "wk_fact_" + TODAY;
+    if(!more){ try{ const c = JSON.parse(localStorage.getItem(key)||"null"); if(c && c.titel){ fact = c; seenTitles.push(c.titel); renderFact(); return; } }catch{} }
+    if(!sample) return;
+    if(more){
+      if(nextFact){ fact = nextFact; nextFact = null; seenTitles.push(fact.titel); renderFact(); prefetch(); return; }
+      factBusy = true; renderFact();
+      const f = await (nextP || fetchExtra()); nextFact = null; nextP = null;
+      if(f){ fact = f; seenTitles.push(f.titel); }
+      factBusy = false; renderFact(); prefetch(); return;
+    }
+    factBusy = true; factErr = ""; renderFact();
+    try{
+      const f = await askFact(THEMES[dayNum % THEMES.length], false);
+      if(f){ fact = f; seenTitles.push(f.titel); try{ localStorage.setItem(key, JSON.stringify(f)); }catch{} }
+      else factErr = "Het weetje van vandaag kon niet geladen worden.";
+    }catch(e){
+      factErr = e?.code==="rate_limited" ? "Claude is even niet beschikbaar. Het weetje volgt later." : e?.code==="not_granted" ? "" : "Het weetje van vandaag kon niet geladen worden.";
+    }
+    factBusy = false; renderFact();
+  }
+  async function askFact(theme, more){
+    const mine = [...new Set(wines.flatMap(w => [w.region, w.country, ...grapesOf(w)]).filter(Boolean))].slice(0,25);
+    const cellar = wines.filter(w => w.status==="wens" || w.stock>0).slice(0,60).map(w => ({id:w.id, naam:w.name, druif:w.grape, streek:w.region, land:w.country, type:COLORS[w.color], lijst: w.status==="wens"?"verlanglijst":"kelder"}));
+    const prompt = `Je bent een enthousiaste sommelier die iemand met interesse in wijn elke dag iets bijleert. Geef één kort, verrassend en feitelijk correct weetje over het thema: ${theme}. Datum: ${TODAY}.
+Mag aansluiten bij wat hij al in huis heeft (druiven/streken: ${mine.join(", ") || "nog niets"}), maar kies regelmatig iets nieuws om zijn kennis te verbreden. Vermijd clichés die iedereen kent${seenTitles.length?` en herhaal deze eerdere weetjes niet: ${seenTitles.slice(-8).join(" | ")}`:""}. Verzin niets; kies alleen feiten waar je zeker van bent. Schrijf in het Nederlands.
+Antwoord met ALLEEN dit JSON-object: {"thema":"korte themanaam, 1-3 woorden","titel":"pakkende titel, max 8 woorden","weetje":"2 tot 3 zinnen","ids":["id's (max 3) van wijnen uit de lijst hieronder die hij kan openen om dit weetje zelf te proeven: dezelfde druif, streek, producent of stijl; lege lijst als er echt niets past"]}
+Kies het thema bij voorkeur zo dat minstens één wijn uit de lijst erbij past, maar wissel af en verbreed zijn kennis.
+Wijnen (JSON): ${JSON.stringify(cellar)}`;
+    const r = await sample.json(prompt, more ? {cache:false, modelTier:"quick"} : {cache:{gcTime:86400000}});
+    return r && r.titel && r.weetje ? {thema:String(r.thema||""), titel:String(r.titel), weetje:String(r.weetje), ids:Array.isArray(r.ids)?r.ids.map(String).slice(0,3):[], extra:!!more} : null;
+  }
+  $("factbox").addEventListener("click", e => { const b = e.target.closest("[data-fact]"); if(b && !factBusy) loadFact(b.dataset.fact==="more"); });
+
+  // ---------- ask ----------
+  let chat = [], askCtl = null;
+  function mdLite(t){
+    const lines = esc(t).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").split("\n");
+    let out = "", inList = false;
+    for(const l of lines){
+      const m = l.match(/^\s*[-•*]\s+(.*)/);
+      if(m){ if(!inList){ out += "<ul>"; inList = true; } out += `<li>${m[1]}</li>`; continue; }
+      if(inList){ out += "</ul>"; inList = false; }
+      if(l.trim()) out += `<p>${l.replace(/^#+\s*/,"")}</p>`;
+    }
+    return out + (inList ? "</ul>" : "");
+  }
+  function renderChat(){
+    $("starters").hidden = chat.length > 0;
+    $("askNew").hidden = !chat.length || !!askCtl;
+    $("askStop").hidden = !askCtl;
+    $("askBtn").disabled = !!askCtl || !sample;
+    if(!sample) $("chat").innerHTML = `<p class="hint">Vragen stellen kan niet in deze weergave.</p>`;
+    else $("chat").innerHTML = chat.map(m => m.role==="user" ? `<div class="msg me">${esc(m.content)}</div>`
+      : `<div class="msg ai${m.err?" err":""}">${m.pending && !m.content ? "<p>Even in je kelder kijken…</p>" : mdLite(m.content)}</div>`).join("");
+  }
+  function cellarData(){
+    const cut = (s,n) => { s = String(s||""); return s.length>n ? s.slice(0,n)+"…" : s; };
+    return wines.map(w => { const o = {
+      lijst: w.status==="wens" ? "verlanglijst" : "kelder", naam: w.name, producent: w.producer, jaargang: w.vintage, type: COLORS[w.color],
+      druif: w.grape, streek: w.region, land: w.country, score: w.score||null, flessen: w.status==="kelder" ? w.stock : null,
+      geopendSinds: w.openedAt||null, plaats: w.loc, drinkvenster: windowText(w), prijsklasse: w.tier?TIERS[w.tier]:null,
+      geschattePrijs: w.price, betaald: w.paid, gekochtBij: w.shop, aankoopdatum: w.bought, aantalGekocht: w.boughtQty||null,
+      tags: w.tags.length ? w.tags : null, smaak: w.taste, pastBij: w.food, schenktemp: w.temp, notitie: w.note,
+      beschrijving: cut(w.desc, 280), wijnhuis: w.house && !w.house.unknown ? cut([w.house.about, w.house.location].filter(Boolean).join(" "), 220) : null,
+      proefmomenten: w.tastings.length ? w.tastings.map(t=>({datum:t.date, score:t.score||null, notitie:t.note||null, kleur:t.color||null, aromas:t.aromas||null, structuur:t.struct||null})) : null,
+      toegevoegd: w.createdAt ? new Date(w.createdAt).toISOString().slice(0,10) : null };
+      Object.keys(o).forEach(k => (o[k]===null || o[k]==="" || o[k]===undefined) && delete o[k]); return o; });
+  }
+  async function ask(q){
+    q = q.trim(); if(!q || !sample || askCtl) return;
+    chat.push({role:"user", content:q});
+    const reply = {role:"assistant", content:"", pending:true}; chat.push(reply);
+    askCtl = new AbortController(); renderChat(); scrollChat();
+    let data = JSON.stringify(cellarData()); if(data.length > 200000) data = data.slice(0, 200000);
+    const rules = `Je bent de assistent van Maarten's wijnapp "Meerstraat wines". Beantwoord vragen over zijn wijnen enkel op basis van de gegevens hieronder. Vandaag is ${TODAY}.
+Regels: antwoord in de taal van de vraag; kort en concreet; noem wijnen bij naam en jaargang; gebruik gewone tekst, eventueel een korte lijst met "- " en **vet** voor wijnnamen; geen tabellen of koppen. "kelder" = wijnen in huis (flessen = aantal in voorraad), "verlanglijst" = nog niet gekocht. Tags zoals "tip van Jan" geven aan van wie een tip kwam. Staat iets niet in de gegevens, zeg dat eerlijk. Algemene wijnkennis mag je erbij geven, maar maak duidelijk wat uit zijn kelder komt.
+Gegevens (JSON):
+${data}`;
+    const hist = [{role:"user", content:rules}, {role:"assistant", content:"Begrepen. Wat wil je weten over je wijnen?"},
+      ...chat.filter(m=>!m.pending && !m.err && m.content).slice(-12).map(m=>({role:m.role, content:m.content}))];
+    try{
+      const r = await sample(hist, {cache:false, signal:askCtl.signal, onText:({text})=>{ reply.content = text; renderChat(); scrollChat(); }});
+      reply.content = r.text; if(r.truncated) reply.content += "\n\n(Antwoord afgebroken. Stel een kleinere vraag.)";
+    }catch(e){
+      if(e?.code==="cancelled"){ reply.content = (e.text||"") + (e.text?"\n\n(Gestopt)":"Gestopt."); }
+      else { reply.err = true; reply.content = (e.text ? e.text+"\n\n" : "") + ({not_granted:"Je gaf geen toestemming om Claude te gebruiken.", rate_limited:"Claude is even niet beschikbaar (gebruikslimiet of te veel aanvragen). Probeer later opnieuw.", prompt_too_large:"Je kelder is te groot om in één keer mee te sturen."}[e?.code] || "Er ging iets mis. Probeer opnieuw."); }
+    }
+    reply.pending = false; askCtl = null; renderChat(); scrollChat();
+  }
+  function scrollChat(){ const last = $("chat").lastElementChild; if(last) last.scrollIntoView({block:"end", behavior:"auto"}); }
+  $("askform").addEventListener("submit", e => { e.preventDefault(); const q = $("askq").value; $("askq").value = ""; $("askq").style.height = ""; ask(q); });
+  $("askq").addEventListener("keydown", e => { if(e.key==="Enter" && !e.shiftKey && !e.isComposing){ e.preventDefault(); $("askform").requestSubmit(); } });
+  $("askq").addEventListener("input", e => { const t = e.target; t.style.height = "auto"; t.style.height = Math.min(140, t.scrollHeight) + "px"; });
+  $("starters").addEventListener("click", e => { const b = e.target.closest("button"); if(b) ask(b.textContent); });
+  $("askStop").onclick = () => askCtl?.abort();
+  $("askNew").onclick = () => { chat = []; renderChat(); $("askq").focus(); };
+
+  // ---------- compare ----------
+  function updateCmpBar(){ $("cmpCancel").hidden = compareIds.length!==1; if(compareIds.length===1) $("cmpCancel").textContent = "Kies een tweede wijn · annuleren"; }
+  $("cmpCancel").onclick = () => { compareIds=[]; updateCmpBar(); render(); };
+  $("cmpClose").onclick = () => { $("cmp").hidden = true; compareIds=[]; updateCmpBar(); render(); };
+  function openCompare(){
+    const [a,b] = compareIds.map(id=>wines.find(w=>w.id===id));
+    if(!a||!b){ compareIds=[]; updateCmpBar(); return; }
+    const best = (x,y,hi=true) => !x||!y||x===y ? ["",""] : ((x>y)===hi ? ["better",""] : ["","better"]);
+    const sc = best(a.score||0,b.score||0), pr = best(priceNum(a)||0, priceNum(b)||0, false);
+    const rows = [
+      ["", `${thumb(a)}`, `${thumb(b)}`],
+      ["Wijn", `<div class="nm">${esc(a.name)}</div>`, `<div class="nm">${esc(b.name)}</div>`],
+      ["Producent", esc(a.producer), esc(b.producer)],
+      ["Jaargang", esc(a.vintage), esc(b.vintage)],
+      ["Type", COLORS[a.color]||"", COLORS[b.color]||""],
+      ["Druif", esc(a.grape), esc(b.grape)],
+      ["Streek", esc([a.region,a.country].filter(Boolean).join(", ")), esc([b.region,b.country].filter(Boolean).join(", "))],
+      ["Score", `<span class="${sc[0]}">${a.score?a.score+" ★":"–"}</span>`, `<span class="${sc[1]}">${b.score?b.score+" ★":"–"}</span>`],
+      ["Prijs", `<span class="${pr[0]}">${priceNum(a)?eur(priceNum(a)):esc(a.price)||"–"}</span>`, `<span class="${pr[1]}">${priceNum(b)?eur(priceNum(b)):esc(b.price)||"–"}</span>`],
+      ["Drinkvenster", esc(windowText(a))||"–", esc(windowText(b))||"–"],
+      ["In huis", a.status==="kelder"?a.stock+" fl.":"verlanglijst", b.status==="kelder"?b.stock+" fl.":"verlanglijst"],
+      ["Aroma's", esc(a.taste), esc(b.taste)],
+      ["Past bij", esc(a.food), esc(b.food)],
+      ["Proefmomenten", a.tastings.length||"–", b.tastings.length||"–"],
+      ["Gekocht bij", esc(a.shop)||"–", esc(b.shop)||"–"]];
+    $("cmpBody").innerHTML = `<table class="cmp"><tbody>${rows.map(r=>`<tr><th scope="row">${r[0]}</th><td>${r[1]||"–"}</td><td>${r[2]||"–"}</td></tr>`).join("")}</tbody></table>`;
+    $("cmp").hidden = false; updateCmpBar();
+  }
+
+  // ---------- duplicates ----------
+  function findDup(r){
+    const n = nrm(r.name), pr = nrm(r.producer); if(!n) return null;
+    const hits = wines.filter(w=>{ const wn=nrm(w.name), wp=nrm(w.producer);
+      return wn && (wn===n || (pr && wp===pr && (wn.includes(n)||n.includes(wn)))); });
+    if(!hits.length) return null;
+    const sameV = hits.find(w=>!r.vintage || !w.vintage || String(w.vintage)===String(r.vintage));
+    return sameV ? {w:sameV, same:true} : {w:hits[0], same:false};
+  }
+  function showDup(r){
+    const d = findDup(r), box = $("dup");
+    if(!d){ box.hidden = true; dupFor=null; return; }
+    dupFor = d.w.id; const w = d.w, where = w.status==="wens" ? "op je verlanglijst" : `in je kelder (${w.stock} fles${w.stock===1?"":"sen"})`;
+    box.innerHTML = d.same
+      ? `<div>Deze wijn staat al ${where}: <b>${esc(w.name)}${w.vintage?" "+esc(w.vintage):""}</b>.</div>
+         <div class="r"><button class="btn sm" type="button" data-dup="add">Tel er een fles bij</button><button class="btn ghost sm" type="button" data-dup="new">Toch als nieuwe wijn bewaren</button></div>`
+      : `<div>Je hebt al een andere jaargang van deze wijn: <b>${esc(w.name)} ${esc(w.vintage)}</b>. Deze scan wordt een aparte kaart.</div>
+         <div class="r"><button class="btn ghost sm" type="button" data-dup="new">Begrepen</button></div>`;
+    box.hidden = false;
+  }
+  $("dup").addEventListener("click", async e => {
+    const b = e.target.closest("[data-dup]"); if(!b) return;
+    if(b.dataset.dup==="new"){ $("dup").hidden = true; return; }
+    const w = wines.find(x=>x.id===dupFor); if(!w) return;
+    b.disabled = true;
+    try{
+      const stock = (w.status==="kelder" ? w.stock : 0) + 1;
+      await col.doc(w.id).update({stock, status:"kelder"});
+      const id = w.id; closeSheet(); goTo(id);
+    }catch{ $("err").textContent="Bijtellen lukte niet. Probeer opnieuw."; $("err").hidden=false; b.disabled=false; }
+  });
+
+  // ---------- interactions ----------
+  function goTo(id){
+    const w = wines.find(x=>x.id===id); if(!w) return;
+    tab = w.status; typeFilter=""; tagFilter=""; $("q").value=""; $("country").value=""; $("grape").value="";
+    openIds.add(id); render();
+    const c = $("c_"+id); if(c){ c.scrollIntoView({behavior: matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth", block:"start"}); c.classList.add("flash"); setTimeout(()=>c.classList.remove("flash"),1600); }
+  }
+  document.addEventListener("click", e => { const g = e.target.closest("[data-goto]"); if(g) goTo(g.dataset.goto); });
+  document.querySelector(".tabs").addEventListener("click", e => { const b=e.target.closest("[data-tab]"); if(!b) return;
+    if(b.dataset.tab===tab){ toTop(); return; }
+    const tabsY = document.querySelector(".tabs").getBoundingClientRect().top + scrollY - (parseFloat(getComputedStyle(document.documentElement).paddingTop)||0);
+    if(scrollY > tabsY) requestAnimationFrame(()=>window.scrollTo({top:tabsY}));
+    tab=b.dataset.tab; typeFilter=""; tastingFor=null; render(); });
+  $("chips").addEventListener("click", e => { const t=e.target.closest("[data-tag]"); if(t){ tagFilter = tagFilter===t.dataset.tag ? "" : t.dataset.tag; render(); return; } const b=e.target.closest("[data-type]"); if(!b) return; typeFilter=b.dataset.type; render(); });
+  $("q").addEventListener("input", render); $("sort").addEventListener("change", render); $("country").addEventListener("change", render); $("grape").addEventListener("change", render);
+
+  async function save(id, patch, msg){
+    try{ await col.doc(id).update(patch); }
+    catch(err){ $("status").textContent = msg || "Bewaren lukte niet. Probeer opnieuw."; }
+  }
+
+  $("list").addEventListener("click", async e => {
+    const t = e.target.closest("[data-act]"); if(!t) return;
+    const act = t.dataset.act, id = t.dataset.id, w = wines.find(x=>x.id===id);
+    if(act==="toggle"){
+      const card = t.closest(".card");
+      openIds.has(id) ? openIds.delete(id) : openIds.add(id);
+      const open = openIds.has(id);
+      card.classList.toggle("open", open); t.setAttribute("aria-expanded", open);
+      t.firstElementChild.textContent = open ? "Beschrijving inklappen" : "Lees de beschrijving";
+      updateCollapse();
+    } else if(act==="rate"){
+      const s = e.target.closest("[data-s]"); if(!s||!w) return;
+      const n=+s.dataset.s; w.score = w.score===n ? n-1 : n; render(); save(id,{score:w.score});
+    } else if(act==="tstar"){
+      const s = e.target.closest("[data-s]"); if(!s) return;
+      const n=+s.dataset.s; tastingScore = tastingScore===n?n-1:n;
+      t.innerHTML = starsHTML(tastingScore,false);
+    } else if(act==="plus"||act==="minus"){
+      if(!w) return; w.stock = Math.max(0, w.stock + (act==="plus"?1:-1)); render(); save(id,{stock:w.stock});
+    } else if(act==="opentoggle"){
+      if(!w) return;
+      if(!w.openedAt){ w.openedAt = TODAY; w.stock = Math.max(0,w.stock-1); tastingFor=id; resetDraft(); tastingScore=w.score||0; openIds.add(id); render(); save(id,{openedAt:w.openedAt, stock:w.stock}); }
+      else { w.openedAt = ""; render(); save(id,{openedAt:""}); }
+    } else if(act==="t-new"){ tastingFor=id; tastingScore=w?.score||0; resetDraft(); render(); $("tf_note")?.focus(); }
+    else if(act==="tg"){
+      const k = t.dataset.k, v = t.dataset.v;
+      if(k==="aroma"){ tDraft.aromas.has(v) ? tDraft.aromas.delete(v) : tDraft.aromas.add(v); t.setAttribute("aria-pressed", tDraft.aromas.has(v)); }
+      else { const cur = k==="color" ? tDraft.color : tDraft.struct[k]; const nv = cur===v ? "" : v;
+        if(k==="color") tDraft.color = nv; else tDraft.struct[k] = nv;
+        t.parentElement.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.v===nv)); }
+      const cnt = t.closest(".guide")?.querySelector(".gcount"); if(cnt) cnt.textContent = draftCount() ? `${draftCount()} gekozen` : "";
+    }
+    else if(act==="pair"){ if(w) fetchPair(w); }
+    else if(act==="pairstop"){ pairCtl.get(id)?.abort(); }
+    else if(act==="tagf"){ const tg=t.dataset.tag; tagFilter = tagFilter===tg ? "" : tg; render(); window.scrollTo({top:0}); }
+    else if(act==="cmp"){
+      if(compareIds.includes(id)) compareIds = compareIds.filter(x=>x!==id); else compareIds.push(id);
+      if(compareIds.length>=2){ openCompare(); } else { render(); updateCmpBar(); }
+    }
+    else if(act==="share"){ if(w) openShare(w); }
+    else if(act==="shop"){ shopOpen.add(id); render(); }
+    else if(act==="shopclose"){ shopOpen.delete(id); render(); }
+    else if(act==="shoptip"){ if(w) fetchTip(w); }
+    else if(act==="house"){ if(w && houseBusy.get(id)!==true) fetchHouse(w); }
+    else if(act==="t-cancel"){ tastingFor=null; render(); }
+    else if(act==="t-save"){
+      if(!w) return;
+      const entry = {date: $("tf_date").value || TODAY, score: tastingScore, note: $("tf_note").value.trim()};
+      if(tDraft.color) entry.color = tDraft.color;
+      if(tDraft.aromas.size) entry.aromas = [...tDraft.aromas];
+      const st = Object.fromEntries(Object.entries(tDraft.struct).filter(([k,v])=>v)); if(Object.keys(st).length) entry.struct = st;
+      const tastings = [...w.tastings, entry];
+      const patch = {tastings}; if(tastingScore) patch.score = tastingScore;
+      tastingFor=null; Object.assign(w,patch); render(); save(id, patch);
+    } else if(act==="bought"){
+      if(!w) return; w.status="kelder"; w.stock=Math.max(1,w.stock); w.bought=w.bought||TODAY; w.boughtQty=w.boughtQty||w.stock; render(); save(id,{status:"kelder",stock:w.stock,bought:w.bought,boughtQty:w.boughtQty});
+    } else if(act==="del"){ pendingDelete=id; render(); }
+    else if(act==="del-no"){ pendingDelete=null; render(); }
+    else if(act==="del-yes"){ pendingDelete=null; try{ await col.doc(id).delete(); }catch{ $("status").textContent="Verwijderen lukte niet."; } }
+    else if(act==="edit"){ if(!w) return; editingId=id; draft={...w}; openSheet(w.photo,true); fillForm(w); }
+  });
+
+  $("list").addEventListener("submit", e => {
+    const f = e.target.closest("[data-shopform]"); if(!f) return;
+    e.preventDefault();
+    const id = f.dataset.shopform, w = wines.find(x=>x.id===id);
+    const c = $("city_"+id).value.trim(); if(w && c && mcp) fetchShops(w, c);
+  });
+  $("list").addEventListener("input", e => { if(e.target.id?.startsWith("city_")) city = e.target.value; });
+
+  // ---------- tonight ----------
+  $("tform").addEventListener("submit", async e => {
+    e.preventDefault();
+    const meal = $("meal").value.trim(); if(!meal || !sample) return;
+    const cand = wines.filter(w=>w.status==="kelder" && w.stock>0);
+    if(!cand.length){ lastPicks={msg:"Je hebt geen flessen meer op voorraad. Verhoog de voorraad bij een wijn om hier suggesties te krijgen."}; renderPicks(); return; }
+    pickCtl?.abort(); pickCtl = new AbortController();
+    $("pickBtn").disabled = true; $("picks").innerHTML = `<p class="hint">Claude kijkt in je kelder…</p>`;
+    const data = cand.slice(0,150).map(w=>({id:w.id,naam:w.name,producent:w.producer,jaar:w.vintage,type:w.color,druif:w.grape,streek:[w.region,w.country].filter(Boolean).join(", "),score:w.score||null,flessen:w.stock,drinkvenster:windowText(w)||null,smaak:w.taste||null}));
+    const prompt = `Je bent een sommelier. Kies uit de wijnkelder hieronder de 3 flessen (of minder als er minder passen) die het best passen bij dit gerecht: "${meal}". Houd rekening met de combinatie met het eten, het drinkvenster (dit jaar is ${YEAR}; geef voorrang aan wijnen die snel gedronken moeten worden) en de persoonlijke score. Schrijf in het Nederlands.
+Antwoord met ALLEEN dit JSON-object: {"picks":[{"id":"exacte id uit de lijst","why":"één zin waarom deze wijn past"}],"tip":"optioneel: één korte serveertip of ''"}
+Kelder:
+${JSON.stringify(data)}`;
+    try{
+      const r = await sample.json(prompt, {signal:pickCtl.signal, modelTier:"quick"});
+      const picks = (r?.picks||[]).filter(p=>cand.some(w=>w.id===String(p.id))).slice(0,3).map(p=>({id:String(p.id),why:String(p.why||"")}));
+      lastPicks = picks.length ? {picks, tip:String(r?.tip||"")} : {msg:"Claude vond geen passende fles in je kelder voor dit gerecht."};
+    }catch(err){
+      if(err?.code==="cancelled") return;
+      lastPicks = {msg: err?.code==="not_granted" ? "Je gaf geen toestemming om Claude te gebruiken." : err?.code==="rate_limited" ? "Claude is even niet beschikbaar: je hebt je gebruikslimiet bereikt of er liepen kort na elkaar te veel aanvragen. Probeer het over een tijdje opnieuw." : "Kiezen lukte niet. Probeer opnieuw."};
+    }finally{ $("pickBtn").disabled=false; }
+    renderPicks();
+  });
+
+  // ---------- scanning & form ----------
+  function thumbFrom(file){
+    return new Promise(res=>{
+      const img = new Image(), url = URL.createObjectURL(file);
+      img.onload = () => { const r=Math.min(1,360/Math.max(img.width,img.height)); const c=document.createElement("canvas");
+        c.width=Math.round(img.width*r); c.height=Math.round(img.height*r); c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+        URL.revokeObjectURL(url); res(c.toDataURL("image/jpeg",.72)); };
+      img.onerror = () => { URL.revokeObjectURL(url); res(""); };
+      img.src = url;
+    });
+  }
+  let formScore=0;
+  function paintFormStars(){ $("f_stars").innerHTML = starsHTML(formScore,false).replace(/^<div[^>]*>|<\/div>$/g,""); }
+  $("f_stars").addEventListener("click", e => { const s=e.target.closest("[data-s]"); if(!s) return; const n=+s.dataset.s; formScore=formScore===n?n-1:n; paintFormStars(); });
+  function paintTagSugg(){
+    const have = $("f_tags").value.split(",").map(x=>x.trim().toLowerCase());
+    const all = [...new Set(wines.flatMap(w=>w.tags))].filter(t=>!have.includes(t.toLowerCase())).slice(0,10);
+    $("f_tagsugg").innerHTML = all.map(t=>`<button type="button" data-sugg="${esc(t)}">+ ${esc(t)}</button>`).join("");
+  }
+  $("f_tagsugg").addEventListener("click", e => { const b=e.target.closest("[data-sugg]"); if(!b) return;
+    const cur = $("f_tags").value.trim().replace(/,\s*$/,""); $("f_tags").value = (cur?cur+", ":"") + b.dataset.sugg; paintTagSugg(); });
+  $("f_tags").addEventListener("input", paintTagSugg);
+  function setTarget(t){ target=t; $("f_target").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.t===t)); ["l_stock","l_loc","l_shop","l_bought","l_qty"].forEach(id=>$(id).hidden = t!=="kelder"); }
+  $("f_target").addEventListener("click", e => { const b=e.target.closest("[data-t]"); if(b) setTarget(b.dataset.t); });
+
+  function openSheet(photo, editing){
+    $("sheet").hidden=false;
+    $("sheetTitle").textContent = editing ? "Wijn bewerken" : "Nieuwe wijn";
+    $("pimg").src = photo || ""; $("pimg").hidden = !photo;
+    $("thinking").hidden = !!editing; $("form").hidden = !editing; $("cancelOnly").hidden = !!editing; $("err").hidden=true;
+  }
+  function closeSheet(){ $("dup").hidden = true; dupFor = null; scanCtl?.abort(); scanCtl=null; $("sheet").hidden=true; draft=null; editingId=null; $("file").value=""; }
+  $("cancel").onclick = closeSheet; $("cancel2").onclick = closeSheet;
+
+  function fillForm(w){
+    const v = (id,val)=>{ $(id).value = val ?? ""; };
+    v("f_name",w.name); v("f_producer",w.producer); v("f_vintage",w.vintage); v("f_region",w.region); v("f_country",w.country);
+    v("f_grape",w.grape); $("f_color").value = COLORS[w.color]?w.color:"rood"; v("f_desc",w.desc); v("f_taste",w.taste); v("f_food",w.food);
+    v("f_temp",w.temp); v("f_from",w.from||""); v("f_to",w.to||""); $("f_tier").value=String(w.tier||0); v("f_price",w.price); v("f_paid",w.paid); v("f_note",w.note);
+    v("f_stock", w.stock ?? 1);
+    v("f_tags", (w.tags||[]).join(", ")); paintTagSugg();
+    v("f_loc", w.loc); v("f_shop", w.shop); v("f_bought", w.bought || (editingId ? "" : TODAY)); v("f_qty", w.boughtQty || (editingId ? "" : (w.stock ?? 1)));
+    setTarget(w.status || (tab==="wens"?"wens":"kelder"));
+    formScore=w.score||0; paintFormStars();
+  }
+
+  $("scanBtn").onclick = () => { if(!col){ $("status").textContent="Opslaan is in deze weergave niet beschikbaar. Open de pagina terwijl je aangemeld bent."; return; } $("file").click(); };
+  $("file").addEventListener("change", async () => {
+    const file = $("file").files[0]; if(!file) return;
+    const photo = await thumbFrom(file);
+    draft = {photo}; editingId=null; openSheet(photo,false);
+    const showManual = msg => { $("thinking").hidden=true; $("cancelOnly").hidden=true; $("form").hidden=false; fillForm({photo}); if(msg){$("err").textContent=msg;$("err").hidden=false;} };
+    if(!sample){ showManual("Automatisch herkennen is hier niet beschikbaar. Vul de gegevens zelf in."); return; }
+    scanCtl = new AbortController();
+    const prompt = `Je bent een sommelier. De foto toont een wijnfles of het etiket ervan. Herken de wijn zo nauwkeurig mogelijk op basis van wat op het etiket staat en je kennis van deze wijn of producent. Schrijf alles in het Nederlands. Dit jaar is ${YEAR}.
+Antwoord met ALLEEN één JSON-object met deze velden (lege string of 0 als iets niet te bepalen is):
+{"recognized": true|false, "name": "naam van de wijn/cuvée", "producer": "", "vintage": "jaartal of ''", "region": "appellatie/streek", "country": "", "grape": "enkel de druivennamen, gescheiden door komma's, bv. 'Touriga Nacional, Tinta Roriz'", "color": "rood|wit|rose|mousserend|dessert", "desc": "een vlotte beschrijving van 3 tot 5 zinnen: stijl, karakter, wat deze wijn bijzonder maakt", "taste": "korte opsomming aroma's en smaak", "food": "2-3 gerechten", "temp": "bv. 16–18 °C", "from": eerste jaar waarin de wijn op dronk is (getal), "to": laatste jaar waarin hij op zijn best is (getal), "price": "geschatte winkelprijs per fles in België/Europa als bereik, bv. €18–22", "tier": 1|2|3|4 (1 = tot €10, 2 = €10–25, 3 = €25–60, 4 = boven €60; 0 als onbekend), "house": info over het wijnhuis in deze vorm: ${HOUSE_FIELDS} (laat velden leeg als je ze niet zeker weet; verzin niets)}
+Zet "recognized" op false als er geen wijnetiket op de foto staat.`;
+    try{
+      const r = await sample.json(prompt, {images:[file], signal:scanCtl.signal});
+      if(!draft) return;
+      if(!r || r.recognized===false){ showManual("Geen wijnetiket herkend. Probeer een scherpere foto van het etiket, of vul de gegevens zelf in."); return; }
+      r.house = r.house ? cleanHouse(r.house) : null; if(r.house?.unknown) r.house = null;
+      r.tier = Math.max(0,Math.min(4,parseInt(r.tier)||0)); r.from = yr(r.from); r.to = yr(r.to);
+      Object.assign(draft, r, {photo});
+      $("thinking").hidden=true; $("cancelOnly").hidden=true; $("form").hidden=false; fillForm(draft); showDup(r);
+    }catch(e){
+      if(e?.code==="cancelled") return;
+      const m = {not_granted:"Je gaf geen toestemming om Claude te gebruiken. Vul de gegevens zelf in.",
+        rate_limited:"Even te veel aanvragen. Vul de gegevens zelf in of probeer straks opnieuw.",
+        image_rejected:"Deze foto kon niet gelezen worden. Probeer een andere foto.",
+        images_unavailable:"Foto's herkennen werkt niet in deze weergave. Vul de gegevens zelf in."}[e?.code] || "Herkennen lukte niet. Vul de gegevens zelf in of probeer opnieuw.";
+      showManual(m);
+    }
+  });
+
+  $("form").addEventListener("submit", async e => {
+    e.preventDefault();
+    const g = id => $(id).value.trim();
+    const w = { name:g("f_name"), producer:g("f_producer"), vintage:g("f_vintage"), region:g("f_region"), country:g("f_country"),
+      grape:g("f_grape"), color:$("f_color").value, desc:g("f_desc"), taste:g("f_taste"), food:g("f_food"), temp:g("f_temp"),
+      from:yr(g("f_from")), to:yr(g("f_to")), window:"", tier:+$("f_tier").value, price:g("f_price"), paid:g("f_paid"), note:g("f_note"),
+      tags:[...new Set(g("f_tags").split(",").map(x=>x.trim().replace(/^#/,"").slice(0,40)).filter(Boolean))].slice(0,12),
+      loc:g("f_loc"), shop:g("f_shop"), bought:g("f_bought"), boughtQty:Math.max(0,parseInt(g("f_qty"))||0),
+      score:formScore, status:target, stock: target==="kelder" ? Math.max(0,parseInt(g("f_stock"))||0) : 0, photo:draft?.photo||"" };
+    if(!w.name) return;
+    if(w.status!=="kelder"){ w.loc=""; w.shop=""; w.bought=""; w.boughtQty=0; }
+    $("save").disabled=true;
+    try{
+      if(editingId){ await col.doc(editingId).update(w); }
+      else {
+        w.createdAt=Date.now(); if(draft?.house) w.house = draft.house;
+        w.tastings = (w.status==="kelder" && w.score) ? [{date:TODAY, score:w.score, note:""}] : [];
+        const ref = col.doc(); await ref.set(w); openIds.add(ref.id); tab = w.status;
+      }
+      closeSheet(); render();
+    }catch(err){
+      $("err").textContent = err?.code==="quota_exceeded" ? "Je kelder zit vol. Verwijder eerst een paar wijnen." : "Bewaren lukte niet. Probeer opnieuw.";
+      $("err").hidden=false;
+    }finally{ $("save").disabled=false; }
+  });
+
+  // ---------- boot ----------
+  render();
+  (async () => {
+    const [d, u, s, m, dl] = await Promise.all([claude.use("db"), claude.use("user"), claude.use("sample"), claude.use("mcp"), claude.use("downloads")]);
+    sample = s; db = d; mcp = m; downloads = dl;
+    $("t_ask").hidden = !sample;
+    const uid = u ? await u.id() : null;
+    if(db && uid) col = db.collection("data/users/"+uid);
+    loadShared();
+    if(!db || !uid){ $("status").textContent = "Meld je aan bij Claude om je wijnen te bewaren."; return; }
+    const timer = setTimeout(()=>{ $("status").textContent="Je wijnen zijn nog niet bereikbaar. Even geduld…"; }, 10000);
+    col.onSnapshot(snap => {
+      wines = snap.docs.map(x => norm({id:x.id, ...x.data()}));
+      if(!snap.metadata.fromCache){ clearTimeout(timer); $("status").textContent=""; if(!factStarted){ factStarted = true; loadFact(false); } }
+      render();
+    }, () => { clearTimeout(timer); $("status").textContent = "Je wijnen konden niet geladen worden."; });
+  })();
+})();
+</script>
+<script>
+if("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(()=>{}));
+</script>
+</body></html>
