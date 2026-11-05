@@ -183,7 +183,8 @@
       collection: path => (/^data\/users\//.test(path) ? winesCol : fs.collection("unused")),
       doc: path => { throw Object.assign(new Error("not available"), {code: "unavailable", path}); }
     };
-    resolveReady({db, user: {id: async () => cloud.cellar.id, name: async () => name}, downloads: window.mwLocal.downloads, sample: null, mcp: null});
+    resolveReady({db, user: {id: async () => cloud.cellar.id, name: async () => name}, downloads: window.mwLocal.downloads,
+      sample: window.MW_AI_URL && window.mwAi ? window.mwAi.make(window.MW_AI_URL, () => auth.currentUser.getIdToken()) : null, mcp: null});
   }
 
   // ---------- header + cellar sheet ----------
@@ -233,6 +234,7 @@
       ${localCount ? `<div class="sharebox"><h3>Wijnen op dit toestel</h3><p>Op dit toestel staan nog ${localCount} wijn${localCount === 1 ? "" : "en"} van voor je je aanmeldde. Zet ze in "${esc(c.name)}".</p>
         <div><button class="btn sm" type="button" data-a="migrate">Zet ze in deze kelder</button></div></div>` : ""}
       <div class="sharebox"><h3>Account</h3><p>Aangemeld als <b>${esc(me.name)}</b> (${esc(me.email)})</p>
+        <p class="hint" style="font-size:.72rem;word-break:break-all">Gebruikers-id: <span style="user-select:all">${esc(me.uid)}</span></p>
         <div><button class="btn ghost sm" type="button" data-a="logout">Afmelden</button></div></div>`;
     if($("mwNew")) $("mwNew").value = keepNew;
     if($("mwRename") && keepName !== undefined && focus === "mwRename") $("mwRename").value = keepName;

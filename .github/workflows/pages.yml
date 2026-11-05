@@ -26,7 +26,7 @@ jobs:
       - name: Collect site files
         run: |
           mkdir _site
-          rsync -a --exclude .git --exclude .github --exclude README.md --exclude firestore.rules ./ _site/
+          rsync -a --exclude .git --exclude .github --exclude README.md --exclude firestore.rules --exclude worker ./ _site/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site

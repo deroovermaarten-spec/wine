@@ -453,6 +453,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
 
 <script src="store.js"></script>
 <script src="firebase-config.js"></script>
+<script src="ai.js"></script>
 <script src="cloud.js"></script>
 <script src="ocr.js"></script>
 <script>
@@ -731,7 +732,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
     const prompt = `Je bent een wijnkenner in België. Waar kan iemand in België (of anders online in Europa) deze wijn waarschijnlijk kopen? Wijn: ${w.name}${w.vintage?" "+w.vintage:""}, producent: ${w.producer||"onbekend"}, streek: ${[w.region,w.country].filter(Boolean).join(", ")||"onbekend"}.
 Noem de Belgische importeur als je die met zekerheid kent, en het soort winkels of ketens waar zo'n wijn meestal ligt. Verzin geen namen: zeg het eerlijk als je het niet weet. Schrijf in het Nederlands, maximaal 4 zinnen, gewone tekst zonder opmaak.`;
     try{ const r = await sample(prompt); tipRes.set(w.id,{text:r.text.trim()}); }
-    catch(e){ if(e?.code==="cancelled") return; tipRes.set(w.id,{err: e?.code==="rate_limited" ? "Claude is even niet beschikbaar (gebruikslimiet of te veel aanvragen). Probeer later opnieuw." : e?.code==="not_granted" ? "Je gaf geen toestemming om Claude te gebruiken." : "Dat lukte niet. Probeer opnieuw."}); }
+    catch(e){ if(e?.code==="cancelled") return; tipRes.set(w.id,{err: e?.code==="rate_limited" ? "Claude is even niet beschikbaar (gebruikslimiet of te veel aanvragen). Probeer later opnieuw." : e?.code==="not_granted" ? "Claude is niet beschikbaar voor jouw account." : "Dat lukte niet. Probeer opnieuw."}); }
     render();
   }
 
@@ -1335,7 +1336,7 @@ Laat een lege regel tussen de gerechten. Geen inleiding, geen afsluiter.`;
       pairRes.delete(w.id); w.pairing = {text:res.text.trim(), at:TODAY}; render(); save(w.id, {pairing:w.pairing});
     }catch(e){
       if(e?.code==="cancelled"){ pairRes.delete(w.id); }
-      else pairRes.set(w.id, {err: e?.code==="rate_limited" ? "Claude is even niet beschikbaar (gebruikslimiet of te veel aanvragen). Probeer later opnieuw." : e?.code==="not_granted" ? "Je gaf geen toestemming om Claude te gebruiken." : "Dat lukte niet. Probeer opnieuw."});
+      else pairRes.set(w.id, {err: e?.code==="rate_limited" ? "Claude is even niet beschikbaar (gebruikslimiet of te veel aanvragen). Probeer later opnieuw." : e?.code==="not_granted" ? "Claude is niet beschikbaar voor jouw account." : "Dat lukte niet. Probeer opnieuw."});
       render();
     }
     pairCtl.delete(w.id);
@@ -1466,7 +1467,7 @@ ${data}`;
       reply.content = r.text; if(r.truncated) reply.content += "\n\n(Antwoord afgebroken. Stel een kleinere vraag.)";
     }catch(e){
       if(e?.code==="cancelled"){ reply.content = (e.text||"") + (e.text?"\n\n(Gestopt)":"Gestopt."); }
-      else { reply.err = true; reply.content = (e.text ? e.text+"\n\n" : "") + ({not_granted:"Je gaf geen toestemming om Claude te gebruiken.", rate_limited:"Claude is even niet beschikbaar (gebruikslimiet of te veel aanvragen). Probeer later opnieuw.", prompt_too_large:"Je kelder is te groot om in één keer mee te sturen."}[e?.code] || "Er ging iets mis. Probeer opnieuw."); }
+      else { reply.err = true; reply.content = (e.text ? e.text+"\n\n" : "") + ({not_granted:"Claude is niet beschikbaar voor jouw account.", rate_limited:"Claude is even niet beschikbaar (gebruikslimiet of te veel aanvragen). Probeer later opnieuw.", prompt_too_large:"Je kelder is te groot om in één keer mee te sturen."}[e?.code] || "Er ging iets mis. Probeer opnieuw."); }
     }
     reply.pending = false; askCtl = null; renderChat(); scrollChat();
   }
@@ -1650,7 +1651,7 @@ ${JSON.stringify(data)}`;
       lastPicks = picks.length ? {picks, tip:String(r?.tip||"")} : {msg:"Claude vond geen passende fles in je kelder voor dit gerecht."};
     }catch(err){
       if(err?.code==="cancelled") return;
-      lastPicks = {msg: err?.code==="not_granted" ? "Je gaf geen toestemming om Claude te gebruiken." : err?.code==="rate_limited" ? "Claude is even niet beschikbaar: je hebt je gebruikslimiet bereikt of er liepen kort na elkaar te veel aanvragen. Probeer het over een tijdje opnieuw." : "Kiezen lukte niet. Probeer opnieuw."};
+      lastPicks = {msg: err?.code==="not_granted" ? "Claude is niet beschikbaar voor jouw account." : err?.code==="rate_limited" ? "Claude is even niet beschikbaar: je hebt je gebruikslimiet bereikt of er liepen kort na elkaar te veel aanvragen. Probeer het over een tijdje opnieuw." : "Kiezen lukte niet. Probeer opnieuw."};
     }finally{ $("pickBtn").disabled=false; }
     renderPicks();
   });
@@ -1710,9 +1711,10 @@ ${JSON.stringify(data)}`;
     const photo = await thumbFrom(file);
     draft = {photo}; editingId=null; openSheet(photo,false);
     const showManual = msg => { $("thinking").hidden=true; $("cancelOnly").hidden=true; $("form").hidden=false; fillForm({photo}); if(msg){$("err").textContent=msg;$("err").hidden=false;} };
-    if(!sample){
-      if(!window.mwOcr){ showManual("Automatisch herkennen is hier niet beschikbaar. Vul de gegevens zelf in."); return; }
+    const runOcr = async note => {
+      if(!window.mwOcr){ showManual(note || "Automatisch herkennen is hier niet beschikbaar. Vul de gegevens zelf in."); return; }
       const ctl = scanCtl = new AbortController(), st = $("thinking").querySelector(".status");
+      st.textContent = "De tekst op het etiket wordt herkend op je telefoon.";
       try{
         const r = await mwOcr.read(file, (s, p) => {
           const pct = Math.round(p * 100);
@@ -1723,13 +1725,14 @@ ${JSON.stringify(data)}`;
         Object.assign(draft, r.fields, {photo});
         $("thinking").hidden=true; $("cancelOnly").hidden=true; $("form").hidden=false; fillForm(draft);
         showOcr(r);
+        if(note){ $("err").textContent = note; $("err").hidden = false; }
         if(r.fields.name) showDup(r.fields);
       }catch(e){
         if(ctl.signal.aborted || !draft) return;
         showManual(navigator.onLine ? "De tekst kon niet gelezen worden. Vul de gegevens zelf in." : "Tekstherkenning moet de eerste keer met internet klaargezet worden. Vul de gegevens nu zelf in.");
       }
-      return;
-    }
+    };
+    if(!sample) return runOcr();
     scanCtl = new AbortController();
     const prompt = `Je bent een sommelier. De foto toont een wijnfles of het etiket ervan. Herken de wijn zo nauwkeurig mogelijk op basis van wat op het etiket staat en je kennis van deze wijn of producent. Schrijf alles in het Nederlands. Dit jaar is ${YEAR}.
 Antwoord met ALLEEN één JSON-object met deze velden (lege string of 0 als iets niet te bepalen is):
@@ -1744,12 +1747,12 @@ Zet "recognized" op false als er geen wijnetiket op de foto staat.`;
       Object.assign(draft, r, {photo});
       $("thinking").hidden=true; $("cancelOnly").hidden=true; $("form").hidden=false; fillForm(draft); showDup(r);
     }catch(e){
-      if(e?.code==="cancelled") return;
-      const m = {not_granted:"Je gaf geen toestemming om Claude te gebruiken. Vul de gegevens zelf in.",
+      if(e?.code==="cancelled" || !draft) return;
+      const m = {not_granted:"Claude is niet beschikbaar voor jouw account. Vul de gegevens zelf in.",
         rate_limited:"Even te veel aanvragen. Vul de gegevens zelf in of probeer straks opnieuw.",
         image_rejected:"Deze foto kon niet gelezen worden. Probeer een andere foto.",
         images_unavailable:"Foto's herkennen werkt niet in deze weergave. Vul de gegevens zelf in."}[e?.code] || "Herkennen lukte niet. Vul de gegevens zelf in of probeer opnieuw.";
-      showManual(m);
+      runOcr(m.replace(" Vul de gegevens zelf in.", "").replace(/ Vul de gegevens zelf in of probeer.*$/, "") + " De tekst is nu op je telefoon gelezen: kijk de velden na.");
     }
   });
 

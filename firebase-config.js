@@ -12,3 +12,6 @@ window.MW_FIREBASE = {
   messagingSenderId: "936727644855",
   appId: "1:936727644855:web:bac946f0502984af7e5b32"
 };
+
+// Address of the AI relay (worker/worker.js on Cloudflare). Empty = smart features off.
+window.MW_AI_URL = "";

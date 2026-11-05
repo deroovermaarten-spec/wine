@@ -27,11 +27,21 @@ Terugzetten is veilig om te herhalen: wijnen die al bestaan worden bijgewerkt, n
 jaargang, streek, land, type en druif worden ingevuld en elke gelezen regel verschijnt als
 knopje om in een veld te zetten. Geen sleutel of abonnement nodig; na de eerste scan werkt het offline.
 
+## Slimme functies met Claude (betalen per gebruik)
+
+Etiket herkennen, "Wat drink ik vanavond?", de Vraag-tab, het weetje, gerechten en wijnhuis-info gebruiken Claude
+via een kleine tussenserver (`worker/worker.js`, Cloudflare Workers, gratis). Daar staat de API-sleutel; telefoons
+krijgen hem nooit te zien. Alleen aangemelde leden van een kelder van de eigenaar (`OWNER_UID`) mogen hem gebruiken,
+met een daglimiet per persoon. Zolang `window.MW_AI_URL` in `firebase-config.js` leeg is, staan de functies uit.
+
+1. console.anthropic.com: tegoed kopen (Billing), een maandlimiet zetten (Limits) en een API-sleutel maken.
+2. dash.cloudflare.com: Workers & Pages → Create → Worker, plak `worker/worker.js`, Deploy.
+3. In de Worker: Settings → Variables and Secrets: `ANTHROPIC_API_KEY` (Secret), `OWNER_UID` (je Gebruikers-id uit het kelder-menu), `FIREBASE_PROJECT` = `meerstraat-wines`.
+4. Zet het adres van de Worker (`https://….workers.dev`) in `window.MW_AI_URL`.
+
 ## Wat niet werkt buiten Claude
 
-De AI-functies (beschrijving bij een scan, "Wat drink ik vanavond?", de Vraag-tab, het weetje van de dag,
-gerechten, info over het wijnhuis, winkeltip), de publieke deellink en "wijnhandels in de buurt"
-staan uit. Die blijven beschikbaar in de Claude-versie van Meerstraat wines.
+De publieke deellink en "wijnhandels in de buurt" staan uit. Die blijven beschikbaar in de Claude-versie van Meerstraat wines.
 
 ## Aanmelden en kelders delen
 
