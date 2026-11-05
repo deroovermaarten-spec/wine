@@ -452,6 +452,8 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
 </div>
 
 <script src="store.js"></script>
+<script src="firebase-config.js"></script>
+<script src="cloud.js"></script>
 <script src="ocr.js"></script>
 <script>
 (() => {
@@ -650,7 +652,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
         ${pairHTML(w)}
         <div class="tastings">
           <div class="eyebrow">Proefmomenten${ts.length?` · ${ts.length}`:""}</div>
-          ${ts.length?`<ol>${ts.map(t=>`<li><time>${esc(fmtDate(t.date))}</time>${starsHTML(t.score||0,true)}<span class="tn">${t.note?`<span>${esc(t.note)}</span>`:""}${tastingSummary(t)}</span></li>`).join("")}</ol>`:`<p class="hint">Nog geen proefmomenten. Voeg er een toe telkens je deze wijn drinkt.</p>`}
+          ${ts.length?`<ol>${ts.map(t=>`<li><time>${esc(fmtDate(t.date))}${t.by?`<br>${esc(t.by)}`:""}</time>${starsHTML(t.score||0,true)}<span class="tn">${t.note?`<span>${esc(t.note)}</span>`:""}${tastingSummary(t)}</span></li>`).join("")}</ol>`:`<p class="hint">Nog geen proefmomenten. Voeg er een toe telkens je deze wijn drinkt.</p>`}
           ${tform}
         </div>
         <div class="cardfoot">
@@ -1606,6 +1608,7 @@ ${data}`;
     else if(act==="t-save"){
       if(!w) return;
       const entry = {date: $("tf_date").value || TODAY, score: tastingScore, note: $("tf_note").value.trim()};
+      if(window.mwCloud?.me && (window.mwCloud.cellar?.memberIds || []).length > 1) entry.by = window.mwCloud.me.name;
       if(tDraft.color) entry.color = tDraft.color;
       if(tDraft.aromas.size) entry.aromas = [...tDraft.aromas];
       const st = Object.fromEntries(Object.entries(tDraft.struct).filter(([k,v])=>v)); if(Object.keys(st).length) entry.struct = st;

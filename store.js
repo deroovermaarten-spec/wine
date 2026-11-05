@@ -115,5 +115,13 @@
   try{ navigator.storage && navigator.storage.persist && navigator.storage.persist(); }catch{}
 
   const caps = {db, user, downloads, sample: null, mcp: null};
-  window.claude = {use: async name => (name in caps ? caps[name] : null), local: true};
+  window.mwLocal = caps;
+  // With logins switched on (cloud.js), wait for sign-in and use the online cellar instead.
+  window.claude = {
+    use: async name => {
+      const c = window.mwCloud ? await window.mwCloud.ready : caps;
+      return name in c ? c[name] : null;
+    },
+    local: true
+  };
 })();

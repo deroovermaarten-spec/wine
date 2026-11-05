@@ -1,0 +1,65 @@
+rules_version = '2';
+
+// Meerstraat wines: who may read and change what.
+// Paste this in Firebase console → Firestore Database → Rules → Publish.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function me() { return request.auth.uid; }
+    function cellar(c) { return get(/databases/$(database)/documents/cellars/$(c)).data; }
+    function isMember(c) { return signedIn() && me() in cellar(c).memberIds; }
+    function changes() { return request.resource.data.diff(resource.data).affectedKeys(); }
+
+    // A small profile (name, e-mail) per person; only they can change it.
+    match /users/{uid} {
+      allow read: if signedIn();
+      allow write: if signedIn() && me() == uid;
+    }
+
+    match /cellars/{c} {
+      // Only members see a cellar.
+      allow read: if signedIn() && me() in resource.data.memberIds;
+
+      // Anyone signed in can start a cellar of their own.
+      allow create: if signedIn()
+        && request.resource.data.owner == me()
+        && request.resource.data.memberIds == [me()];
+
+      allow update: if signedIn() && (
+        // the owner may rename and manage members, but cannot hand the cellar away or drop themselves
+        (me() == resource.data.owner
+          && request.resource.data.owner == resource.data.owner
+          && me() in request.resource.data.memberIds)
+        // a member may leave
+        || (me() in resource.data.memberIds && me() != resource.data.owner
+          && request.resource.data.memberIds == resource.data.memberIds.removeAll([me()])
+          && changes().hasOnly(['memberIds', 'members']))
+        // someone with a valid invite for this cellar may join (only adding themselves)
+        || (!(me() in resource.data.memberIds)
+          && request.resource.data.memberIds == resource.data.memberIds.concat([me()])
+          && changes().hasOnly(['memberIds', 'members', 'lastJoin'])
+          && request.resource.data.lastJoin.uid == me()
+          && exists(/databases/$(database)/documents/invites/$(request.resource.data.lastJoin.code))
+          && get(/databases/$(database)/documents/invites/$(request.resource.data.lastJoin.code)).data.cellarId == c
+          && get(/databases/$(database)/documents/invites/$(request.resource.data.lastJoin.code)).data.expiresAt > request.time)
+      );
+
+      allow delete: if signedIn() && me() == resource.data.owner;
+
+      // The wines: every member may read and edit them.
+      match /wines/{wine} {
+        allow read, write: if isMember(c);
+      }
+    }
+
+    // Invite links: made by a member, readable by whoever signs in with the code.
+    match /invites/{code} {
+      allow get: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.by == me()
+        && isMember(request.resource.data.cellarId);
+      allow delete: if signedIn() && resource.data.by == me();
+    }
+  }
+}

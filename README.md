@@ -33,6 +33,23 @@ De AI-functies (beschrijving bij een scan, "Wat drink ik vanavond?", de Vraag-ta
 gerechten, info over het wijnhuis, winkeltip), de publieke deellink en "wijnhandels in de buurt"
 staan uit. Die blijven beschikbaar in de Claude-versie van Meerstraat wines.
 
+## Aanmelden en kelders delen
+
+Met een Firebase-project (gratis) kan iedereen een eigen account maken. Elk account krijgt een eigen kelder,
+en via "Uitnodigen" in het kelder-menu (knop bovenaan) deel je een kelder met iemand anders.
+Zolang `firebase-config.js` leeg is (`window.MW_FIREBASE = null`) werkt de app zoals voorheen, alleen op de telefoon.
+
+Eenmalig instellen:
+
+1. Maak een project op [console.firebase.google.com](https://console.firebase.google.com).
+2. Voeg een Web-app toe en kopieer de `firebaseConfig` naar `firebase-config.js` (die gegevens zijn niet geheim).
+3. Authentication → Sign-in method → E-mail/wachtwoord aanzetten.
+4. Firestore Database aanmaken (regio in Europa, productiemodus).
+5. Firestore → Rules: plak de inhoud van `firestore.rules` en klik Publish.
+6. Authentication → Settings → Authorized domains: voeg `deroovermaarten-spec.github.io` toe.
+
+Bestaande wijnen op de telefoon zet je over met "Zet ze in deze kelder" in het kelder-menu, of via een backupbestand.
+
 ## Bestanden
 
 | Bestand | Wat |
@@ -44,5 +61,7 @@ staan uit. Die blijven beschikbaar in de Claude-versie van Meerstraat wines.
 | `world.json` | Wereldkaart voor Inzichten |
 | `manifest.webmanifest`, `icons/` | Naam en icoon op het beginscherm |
 | `.github/workflows/pages.yml` | Publiceert de app op GitHub Pages bij elke push |
+| `cloud.js`, `firebase-config.js`, `vendor/firebase/` | Aanmelden en gedeelde kelders (Firebase) |
+| `firestore.rules` | Beveiligingsregels om in Firebase te plakken |
 
 Lokaal testen: `python3 -m http.server` in deze map en open `http://localhost:8000`.

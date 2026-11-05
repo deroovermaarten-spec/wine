@@ -26,7 +26,7 @@ jobs:
       - name: Collect site files
         run: |
           mkdir _site
-          cp -r index.html store.js ocr.js sw.js world.json vendor manifest.webmanifest icons .nojekyll _site/
+          rsync -a --exclude .git --exclude .github --exclude README.md --exclude firestore.rules ./ _site/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
