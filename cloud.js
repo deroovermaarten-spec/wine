@@ -225,7 +225,7 @@
         ${inviteLink ? `<p>Stuur deze link naar wie je wilt uitnodigen. Hij werkt 7 dagen.</p>
           <div class="line"><input id="mwLink" readonly value="${esc(inviteLink)}"><button class="btn sm" type="button" data-a="copy">Kopieer</button>${navigator.share ? `<button class="btn ghost sm" type="button" data-a="share">Deel</button>` : ""}</div>`
           : `<div><button class="btn sm" type="button" data-a="invite">Nodig iemand uit</button></div>`}
-        ${owner ? "" : `<div><button class="link" type="button" data-a="leave">Verlaat deze kelder</button></div>`}
+        ${owner ? (cloud.cellars.length > 1 ? `<div><button class="link" type="button" data-a="delcellar">Verwijder deze kelder</button></div>` : "") : `<div><button class="link" type="button" data-a="leave">Verlaat deze kelder</button></div>`}
       </div>
       <div class="sharebox"><h3>Je kelders</h3>
         ${cloud.cellars.map(x => `<button class="mwpick" type="button" data-a="switch" data-id="${esc(x.id)}" aria-current="${x.id === c.id}"><span>${esc(x.id === c.id ? c.name : x.name)}</span><small>${(x.memberIds || []).length > 1 ? (x.memberIds.length) + " leden" : "alleen jij"}${x.owner !== me.uid ? " · gedeeld" : ""}</small></button>`).join("")}
@@ -274,6 +274,16 @@
       if(a === "leave"){
         if(!confirm(`"${c.name}" verlaten? Je ziet deze wijnen dan niet meer.`)) return;
         await fs.doc("cellars/" + c.id).update({memberIds: F.arrayRemove(cloud.me.uid), ["members." + cloud.me.uid]: F.delete()});
+        store.set("mw_cellar_" + cloud.me.uid, null); location.reload(); return;
+      }
+      if(a === "delcellar"){
+        const col = fs.collection("cellars/" + c.id + "/wines"), snap = await col.get(), n = snap.size;
+        if(!confirm(`"${c.name}" definitief verwijderen${n ? `, met de ${n} wijn${n === 1 ? "" : "en"} erin` : ""}? Dit kan niet ongedaan gemaakt worden.${(c.memberIds || []).length > 1 ? " De andere leden verliezen de kelder ook." : ""}`)) return;
+        b.disabled = true; b.textContent = "Bezig…";
+        let batch = fs.batch(), k = 0;
+        for(const d of snap.docs){ batch.delete(d.ref); if(++k % 400 === 0){ await batch.commit(); batch = fs.batch(); } }
+        await batch.commit();
+        await fs.doc("cellars/" + c.id).delete();
         store.set("mw_cellar_" + cloud.me.uid, null); location.reload(); return;
       }
       if(a === "migrate"){
