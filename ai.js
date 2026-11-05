@@ -19,6 +19,27 @@
     default: ["gemini-flash-latest", "gemini-2.5-flash"],
     quick: ["gemini-flash-lite-latest", "gemini-2.5-flash-lite", "gemini-flash-latest"]
   };
+  // Google renames its free models now and then, so ask the API which Flash models this key can use.
+  const MCACHE = "mw_gemini_models";
+  async function discover(){
+    const key = getKey(), tag = key.slice(-6);
+    try{ const c = JSON.parse(localStorage.getItem(MCACHE) || "null"); if(c && c.tag === tag && Date.now() - c.at < 864e5) return c; }catch{}
+    try{
+      const res = await fetch(API + "?pageSize=200", {headers: {"x-goog-api-key": key}});
+      if(!res.ok) return null;
+      const all = ((await res.json()).models || [])
+        .filter(m => (m.supportedGenerationMethods || []).includes("generateContent"))
+        .map(m => String(m.name || "").replace(/^models\//, ""))
+        .filter(n => /flash/.test(n) && !/(tts|image|live|audio|embed|exp|learnlm|robotics|computer|native|8b)/.test(n));
+      const ver = n => { const m = n.match(/gemini-(\d+(?:\.\d+)?)/); return m ? +m[1] : 0; };
+      const rank = n => (/latest/.test(n) ? 100 : 0) + ver(n) * 10 - (/preview/.test(n) ? 5 : 0);
+      const sort = a => a.sort((x, y) => rank(y) - rank(x));
+      const lite = sort(all.filter(n => /lite/.test(n))), full = sort(all.filter(n => !/lite/.test(n)));
+      const c = {tag, at: Date.now(), default: full.slice(0, 3), quick: [...lite.slice(0, 2), ...full.slice(0, 1)]};
+      try{ localStorage.setItem(MCACHE, JSON.stringify(c)); }catch{}
+      return c;
+    }catch{ return null; }
+  }
   const getKey = () => { try{ return localStorage.getItem(KEY) || ""; }catch{ return ""; } };
   const err = (code, msg, extra) => Object.assign(new Error(msg || code), {code}, extra || {});
 
@@ -99,7 +120,8 @@
     if(opts.signal && opts.signal.aborted) throw err("cancelled");
     const body = {contents: await buildContents(input, opts.images), generationConfig: {maxOutputTokens: 8192}};
     if(json) body.generationConfig.responseMimeType = "application/json";
-    const list = MODELS[opts.modelTier === "quick" ? "quick" : "default"];
+    const tier = opts.modelTier === "quick" ? "quick" : "default", found = await discover();
+    const list = [...new Set([...((found && found[tier]) || []), ...MODELS[tier]])];
     let last;
     for(const model of list){
       try{ return await call(model, body, json ? {signal: opts.signal} : opts); }
@@ -121,14 +143,12 @@
 
   window.mwAi = {
     sample, hasKey: () => !!getKey(),
-    setKey: k => { try{ k ? localStorage.setItem(KEY, k.trim()) : localStorage.removeItem(KEY); }catch{} },
+    setKey: k => { try{ k ? localStorage.setItem(KEY, k.trim()) : localStorage.removeItem(KEY); localStorage.removeItem(MCACHE); }catch{} },
     getKey,
     async test(k){
-      const res = await fetch(API + "gemini-flash-lite-latest:generateContent", {method: "POST", headers: {"Content-Type": "application/json", "x-goog-api-key": k.trim()},
-        body: JSON.stringify({contents: [{role: "user", parts: [{text: "Antwoord met OK."}]}], generationConfig: {maxOutputTokens: 5}})}).catch(() => null);
+      const res = await fetch(API + "?pageSize=5", {headers: {"x-goog-api-key": k.trim()}}).catch(() => null);
       if(!res) return "offline";
-      if(res.ok || res.status === 429 || res.status === 404) return "ok";
-      return "bad";
+      return res.ok || res.status === 429 ? "ok" : "bad";
     }
   };
 })();

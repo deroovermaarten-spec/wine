@@ -1763,7 +1763,7 @@ Zet "recognized" op false als er geen wijnetiket op de foto staat.`;
       $("thinking").hidden=true; $("cancelOnly").hidden=true; $("form").hidden=false; fillForm(draft); showDup(r);
     }catch(e){
       if(e?.code==="cancelled" || !draft) return;
-      if(window.mwOcr && e?.code!=="image_rejected") return runOcr((e?.code==="rate_limited" ? "Gemini is even niet beschikbaar (gratis limiet bereikt)." : e?.code==="bad_key" ? "Je Gemini-sleutel werkt niet. Kijk hem na bij Instellingen." : "Gemini kon de foto niet verwerken.") + " De gratis tekstherkenning is gebruikt.");
+      if(window.mwOcr && e?.code!=="image_rejected") return runOcr((e?.code==="rate_limited" ? "Gemini is even niet beschikbaar (gratis limiet bereikt)." : e?.code==="bad_key" ? "Je Gemini-sleutel werkt niet. Kijk hem na bij Instellingen." : "Gemini kon de foto niet verwerken.") + " De gratis tekstherkenning is gebruikt." + (e?.message && !/^(rate_limited|bad_key)$/.test(e.message) ? ` (Melding: ${String(e.message).slice(0,160)})` : ""));
       const m = {not_granted:"Je Gemini-sleutel werkt niet. Kijk hem na bij Instellingen. Vul de gegevens zelf in.",
         rate_limited:"Even te veel aanvragen. Vul de gegevens zelf in of probeer straks opnieuw.",
         image_rejected:"Deze foto kon niet gelezen worden. Probeer een andere foto.",

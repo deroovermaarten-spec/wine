@@ -293,16 +293,21 @@ Côtes de Sambre et Meuse|Sambre et Meuse|België||`
     ["Zuid-Afrika", ["southafrica", "wineofsouthafrica"]],
     ["Australië", ["productofaustralia", "australia"]],
     ["Nieuw-Zeeland", ["newzealand", "productofnewzealand"]],
-    ["Hongarije", ["hungary", "magyar"]]
+    ["Hongarije", ["hungary", "magyar"]],
+    ["Montenegro", ["crnagora", "crnojgori", "montenegro"]],
+    ["Kroatië", ["hrvatska", "croatia"]],
+    ["Servië", ["srbija", "serbia"]],
+    ["Griekenland", ["greece", "hellas"]],
+    ["Georgië", ["georgia", "sakartvelo"]]
   ];
   const COLOR = [
     ["mousserend", ["champagne", "cremant", "cava", "prosecco", "spumante", "sekt", "methodetraditionnelle", "metodoclassico", "brutnature", "extrabrut", "brut", "petnat", "frizzante"]],
     ["dessert", ["sauternes", "portwine", "vintageport", "tawny", "lbv", "lateharvest", "vendangestardives", "passito", "auslese", "beerenauslese", "eiswein", "vindoux", "vinliquoreux", "oloroso", "pedroximenez", "moscatel"]],
     ["rose", ["rose", "rosato", "rosado", "blush", "cerasuolo"]],
     ["wit", ["blanc", "bianco", "blanco", "branco", "white", "weiss", "weisswein"]],
-    ["rood", ["rouge", "rosso", "tinto", "red", "rotwein"]]
+    ["rood", ["rouge", "rosso", "tinto", "red", "rotwein", "crveno", "crno", "vermelho"]]
   ];
-  const GRAPES = ["Cabernet Sauvignon", "Cabernet Franc", "Merlot", "Pinot Noir", "Syrah", "Shiraz", "Grenache", "Garnacha", "Mourvèdre", "Monastrell", "Carignan", "Cinsault", "Malbec", "Tempranillo", "Sangiovese", "Nebbiolo", "Barbera", "Dolcetto", "Primitivo", "Zinfandel", "Negroamaro", "Nero d'Avola", "Aglianico", "Montepulciano", "Corvina", "Gamay", "Pinotage", "Touriga Nacional", "Mencía", "Tannat", "Petit Verdot", "Carménère", "Blaufränkisch", "Zweigelt", "Spätburgunder", "Chardonnay", "Sauvignon Blanc", "Sémillon", "Chenin Blanc", "Riesling", "Gewürztraminer", "Pinot Gris", "Pinot Grigio", "Pinot Blanc", "Viognier", "Marsanne", "Roussanne", "Grüner Veltliner", "Albariño", "Alvarinho", "Verdejo", "Godello", "Vermentino", "Fiano", "Greco", "Garganega", "Glera", "Trebbiano", "Verdicchio", "Muscat", "Moscato", "Furmint", "Melon de Bourgogne", "Aligoté", "Silvaner", "Müller-Thurgau", "Picpoul", "Arneis", "Cortese", "Friulano", "Ribolla Gialla", "Assyrtiko", "Torrontés", "Viura", "Macabeo"]
+  const GRAPES = ["Cabernet Sauvignon", "Cabernet Franc", "Merlot", "Pinot Noir", "Syrah", "Shiraz", "Grenache", "Garnacha", "Mourvèdre", "Monastrell", "Carignan", "Cinsault", "Malbec", "Tempranillo", "Sangiovese", "Nebbiolo", "Barbera", "Dolcetto", "Primitivo", "Zinfandel", "Negroamaro", "Nero d'Avola", "Aglianico", "Montepulciano", "Corvina", "Gamay", "Pinotage", "Touriga Nacional", "Mencía", "Tannat", "Petit Verdot", "Carménère", "Blaufränkisch", "Zweigelt", "Spätburgunder", "Chardonnay", "Sauvignon Blanc", "Sémillon", "Chenin Blanc", "Riesling", "Gewürztraminer", "Pinot Gris", "Pinot Grigio", "Pinot Blanc", "Viognier", "Marsanne", "Roussanne", "Grüner Veltliner", "Albariño", "Alvarinho", "Verdejo", "Godello", "Vermentino", "Fiano", "Greco", "Garganega", "Glera", "Trebbiano", "Verdicchio", "Muscat", "Moscato", "Furmint", "Melon de Bourgogne", "Aligoté", "Silvaner", "Müller-Thurgau", "Picpoul", "Arneis", "Cortese", "Friulano", "Ribolla Gialla", "Assyrtiko", "Torrontés", "Viura", "Macabeo", "Vranac", "Kratošija", "Plavac Mali", "Graševina", "Prokupac", "Xinomavro", "Agiorgitiko", "Saperavi", "Fetească Neagră", "Kékfrankos"]
     .map(g => ({g, key: nrm(g)})).sort((a, b) => b.key.length - a.key.length);
   const PRODUCER = /\b(ch[aâ]teau|domaine|dom\.|tenuta|bodegas?|weingut|cantina|cantine|maison|clos|quinta|fattoria|azienda|agricola|cave|caves|vignobles?|castello|podere|marchesi|estate|winery|famille|herdade|ca'|cascina)\b/i;
   const NOISE = /(appellation|contr[oô]l[ée]e|prot[ée]g[ée]e|mis en bouteille|imbottigliat|embotellad|bottled|produit|product|prodotto|contains|contient|sulfites|solfiti|sulfitos|\d+\s*(ml|cl|l)\b|\d+([.,]\d)?\s*%\s*(vol|alc)|\bvol\b|www\.|\.com|lot\b|\bl\d{3,}|denominazione|denominaci|origine|origen|garantita|vin de france|grand vin de|recoltant|r[ée]colte|harvest|annata|cosecha)/i;
