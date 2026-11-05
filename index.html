@@ -9,6 +9,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<script>try{var t=localStorage.getItem("mw_theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;}catch(e){}</script>
 <title>Mijn wijnkelder</title><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;0,6..96,600;1,6..96,500&family=Titillium+Web:wght@400;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
@@ -300,6 +301,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
   <header>
     <div class="brand"><span class="eyebrow">Enoteca di casa · Londerzeel</span><h1>Mijn <em>wijnkelder</em></h1></div>
     <span class="count" id="count"></span>
+    <button class="btn ghost sm" id="themeBtn" type="button" style="padding:7px 9px"></button>
   </header>
   <nav class="tabs" role="tablist" aria-label="Weergave">
     <button role="tab" id="t_kelder" data-tab="kelder" aria-selected="true">Kelder<span class="n" id="n_kelder"></span></button>
@@ -451,6 +453,34 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
   </div>
 </div>
 
+<script>
+(() => {
+  const ICON = {
+    auto: '<circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 0 0 16z" fill="currentColor"/>',
+    light: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+    dark: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>'
+  };
+  const LABEL = {auto: "Automatisch (volgt je toestel)", light: "Dagmodus", dark: "Nachtmodus"};
+  const NEXT = {auto: "light", light: "dark", dark: "auto"};
+  const btn = document.getElementById("themeBtn");
+  const get = () => { try{ const t = localStorage.getItem("mw_theme"); return t === "light" || t === "dark" ? t : "auto"; }catch{ return "auto"; } };
+  function apply(t){
+    if(t === "auto") delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = t;
+    const dark = t === "dark" || (t === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+    document.querySelectorAll('meta[name="theme-color"]').forEach(m => { m.setAttribute("content", dark ? "#17110e" : "#efe9df"); if(t !== "auto") m.removeAttribute("media"); });
+    btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">${ICON[t]}</svg>`;
+    btn.title = LABEL[t] + ". Tik om te wisselen.";
+    btn.setAttribute("aria-label", "Weergave: " + LABEL[t] + ". Tik om te wisselen.");
+  }
+  btn.addEventListener("click", () => {
+    const t = NEXT[get()];
+    try{ t === "auto" ? localStorage.removeItem("mw_theme") : localStorage.setItem("mw_theme", t); }catch{}
+    apply(t);
+    const st = document.getElementById("status"); if(st) st.textContent = "Weergave: " + LABEL[t];
+  });
+  apply(get());
+})();
+</script>
 <script src="store.js"></script>
 <script src="firebase-config.js"></script>
 <script src="ai.js"></script>
