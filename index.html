@@ -288,6 +288,12 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
 .actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
 .err{color:var(--accent);font-size:.88rem}
 .confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:.85rem}
+.ocr{display:flex;flex-direction:column;gap:8px;background:var(--bg);border-radius:12px;padding:12px}
+.ocr .hint b{color:var(--accent)}
+.ocrchips{display:flex;flex-wrap:wrap;gap:6px}
+.ocrchips button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:5px 10px;font-size:.84rem;text-align:left;max-width:100%;overflow-wrap:anywhere}
+.ocrchips button:active{background:var(--accent-soft)}
+.panel input.filled,.panel textarea.filled{box-shadow:0 0 0 2px var(--gold)}
 </style>
 
 <div class="wrap">
@@ -399,6 +405,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
     </div>
     <div class="err" id="err" hidden></div>
     <div class="dup" id="dup" hidden></div>
+    <div class="ocr" id="ocrBox" hidden></div>
     <form id="form" hidden>
       <div style="display:flex;flex-direction:column;gap:10px">
         <div class="seg" id="f_target" role="group" aria-label="Bewaren in">
@@ -445,6 +452,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
 </div>
 
 <script src="store.js"></script>
+<script src="ocr.js"></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);
@@ -577,7 +585,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
     const list = $("list");
     if(!pool.length){
       list.innerHTML = tab==="kelder"
-        ? `<div class="empty"><div class="big">Je kelder is nog leeg</div><p>Tik op "Scan een fles" om het etiket te fotograferen en vul de gegevens in. Al wijnen in de Claude-versie? Zet hier je back-upbestand terug.</p><div><button class="btn ghost sm" type="button" data-imp="1">Back-up terugzetten</button></div></div>`
+        ? `<div class="empty"><div class="big">Je kelder is nog leeg</div><p>Tik op "Scan een fles" en fotografeer het etiket. De app leest de tekst en vult al in wat ze herkent. Al wijnen in de Claude-versie? Zet hier je back-upbestand terug.</p><div><button class="btn ghost sm" type="button" data-imp="1">Back-up terugzetten</button></div></div>`
         : `<div class="empty"><div class="big">Nog geen wensen</div><p>Proefde je ergens iets lekkers? Scan het etiket en kies "Op verlanglijst". Zo vind je het terug in de winkel.</p></div>`;
       return;
     }
@@ -1673,9 +1681,12 @@ ${JSON.stringify(data)}`;
     $("sheet").hidden=false;
     $("sheetTitle").textContent = editing ? "Wijn bewerken" : "Nieuwe wijn";
     $("pimg").src = photo || ""; $("pimg").hidden = !photo;
+    $("ocrBox").hidden = true;
+    $("thinking").querySelector("strong").textContent = "Etiket lezen…";
+    $("thinking").querySelector(".status").textContent = sample ? "Claude herkent de wijn en schrijft een beschrijving." : "De tekst op het etiket wordt herkend op je telefoon.";
     $("thinking").hidden = !!editing; $("form").hidden = !editing; $("cancelOnly").hidden = !!editing; $("err").hidden=true;
   }
-  function closeSheet(){ $("dup").hidden = true; dupFor = null; scanCtl?.abort(); scanCtl=null; $("sheet").hidden=true; draft=null; editingId=null; $("file").value=""; }
+  function closeSheet(){ $("ocrBox").hidden = true; $("dup").hidden = true; dupFor = null; scanCtl?.abort(); scanCtl=null; $("sheet").hidden=true; draft=null; editingId=null; $("file").value=""; }
   $("cancel").onclick = closeSheet; $("cancel2").onclick = closeSheet;
 
   function fillForm(w){
@@ -1696,7 +1707,26 @@ ${JSON.stringify(data)}`;
     const photo = await thumbFrom(file);
     draft = {photo}; editingId=null; openSheet(photo,false);
     const showManual = msg => { $("thinking").hidden=true; $("cancelOnly").hidden=true; $("form").hidden=false; fillForm({photo}); if(msg){$("err").textContent=msg;$("err").hidden=false;} };
-    if(!sample){ showManual("Automatisch herkennen is hier niet beschikbaar. Vul de gegevens zelf in."); return; }
+    if(!sample){
+      if(!window.mwOcr){ showManual("Automatisch herkennen is hier niet beschikbaar. Vul de gegevens zelf in."); return; }
+      const ctl = scanCtl = new AbortController(), st = $("thinking").querySelector(".status");
+      try{
+        const r = await mwOcr.read(file, (s, p) => {
+          const pct = Math.round(p * 100);
+          if(/recogni/i.test(s)) st.textContent = `Tekst herkennen… ${pct}%`;
+          else if(p < 1) st.textContent = `Tekstherkenning klaarzetten… ${pct}% (de eerste keer duurt dit even)`;
+        });
+        if(ctl.signal.aborted || !draft) return;
+        Object.assign(draft, r.fields, {photo});
+        $("thinking").hidden=true; $("cancelOnly").hidden=true; $("form").hidden=false; fillForm(draft);
+        showOcr(r);
+        if(r.fields.name) showDup(r.fields);
+      }catch(e){
+        if(ctl.signal.aborted || !draft) return;
+        showManual(navigator.onLine ? "De tekst kon niet gelezen worden. Vul de gegevens zelf in." : "Tekstherkenning moet de eerste keer met internet klaargezet worden. Vul de gegevens nu zelf in.");
+      }
+      return;
+    }
     scanCtl = new AbortController();
     const prompt = `Je bent een sommelier. De foto toont een wijnfles of het etiket ervan. Herken de wijn zo nauwkeurig mogelijk op basis van wat op het etiket staat en je kennis van deze wijn of producent. Schrijf alles in het Nederlands. Dit jaar is ${YEAR}.
 Antwoord met ALLEEN één JSON-object met deze velden (lege string of 0 als iets niet te bepalen is):
@@ -1718,6 +1748,31 @@ Zet "recognized" op false als er geen wijnetiket op de foto staat.`;
         images_unavailable:"Foto's herkennen werkt niet in deze weergave. Vul de gegevens zelf in."}[e?.code] || "Herkennen lukte niet. Vul de gegevens zelf in of probeer opnieuw.";
       showManual(m);
     }
+  });
+
+  // ---------- free label reading (OCR) ----------
+  const OCR_FIELDS = {f_name:"Naam", f_producer:"Producent", f_vintage:"Jaargang", f_region:"Streek", f_country:"Land", f_grape:"Druif", f_desc:"Beschrijving", f_taste:"Aroma's & smaak", f_food:"Past bij", f_note:"Eigen notitie", f_tags:"Tags", f_loc:"Plaats in kelder", f_shop:"Gekocht bij", f_price:"Geschatte prijs", f_paid:"Zelf betaald", f_temp:"Schenktemperatuur"};
+  let ocrField = "f_name";
+  function showOcr(r){
+    const f = r.fields, box = $("ocrBox");
+    const got = [["name","naam"],["producer","producent"],["vintage","jaargang"],["region","streek"],["country","land"],["grape","druif"],["color","type"]].filter(([k])=>f[k]).map(x=>x[1]);
+    const chips = [...new Set(r.lines.filter(l=>l.useful).map(l=>l.text))].slice(0,30);
+    ocrField = "f_name";
+    if(!chips.length && !got.length){ box.innerHTML = `<p class="hint">Er werd weinig tekst gevonden. Probeer een scherpe foto recht van voor met goed licht, of vul de gegevens zelf in.</p>`; box.hidden = false; return; }
+    box.innerHTML = `<div class="eyebrow">Gelezen op het etiket</div>
+      ${got.length ? `<p class="hint">Al ingevuld: ${got.join(", ")}. Kijk het even na, de herkenning is niet altijd juist.</p>` : ""}
+      ${chips.length ? `<p class="hint">Tik in een veld en daarna op een stukje tekst. Nu vul je in: <b id="ocrTarget">${OCR_FIELDS[ocrField]}</b></p>
+      <div class="ocrchips">${chips.map(t=>`<button type="button" data-ocr="${esc(t)}">${esc(t)}</button>`).join("")}</div>` : ""}`;
+    box.hidden = false;
+  }
+  $("form").addEventListener("focusin", e => { if(OCR_FIELDS[e.target.id]){ ocrField = e.target.id; const t = $("ocrTarget"); if(t) t.textContent = OCR_FIELDS[ocrField]; } });
+  $("ocrBox").addEventListener("mousedown", e => { if(e.target.closest("[data-ocr]")) e.preventDefault(); });
+  $("ocrBox").addEventListener("click", e => {
+    const b = e.target.closest("[data-ocr]"), el = $(ocrField); if(!b || !el) return;
+    const t = b.dataset.ocr;
+    el.value = el.tagName==="TEXTAREA" && el.value.trim() ? el.value.trim() + " " + t : t;
+    if(ocrField==="f_tags") paintTagSugg();
+    el.classList.add("filled"); setTimeout(()=>el.classList.remove("filled"), 900);
   });
 
   $("form").addEventListener("submit", async e => {
