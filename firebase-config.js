@@ -14,4 +14,4 @@ window.MW_FIREBASE = {
 };
 
 // Address of the AI relay (worker/worker.js on Cloudflare). Empty = smart features off.
-window.MW_AI_URL = "";
+window.MW_AI_URL = "https://meerstraat-ai.deroover-maarten.workers.dev";
