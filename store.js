@@ -111,6 +111,8 @@
   // Ask the browser not to clear the cellar when the device is low on space.
   try{ navigator.storage && navigator.storage.persist && navigator.storage.persist(); }catch{}
 
-  const caps = {db, user, downloads, sample: null, mcp: null};
-  window.claude = {use: async name => (name in caps ? caps[name] : null), local: true};
+  // sample = AI. Only when a Gemini key is saved on this device (see ai.js); otherwise the app hides the AI features.
+  const caps = {db, user, downloads, mcp: null};
+  const ai = () => (window.mwAi && window.mwAi.hasKey() ? window.mwAi.sample : null);
+  window.claude = {use: async name => (name === "sample" ? ai() : name in caps ? caps[name] : null), local: true};
 })();

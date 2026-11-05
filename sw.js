@@ -1,7 +1,7 @@
 // Offline support: the app itself is cached on first visit, so it opens without a connection.
 // Bump VERSION whenever a file below changes so phones pick up the new version.
-const VERSION = "mw-v2";
-const SHELL = ["./", "index.html", "store.js", "ocr.js", "world.json", "manifest.webmanifest",
+const VERSION = "mw-v3";
+const SHELL = ["./", "index.html", "store.js", "ocr.js", "ai.js", "world.json", "manifest.webmanifest",
   "icons/icon.svg", "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png"];
 
 self.addEventListener("install", e => {

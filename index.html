@@ -299,7 +299,8 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
 <div class="wrap">
   <header>
     <div class="brand"><span class="eyebrow">Enoteca di casa · Londerzeel</span><h1>Meerstraat <em>wines</em></h1></div>
-    <span class="count" id="count"></span>
+    <div style="display:flex;align-items:center;gap:10px"><span class="count" id="count"></span>
+      <button class="btn ghost sm" id="settingsBtn" type="button" aria-label="Instellingen" style="padding:7px 9px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button></div>
   </header>
   <nav class="tabs" role="tablist" aria-label="Weergave">
     <button role="tab" id="t_kelder" data-tab="kelder" aria-selected="true">Kelder<span class="n" id="n_kelder"></span></button>
@@ -376,6 +377,23 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
   <input id="impFile" type="file" accept=".json,application/json" hidden>
 </div>
 
+<div class="sheet" id="settings" hidden>
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="setTitle">
+    <h2 id="setTitle">Instellingen</h2>
+    <div class="sharebox">
+      <h3>Slimme functies met Gemini</h3>
+      <p id="setState"></p>
+      <p>Met een gratis sleutel van Google werken het etiket herkennen, "Wat drink ik vanavond?", de Vraag-tab, het weetje van de dag, gerechten en info over het wijnhuis.</p>
+      <p>1. Open <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> en meld je aan met je Google-account.<br>2. Tik op <b>Create API key</b> en kopieer de sleutel.<br>3. Plak hem hieronder en tik op Bewaar.</p>
+      <label>Gemini API-sleutel<input id="setKey" type="password" autocomplete="off" spellcheck="false" placeholder="AIza…"></label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm" type="button" id="setSave">Bewaar</button><button class="btn ghost sm" type="button" id="setDel">Verwijder sleutel</button></div>
+      <p class="err" id="setMsg" hidden></p>
+      <p>De sleutel blijft alleen op dit toestel en gaat enkel naar Google. Bij gratis gebruik mag Google je vragen en foto's gebruiken om hun AI te verbeteren, en er geldt een daglimiet. Zonder sleutel blijft de gratis tekstherkenning werken.</p>
+    </div>
+    <div class="actions"><button class="btn ghost" type="button" id="setClose">Sluiten</button></div>
+  </div>
+</div>
+
 <div class="sheet" id="cmp" hidden>
   <div class="panel" role="dialog" aria-modal="true" aria-labelledby="cmpTitle">
     <h2 id="cmpTitle">Vergelijken</h2>
@@ -399,7 +417,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
       <img id="pimg" alt="Foto van de fles">
       <div class="thinking" id="thinking">
         <strong>Etiket lezen…</strong>
-        <span class="status">Claude herkent de wijn en schrijft een beschrijving.</span>
+        <span class="status">Gemini herkent de wijn en schrijft een beschrijving.</span>
         <div class="pour"><i></i></div>
       </div>
     </div>
@@ -451,6 +469,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
   </div>
 </div>
 
+<script src="ai.js"></script>
 <script src="store.js"></script>
 <script src="ocr.js"></script>
 <script>
@@ -683,9 +702,9 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
         ${h.about?`<p>${esc(h.about)}</p>`:""}
         ${f.length?`<dl class="facts">${f.map(x=>`<div><dt>${x[0]}</dt><dd>${esc(x[1])}</dd></div>`).join("")}</dl>`:""}
         ${houseLinks(w)}
-        <p class="src">Uit de kennis van Claude, zonder live opzoeking. Details kunnen verouderd zijn.</p></section>`;
+        <p class="src">Uit de kennis van Gemini, zonder live opzoeking. Details kunnen verouderd zijn.</p></section>`;
     }
-    if(h && h.unknown) return `<section class="house"><div class="eyebrow">Het wijnhuis</div><p class="hint">Claude vond geen betrouwbare informatie over ${who}.</p>${houseLinks(w)}</section>`;
+    if(h && h.unknown) return `<section class="house"><div class="eyebrow">Het wijnhuis</div><p class="hint">Gemini vond geen betrouwbare informatie over ${who}.</p>${houseLinks(w)}</section>`;
     if(!sample) return "";
     const busy = houseBusy.get(w.id);
     return `<section class="house"><div class="eyebrow">Het wijnhuis</div>
@@ -704,10 +723,10 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
     const tip = tipRes.get(w.id), sres = shopRes.get(w.id);
     let tipBlock = "";
     if(sample){
-      if(!tip) tipBlock = `<div><button class="btn ghost sm" type="button" data-act="shoptip" data-id="${w.id}">Vraag Claude naar importeur en winkels</button></div>`;
-      else if(tip.busy) tipBlock = `<p class="hint">Claude denkt na…</p>`;
+      if(!tip) tipBlock = `<div><button class="btn ghost sm" type="button" data-act="shoptip" data-id="${w.id}">Vraag Gemini naar importeur en winkels</button></div>`;
+      else if(tip.busy) tipBlock = `<p class="hint">Gemini denkt na…</p>`;
       else if(tip.err) tipBlock = `<p class="hint">${esc(tip.err)}</p><div><button class="btn ghost sm" type="button" data-act="shoptip" data-id="${w.id}">Opnieuw</button></div>`;
-      else tipBlock = `<p>${esc(tip.text)}</p><p class="src">Uit de kennis van Claude, niet live gecontroleerd. Bel of kijk online of de wijn nog in het gamma zit.</p>`;
+      else tipBlock = `<p>${esc(tip.text)}</p><p class="src">Uit de kennis van Gemini, niet live gecontroleerd. Bel of kijk online of de wijn nog in het gamma zit.</p>`;
     }
     let near = "";
     if(mcp){
@@ -729,7 +748,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
     const prompt = `Je bent een wijnkenner in België. Waar kan iemand in België (of anders online in Europa) deze wijn waarschijnlijk kopen? Wijn: ${w.name}${w.vintage?" "+w.vintage:""}, producent: ${w.producer||"onbekend"}, streek: ${[w.region,w.country].filter(Boolean).join(", ")||"onbekend"}.
 Noem de Belgische importeur als je die met zekerheid kent, en het soort winkels of ketens waar zo'n wijn meestal ligt. Verzin geen namen: zeg het eerlijk als je het niet weet. Schrijf in het Nederlands, maximaal 4 zinnen, gewone tekst zonder opmaak.`;
     try{ const r = await sample(prompt); tipRes.set(w.id,{text:r.text.trim()}); }
-    catch(e){ if(e?.code==="cancelled") return; tipRes.set(w.id,{err: e?.code==="rate_limited" ? "Claude is even niet beschikbaar (gebruikslimiet of te veel aanvragen). Probeer later opnieuw." : e?.code==="not_granted" ? "Je gaf geen toestemming om Claude te gebruiken." : "Dat lukte niet. Probeer opnieuw."}); }
+    catch(e){ if(e?.code==="cancelled") return; tipRes.set(w.id,{err: e?.code==="rate_limited" ? "Gemini is even niet beschikbaar (gratis limiet bereikt of te veel aanvragen). Probeer later opnieuw." : e?.code==="not_granted" ? "Je Gemini-sleutel werkt niet. Kijk hem na bij Instellingen." : "Dat lukte niet. Probeer opnieuw."}); }
     render();
   }
 
@@ -1308,7 +1327,7 @@ Sleutels (streek|land): ${JSON.stringify(keys.slice(0,60))}`;
     if(!sample && !w.pairing) return "";
     const r = pairRes.get(w.id), saved = w.pairing?.text;
     let body = "";
-    if(r?.busy) body = `<div class="out">${r.text ? mdLite(r.text) : `<p class="hint">Claude zoekt gerechten bij deze fles…</p>`}</div><div><button class="link" type="button" data-act="pairstop" data-id="${w.id}">Stop</button></div>`;
+    if(r?.busy) body = `<div class="out">${r.text ? mdLite(r.text) : `<p class="hint">Gemini zoekt gerechten bij deze fles…</p>`}</div><div><button class="link" type="button" data-act="pairstop" data-id="${w.id}">Stop</button></div>`;
     else if(r?.err) body = `<p class="hint">${esc(r.err)}</p>`;
     else if(saved) body = `<div class="out">${mdLite(saved)}</div>`;
     const btn = r?.busy ? "" : `<div><button class="btn ${saved?"ghost ":""}sm" type="button" data-act="pair" data-id="${w.id}">${saved?"Andere gerechten":"Wat eet ik bij deze fles?"}</button></div>`;
@@ -1333,7 +1352,7 @@ Laat een lege regel tussen de gerechten. Geen inleiding, geen afsluiter.`;
       pairRes.delete(w.id); w.pairing = {text:res.text.trim(), at:TODAY}; render(); save(w.id, {pairing:w.pairing});
     }catch(e){
       if(e?.code==="cancelled"){ pairRes.delete(w.id); }
-      else pairRes.set(w.id, {err: e?.code==="rate_limited" ? "Claude is even niet beschikbaar (gebruikslimiet of te veel aanvragen). Probeer later opnieuw." : e?.code==="not_granted" ? "Je gaf geen toestemming om Claude te gebruiken." : "Dat lukte niet. Probeer opnieuw."});
+      else pairRes.set(w.id, {err: e?.code==="rate_limited" ? "Gemini is even niet beschikbaar (gratis limiet bereikt of te veel aanvragen). Probeer later opnieuw." : e?.code==="not_granted" ? "Je Gemini-sleutel werkt niet. Kijk hem na bij Instellingen." : "Dat lukte niet. Probeer opnieuw."});
       render();
     }
     pairCtl.delete(w.id);
@@ -1395,7 +1414,7 @@ Laat een lege regel tussen de gerechten. Geen inleiding, geen afsluiter.`;
       if(f){ fact = f; seenTitles.push(f.titel); try{ localStorage.setItem(key, JSON.stringify(f)); }catch{} }
       else factErr = "Het weetje van vandaag kon niet geladen worden.";
     }catch(e){
-      factErr = e?.code==="rate_limited" ? "Claude is even niet beschikbaar. Het weetje volgt later." : e?.code==="not_granted" ? "" : "Het weetje van vandaag kon niet geladen worden.";
+      factErr = e?.code==="rate_limited" ? "Gemini is even niet beschikbaar. Het weetje volgt later." : e?.code==="not_granted" ? "" : "Het weetje van vandaag kon niet geladen worden.";
     }
     factBusy = false; renderFact();
   }
@@ -1464,7 +1483,7 @@ ${data}`;
       reply.content = r.text; if(r.truncated) reply.content += "\n\n(Antwoord afgebroken. Stel een kleinere vraag.)";
     }catch(e){
       if(e?.code==="cancelled"){ reply.content = (e.text||"") + (e.text?"\n\n(Gestopt)":"Gestopt."); }
-      else { reply.err = true; reply.content = (e.text ? e.text+"\n\n" : "") + ({not_granted:"Je gaf geen toestemming om Claude te gebruiken.", rate_limited:"Claude is even niet beschikbaar (gebruikslimiet of te veel aanvragen). Probeer later opnieuw.", prompt_too_large:"Je kelder is te groot om in één keer mee te sturen."}[e?.code] || "Er ging iets mis. Probeer opnieuw."); }
+      else { reply.err = true; reply.content = (e.text ? e.text+"\n\n" : "") + ({not_granted:"Je Gemini-sleutel werkt niet. Kijk hem na bij Instellingen.", rate_limited:"Gemini is even niet beschikbaar (gratis limiet bereikt of te veel aanvragen). Probeer later opnieuw.", prompt_too_large:"Je kelder is te groot om in één keer mee te sturen."}[e?.code] || "Er ging iets mis. Probeer opnieuw."); }
     }
     reply.pending = false; askCtl = null; renderChat(); scrollChat();
   }
@@ -1635,7 +1654,7 @@ ${data}`;
     const cand = wines.filter(w=>w.status==="kelder" && w.stock>0);
     if(!cand.length){ lastPicks={msg:"Je hebt geen flessen meer op voorraad. Verhoog de voorraad bij een wijn om hier suggesties te krijgen."}; renderPicks(); return; }
     pickCtl?.abort(); pickCtl = new AbortController();
-    $("pickBtn").disabled = true; $("picks").innerHTML = `<p class="hint">Claude kijkt in je kelder…</p>`;
+    $("pickBtn").disabled = true; $("picks").innerHTML = `<p class="hint">Gemini kijkt in je kelder…</p>`;
     const data = cand.slice(0,150).map(w=>({id:w.id,naam:w.name,producent:w.producer,jaar:w.vintage,type:w.color,druif:w.grape,streek:[w.region,w.country].filter(Boolean).join(", "),score:w.score||null,flessen:w.stock,drinkvenster:windowText(w)||null,smaak:w.taste||null}));
     const prompt = `Je bent een sommelier. Kies uit de wijnkelder hieronder de 3 flessen (of minder als er minder passen) die het best passen bij dit gerecht: "${meal}". Houd rekening met de combinatie met het eten, het drinkvenster (dit jaar is ${YEAR}; geef voorrang aan wijnen die snel gedronken moeten worden) en de persoonlijke score. Schrijf in het Nederlands.
 Antwoord met ALLEEN dit JSON-object: {"picks":[{"id":"exacte id uit de lijst","why":"één zin waarom deze wijn past"}],"tip":"optioneel: één korte serveertip of ''"}
@@ -1644,10 +1663,10 @@ ${JSON.stringify(data)}`;
     try{
       const r = await sample.json(prompt, {signal:pickCtl.signal, modelTier:"quick"});
       const picks = (r?.picks||[]).filter(p=>cand.some(w=>w.id===String(p.id))).slice(0,3).map(p=>({id:String(p.id),why:String(p.why||"")}));
-      lastPicks = picks.length ? {picks, tip:String(r?.tip||"")} : {msg:"Claude vond geen passende fles in je kelder voor dit gerecht."};
+      lastPicks = picks.length ? {picks, tip:String(r?.tip||"")} : {msg:"Gemini vond geen passende fles in je kelder voor dit gerecht."};
     }catch(err){
       if(err?.code==="cancelled") return;
-      lastPicks = {msg: err?.code==="not_granted" ? "Je gaf geen toestemming om Claude te gebruiken." : err?.code==="rate_limited" ? "Claude is even niet beschikbaar: je hebt je gebruikslimiet bereikt of er liepen kort na elkaar te veel aanvragen. Probeer het over een tijdje opnieuw." : "Kiezen lukte niet. Probeer opnieuw."};
+      lastPicks = {msg: err?.code==="not_granted" ? "Je Gemini-sleutel werkt niet. Kijk hem na bij Instellingen." : err?.code==="rate_limited" ? "Gemini is even niet beschikbaar: de gratis limiet is bereikt of er liepen kort na elkaar te veel aanvragen. Probeer het over een tijdje opnieuw." : "Kiezen lukte niet. Probeer opnieuw."};
     }finally{ $("pickBtn").disabled=false; }
     renderPicks();
   });
@@ -1683,7 +1702,7 @@ ${JSON.stringify(data)}`;
     $("pimg").src = photo || ""; $("pimg").hidden = !photo;
     $("ocrBox").hidden = true;
     $("thinking").querySelector("strong").textContent = "Etiket lezen…";
-    $("thinking").querySelector(".status").textContent = sample ? "Claude herkent de wijn en schrijft een beschrijving." : "De tekst op het etiket wordt herkend op je telefoon.";
+    $("thinking").querySelector(".status").textContent = sample ? "Gemini herkent de wijn en schrijft een beschrijving." : "De tekst op het etiket wordt herkend op je telefoon.";
     $("thinking").hidden = !!editing; $("form").hidden = !editing; $("cancelOnly").hidden = !!editing; $("err").hidden=true;
   }
   function closeSheet(){ $("ocrBox").hidden = true; $("dup").hidden = true; dupFor = null; scanCtl?.abort(); scanCtl=null; $("sheet").hidden=true; draft=null; editingId=null; $("file").value=""; }
@@ -1707,9 +1726,10 @@ ${JSON.stringify(data)}`;
     const photo = await thumbFrom(file);
     draft = {photo}; editingId=null; openSheet(photo,false);
     const showManual = msg => { $("thinking").hidden=true; $("cancelOnly").hidden=true; $("form").hidden=false; fillForm({photo}); if(msg){$("err").textContent=msg;$("err").hidden=false;} };
-    if(!sample){
-      if(!window.mwOcr){ showManual("Automatisch herkennen is hier niet beschikbaar. Vul de gegevens zelf in."); return; }
+    const runOcr = async note => {
+      if(!window.mwOcr){ showManual(note || "Automatisch herkennen is hier niet beschikbaar. Vul de gegevens zelf in."); return; }
       const ctl = scanCtl = new AbortController(), st = $("thinking").querySelector(".status");
+      st.textContent = "De tekst op het etiket wordt herkend op je telefoon.";
       try{
         const r = await mwOcr.read(file, (s, p) => {
           const pct = Math.round(p * 100);
@@ -1720,13 +1740,14 @@ ${JSON.stringify(data)}`;
         Object.assign(draft, r.fields, {photo});
         $("thinking").hidden=true; $("cancelOnly").hidden=true; $("form").hidden=false; fillForm(draft);
         showOcr(r);
+        if(note){ $("err").textContent = note; $("err").hidden = false; }
         if(r.fields.name) showDup(r.fields);
       }catch(e){
         if(ctl.signal.aborted || !draft) return;
         showManual(navigator.onLine ? "De tekst kon niet gelezen worden. Vul de gegevens zelf in." : "Tekstherkenning moet de eerste keer met internet klaargezet worden. Vul de gegevens nu zelf in.");
       }
-      return;
-    }
+    };
+    if(!sample) return runOcr();
     scanCtl = new AbortController();
     const prompt = `Je bent een sommelier. De foto toont een wijnfles of het etiket ervan. Herken de wijn zo nauwkeurig mogelijk op basis van wat op het etiket staat en je kennis van deze wijn of producent. Schrijf alles in het Nederlands. Dit jaar is ${YEAR}.
 Antwoord met ALLEEN één JSON-object met deze velden (lege string of 0 als iets niet te bepalen is):
@@ -1741,8 +1762,9 @@ Zet "recognized" op false als er geen wijnetiket op de foto staat.`;
       Object.assign(draft, r, {photo});
       $("thinking").hidden=true; $("cancelOnly").hidden=true; $("form").hidden=false; fillForm(draft); showDup(r);
     }catch(e){
-      if(e?.code==="cancelled") return;
-      const m = {not_granted:"Je gaf geen toestemming om Claude te gebruiken. Vul de gegevens zelf in.",
+      if(e?.code==="cancelled" || !draft) return;
+      if(window.mwOcr && e?.code!=="image_rejected") return runOcr((e?.code==="rate_limited" ? "Gemini is even niet beschikbaar (gratis limiet bereikt)." : e?.code==="bad_key" ? "Je Gemini-sleutel werkt niet. Kijk hem na bij Instellingen." : "Gemini kon de foto niet verwerken.") + " De gratis tekstherkenning is gebruikt.");
+      const m = {not_granted:"Je Gemini-sleutel werkt niet. Kijk hem na bij Instellingen. Vul de gegevens zelf in.",
         rate_limited:"Even te veel aanvragen. Vul de gegevens zelf in of probeer straks opnieuw.",
         image_rejected:"Deze foto kon niet gelezen worden. Probeer een andere foto.",
         images_unavailable:"Foto's herkennen werkt niet in deze weergave. Vul de gegevens zelf in."}[e?.code] || "Herkennen lukte niet. Vul de gegevens zelf in of probeer opnieuw.";
@@ -1800,6 +1822,27 @@ Zet "recognized" op false als er geen wijnetiket op de foto staat.`;
       $("err").hidden=false;
     }finally{ $("save").disabled=false; }
   });
+
+  // ---------- settings (Gemini key) ----------
+  function openSettings(){
+    const has = window.mwAi?.hasKey();
+    $("setState").innerHTML = has ? "<b>Aan:</b> er is een sleutel bewaard op dit toestel." : "<b>Uit:</b> nog geen sleutel.";
+    $("setKey").value = ""; $("setMsg").hidden = true; $("setDel").hidden = !has; $("settings").hidden = false;
+  }
+  $("settingsBtn").onclick = openSettings;
+  $("setClose").onclick = () => { $("settings").hidden = true; };
+  $("setDel").onclick = () => { window.mwAi?.setKey(""); location.reload(); };
+  $("setSave").onclick = async () => {
+    const k = $("setKey").value.trim(), msg = $("setMsg");
+    if(!k){ msg.textContent = "Plak eerst je sleutel."; msg.hidden = false; return; }
+    $("setSave").disabled = true; msg.hidden = false; msg.textContent = "Sleutel testen…";
+    const r = await window.mwAi.test(k);
+    $("setSave").disabled = false;
+    if(r === "bad"){ msg.textContent = "Deze sleutel werkt niet. Kopieer hem opnieuw uit Google AI Studio."; return; }
+    window.mwAi.setKey(k);
+    msg.textContent = r === "offline" ? "Bewaard. Testen lukte niet zonder internet." : "Werkt! De app herlaadt.";
+    setTimeout(() => location.reload(), 700);
+  };
 
   // ---------- boot ----------
   render();
