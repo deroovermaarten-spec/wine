@@ -26,7 +26,12 @@ jobs:
       - name: Collect site files
         run: |
           mkdir _site
-          rsync -a --exclude .git --exclude .github --exclude README.md --exclude firestore.rules --exclude worker ./ _site/
+          rsync -a --exclude .git --exclude .github --exclude .claude --exclude README.md --exclude firestore.rules --exclude worker ./ _site/
+      - name: Stamp the app version
+        # Every publish gets its own cache name, so phones always pick up the new files.
+        run: |
+          sed -i "s/__BUILD__/${GITHUB_SHA::8}-${GITHUB_RUN_NUMBER}/" _site/sw.js
+          grep -q '__BUILD__' _site/sw.js && { echo "version stamp failed"; exit 1; } || true
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site

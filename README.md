@@ -21,11 +21,26 @@ Terugzetten is veilig om te herhalen: wijnen die al bestaan worden bijgewerkt, n
 > Op een iPhone heeft de app op het beginscherm een eigen opslag, los van Safari.
 > Zet je back-up dus terug *in* de geïnstalleerde app.
 
-## Etiket scannen (gratis, op de telefoon)
+## Etiket scannen
 
-"Scan een fles" leest het etiket met gratis tekstherkenning op de telefoon (Tesseract):
-jaargang, streek, land, type en druif worden ingevuld en elke gelezen regel verschijnt als
-knopje om in een veld te zetten. Geen sleutel of abonnement nodig; na de eerste scan werkt het offline.
+"Scan een fles" laat Claude het etiket herkennen (zie hieronder). Staan de slimme functies uit,
+dan vul je de gegevens zelf in bij de foto.
+
+Offline (bv. in de kelder) tik je op **Later herkennen**: de fles wordt meteen bewaard met wat je
+invulde (voorraad, plaats…) en krijgt het label "Wacht op herkenning". De foto blijft op die telefoon
+staan (IndexedDB `mw-scan-queue`). Zodra die telefoon weer online is, vult Claude de lege velden aan.
+
+## Updates
+
+Bij elke push vult de workflow een nieuw versienummer in `sw.js` in (`__BUILD__` wordt de commit-id).
+Telefoons zien dan "Er is een nieuwe versie" en vernieuwen pas als je erop tikt. Lokaal blijft het
+`__BUILD__`: dan komen de app-bestanden altijd vers van de schijf.
+Bibliotheken en lettertypes (`vendor/`, `fonts/`) zitten in een aparte cache die updates overleeft;
+verhoog `LIBS` in `sw.js` alleen als je daar zelf een bestand vervangt.
+
+## Snelkoppelingen
+
+Lang drukken op het app-icoon (Android, en Chrome op de computer) toont "Vanavond", "Verlanglijst" en "Inzichten".
 
 ## Slimme functies met Claude (betalen per gebruik)
 
@@ -66,8 +81,8 @@ Bestaande wijnen op de telefoon zet je over met "Zet ze in deze kelder" in het k
 | --- | --- |
 | `index.html` | De app (zelfde code als de Claude-versie) |
 | `store.js` | Opslag op het toestel (IndexedDB) in plaats van de Claude-database |
-| `ocr.js`, `vendor/tesseract/` | Gratis tekstherkenning op het toestel |
-| `sw.js` | Offline werken |
+| `sw.js` | Offline werken en updates |
+| `fonts/` | De lettertypes, zelf gehost zodat ze offline werken |
 | `world.json` | Wereldkaart voor Inzichten |
 | `manifest.webmanifest`, `icons/` | Naam en icoon op het beginscherm |
 | `.github/workflows/pages.yml` | Publiceert de app op GitHub Pages bij elke push |

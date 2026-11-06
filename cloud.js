@@ -62,7 +62,66 @@
 .mwcell .line input{flex:1 1 180px}
 .mwpick{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:10px 12px;text-align:left;display:flex;justify-content:space-between;gap:10px;width:100%}
 .mwpick[aria-current="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
-.mwpick small{color:var(--muted)}`;
+.mwpick small{color:var(--muted)}
+.mwi{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.mwtop{display:flex;justify-content:space-between;align-items:center;gap:10px;position:sticky;top:-20px;margin:-20px 0 0;padding:20px 0 6px;background:var(--surface);z-index:1}
+.mwx{border:0;background:var(--bg);color:var(--ink);width:38px;height:38px;border-radius:50%;display:grid;place-items:center;flex:none}
+.mwsec{display:flex;flex-direction:column;gap:10px;padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+.mwhead{display:flex;align-items:center;gap:10px}
+.mwhead h3{margin:0;font-size:1rem;flex:1;min-width:0}
+.mwhead small{color:var(--muted);font-size:.8rem;font-weight:600}
+.mwbadge{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);flex:none}
+.mwsec p{margin:0;font-size:.86rem;color:var(--muted)}
+.mwsec p .mwi{width:15px;height:15px;vertical-align:-3px}
+.mwme{display:flex;align-items:center;gap:12px;padding:14px;border-radius:14px;background:var(--accent-soft)}
+.mwme .who{flex:1;min-width:0;display:flex;flex-direction:column}
+.mwme .who small{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mwav{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:.95rem;flex:none}
+.mwme .mwav{width:46px;height:46px;font-size:1.2rem;background:var(--accent);color:var(--onaccent)}
+.mwrow .mwav{margin-right:2px}
+.mwrow .who{flex:1}
+.mwrole{font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--gold);color:var(--onaccent);align-self:flex-start;margin-top:3px}
+.mwic{border:1px solid var(--line);background:none;color:var(--muted);width:36px;height:36px;border-radius:10px;display:grid;place-items:center;flex:none}
+.mwic.danger:hover,.mwic.danger:focus-visible{color:var(--accent);border-color:var(--accent)}
+.mwsec .btn{gap:7px}
+.mwsec .btn .mwi{width:16px;height:16px}
+.mwpick{align-items:center}
+.mwpick > span{display:flex;align-items:center;gap:8px;min-width:0}
+.mwpick small{display:flex;align-items:center;gap:4px;flex:none}
+.mwpick small .mwi{width:14px;height:14px}
+.mwpick .tick{color:var(--accent)}
+.mwdanger{display:flex;flex-direction:column;gap:6px;padding:4px 2px}
+.mwdanger button{border:0;background:none;color:var(--accent);font:inherit;font-size:.9rem;font-weight:600;display:inline-flex;align-items:center;gap:8px;padding:8px 0;align-self:flex-start}
+.mwtech summary{cursor:pointer;color:var(--muted);font-size:.8rem;display:inline-flex;align-items:center;gap:6px;list-style:none}
+.mwtech summary::-webkit-details-marker{display:none}
+.mwmanage{align-self:flex-start;margin-top:4px;display:inline-flex;align-items:center;gap:6px;text-decoration:none;font-weight:600}
+.mwmanage .mwi{width:15px;height:15px}
+.mwtech p{font-size:.74rem;color:var(--muted);word-break:break-all;margin:6px 0 0}`;
+  const ICONS = {
+    user: '<circle cx="12" cy="8" r="3.6"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/>',
+    users: '<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.6"/><path d="M15.5 14.2c3 .2 5.5 2.6 5.5 5.8"/>',
+    userPlus: '<circle cx="10" cy="8" r="3.6"/><path d="M3 20c0-3.9 3.1-7 7-7 1.5 0 2.9.5 4 1.3"/><path d="M19 14v6M16 17h6"/>',
+    userMinus: '<circle cx="10" cy="8" r="3.6"/><path d="M3 20c0-3.9 3.1-7 7-7 1.5 0 2.9.5 4 1.3"/><path d="M16 17h6"/>',
+    cellar: '<path d="M3 21V10l9-6 9 6v11"/><path d="M8 21v-5a4 4 0 0 1 8 0v5"/>',
+    stack: '<path d="M12 3 2 8l10 5 10-5z"/><path d="m2 13 10 5 10-5"/>',
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    pencil: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/>',
+    link: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1.5 1.5"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1.5-1.5"/>',
+    copy: '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 0 1 1-1h10"/>',
+    share: '<path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/>',
+    phone: '<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>',
+    upload: '<path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 20h16"/>',
+    logout: '<path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 16l-4-4 4-4M6 12h10"/>',
+    trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
+    check: '<path d="m5 12 5 5 9-10"/>',
+    close: '<path d="M6 6l12 12M18 6 6 18"/>',
+    info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+    heart: '<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/>',
+    gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/>'
+  };
+  const ico = n => `<svg class="mwi" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n]}</svg>`;
+  const initial = s => esc((String(s || "?").trim()[0] || "?").toUpperCase());
+  const head = (icon, title, extra = "") => `<div class="mwhead"><span class="mwbadge">${ico(icon)}</span><h3>${title}</h3>${extra}</div>`;
   function injectCss(){ const st = document.createElement("style"); st.textContent = css; document.head.appendChild(st); }
 
   const ERR = {
@@ -220,15 +279,15 @@
   function prefsHtml(){
     const d = prefDraft || (prefDraft = {...cloud.prefs, grapesTxt: cloud.prefs.grapes.join(", "), regionsTxt: cloud.prefs.regions.join(", "), avoidTxt: cloud.prefs.avoid.join(", ")});
     const sugg = (window.mwSuggest && window.mwSuggest()) || [];
-    return `<div class="sharebox"><h3>Mijn smaak</h3>
-      <p class="hint" style="margin:0">Daarmee kun je in de kelder filteren op "Mijn smaak", en houdt "Wat drink ik vanavond?" er rekening mee. Alleen jij past dit aan; het geldt in al je kelders.</p>
+    return `<section class="mwsec">${head("heart", "Mijn smaak", `<small>alleen jij</small>`)}
+      <p>Daarmee kun je in de kelder filteren op "Mijn smaak", en houdt "Wat drink ik vanavond?" er rekening mee. Alleen jij past dit aan; het geldt in al je kelders.</p>
       <div class="mwchips">${Object.entries(PREF_COLORS).map(([k, v]) => `<button type="button" class="chip" data-pcolor="${k}" aria-pressed="${d.colors.includes(k)}"><span class="dot ${k}"></span>${v}</button>`).join("")}</div>
       <label class="mwlab">Favoriete druiven<input id="mwPG" data-pf="grapesTxt" list="mwSugg" value="${esc(d.grapesTxt)}" placeholder="bv. Albariño, Tempranillo"></label>
       <label class="mwlab">Favoriete streken of landen<input id="mwPR" data-pf="regionsTxt" list="mwSugg" value="${esc(d.regionsTxt)}" placeholder="bv. Rioja, Douro, Portugal"></label>
       <label class="mwlab">Liever niet<input id="mwPA" data-pf="avoidTxt" list="mwSugg" value="${esc(d.avoidTxt)}" placeholder="bv. Chardonnay, zoete wijn"></label>
       <label class="mwlab">In je eigen woorden (optioneel)<input id="mwPN" data-pf="note" value="${esc(d.note)}" placeholder="bv. fris en droog, niet te veel hout"></label>
       <datalist id="mwSugg">${sugg.map(x => `<option value="${esc(x)}">`).join("")}</datalist>
-      <div><button class="btn sm" type="button" data-a="prefs">Bewaar mijn smaak</button></div></div>`;
+      <div><button class="btn sm" type="button" data-a="prefs">${ico("check")}Bewaar mijn smaak</button></div></section>`;
   }
   async function savePrefs(){
     const d = prefDraft;
@@ -315,7 +374,7 @@
     const draw = () => {
       p.innerHTML = cloud.cellars.map(x => { const cur = x.id === cloud.cellar.id, n = (x.memberIds || []).length;
         return `<button type="button" class="mwbelli" role="menuitemradio" aria-checked="${cur}" data-pick="${esc(x.id)}"><b>${cur ? "✓ " : ""}${esc(cur ? cloud.cellar.name : x.name)}</b><small>${n > 1 ? n + " leden" : "alleen jij"}${x.owner !== cloud.me.uid ? " · gedeeld" : ""}</small></button>`; }).join("")
-        + `<button type="button" class="link" data-manage="1" style="align-self:flex-start;margin-top:4px">Kelders en account beheren</button>`;
+        + `<button type="button" class="link mwmanage" data-manage="1">${ico("gear")}Instellingen</button>`;
     };
     draw();
     const r = b.getBoundingClientRect();
@@ -335,17 +394,22 @@
       host.appendChild(b);
     }
     const n = (cloud.cellar.memberIds || []).length;
-    b.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">${n > 1 ? '<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.6"/><path d="M15.5 14.2c3 .2 5.5 2.6 5.5 5.8"/>' : '<circle cx="12" cy="8" r="3.6"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/>'}</svg><span>${esc(cloud.cellar.name)}</span>${cloud.cellars.length > 1 ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>` : ""}`;
-    b.setAttribute("aria-label", "Kelder en account: " + cloud.cellar.name);
+    const many = cloud.cellars.length > 1;
+    b.innerHTML = `${ico(n > 1 ? "users" : "user")}<span>${esc(cloud.cellar.name)}</span>${many ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>` : ""}`;
+    b.setAttribute("aria-label", (many ? "Kies een kelder: " : "Instellingen: ") + cloud.cellar.name);
   }
 
   let sheetMsg = "", inviteLink = "", localCount = null;
   function makeSheet(){
     const sh = document.createElement("div"); sh.className = "sheet"; sh.id = "mwSheet"; sh.hidden = true;
-    sh.innerHTML = `<div class="panel" role="dialog" aria-modal="true" aria-labelledby="mwSheetTitle"><h2 id="mwSheetTitle">Kelders en account</h2><div class="mwcell" id="mwBody"></div>
-      <div class="actions"><button class="btn ghost" type="button" id="mwClose">Sluiten</button></div></div>`;
+    sh.innerHTML = `<div class="panel" role="dialog" aria-modal="true" aria-labelledby="mwSheetTitle">
+      <div class="mwtop"><h2 id="mwSheetTitle">Instellingen</h2><button class="mwx" type="button" id="mwClose" aria-label="Sluiten">${ico("close")}</button></div>
+      <div class="mwcell" id="mwBody"></div></div>`;
     document.body.appendChild(sh);
-    $("mwClose").onclick = () => { sh.hidden = true; sheetMsg = ""; inviteLink = ""; prefDraft = null; };
+    const close = () => { sh.hidden = true; sheetMsg = ""; inviteLink = ""; prefDraft = null; };
+    $("mwClose").onclick = close;
+    sh.addEventListener("click", e => { if(e.target === sh) close(); });
+    document.addEventListener("keydown", e => { if(e.key === "Escape" && !sh.hidden) close(); });
     $("mwBody").addEventListener("click", onSheetClick);
     $("mwBody").addEventListener("input", e => { const k = e.target.dataset.pf; if(k && prefDraft) prefDraft[k] = e.target.value; });
   }
@@ -355,27 +419,41 @@
       .sort((a, b) => (b[1].role === "owner") - (a[1].role === "owner"));
     if(localCount === null) countLocal();
     const keepNew = $("mwNew")?.value || "", keepName = $("mwRename")?.value, focus = document.activeElement?.id;
+    const ownerName = (c.members?.[c.owner] || {}).name || "de eigenaar";
     $("mwBody").innerHTML = `
       ${sheetMsg ? `<p class="err">${esc(sheetMsg)}</p>` : ""}
-      <div class="sharebox"><h3>Deze kelder</h3>
-        ${owner ? `<div class="line"><input id="mwRename" value="${esc(c.name)}" aria-label="Naam van de kelder"><button class="btn ghost sm" type="button" data-a="rename">Hernoem</button></div>` : `<p><b>${esc(c.name)}</b>, gedeeld door ${esc((c.members?.[c.owner] || {}).name || "de eigenaar")}</p>`}
-        <div>${members.map(([uid, m]) => `<div class="mwrow"><span class="who"><b>${esc(m.name)}${uid === me.uid ? " (jij)" : ""}</b><small>${esc(m.email)} · ${m.role === "owner" ? "eigenaar" : "lid"}</small></span>
-          ${owner && uid !== me.uid ? `<button class="link" type="button" data-a="kick" data-uid="${esc(uid)}">Verwijder</button>` : ""}</div>`).join("")}</div>
-        ${inviteLink ? `<p>Stuur deze link naar wie je wilt uitnodigen. Hij werkt 7 dagen.</p>
-          <div class="line"><input id="mwLink" readonly value="${esc(inviteLink)}"><button class="btn sm" type="button" data-a="copy">Kopieer</button>${navigator.share ? `<button class="btn ghost sm" type="button" data-a="share">Deel</button>` : ""}</div>`
-          : `<div><button class="btn sm" type="button" data-a="invite">Nodig iemand uit</button></div>`}
-        ${owner ? (cloud.cellars.length > 1 ? `<div><button class="link" type="button" data-a="delcellar">Verwijder deze kelder</button></div>` : "") : `<div><button class="link" type="button" data-a="leave">Verlaat deze kelder</button></div>`}
-      </div>
-      <div class="sharebox"><h3>Je kelders</h3>
-        ${cloud.cellars.map(x => `<button class="mwpick" type="button" data-a="switch" data-id="${esc(x.id)}" aria-current="${x.id === c.id}"><span>${esc(x.id === c.id ? c.name : x.name)}</span><small>${(x.memberIds || []).length > 1 ? (x.memberIds.length) + " leden" : "alleen jij"}${x.owner !== me.uid ? " · gedeeld" : ""}</small></button>`).join("")}
-        <div class="line"><input id="mwNew" placeholder="Naam nieuwe kelder, bv. Wijnclub" aria-label="Naam nieuwe kelder"><button class="btn ghost sm" type="button" data-a="new">Maak</button></div>
-      </div>
-      ${localCount ? `<div class="sharebox"><h3>Wijnen op dit toestel</h3><p>Op dit toestel staan nog ${localCount} wijn${localCount === 1 ? "" : "en"} van voor je je aanmeldde. Zet ze in "${esc(c.name)}".</p>
-        <div><button class="btn sm" type="button" data-a="migrate">Zet ze in deze kelder</button></div></div>` : ""}
+      <div class="mwme"><span class="mwav">${initial(me.name)}</span>
+        <span class="who"><b>${esc(me.name)}</b><small>${esc(me.email)}</small></span>
+        <button class="btn ghost sm" type="button" data-a="logout">${ico("logout")}Afmelden</button></div>
+
+      <section class="mwsec">${head("cellar", "Deze kelder", owner ? "" : `<small>van ${esc(ownerName)}</small>`)}
+        ${owner ? `<div class="line"><input id="mwRename" value="${esc(c.name)}" aria-label="Naam van de kelder"><button class="btn ghost sm" type="button" data-a="rename">${ico("pencil")}Hernoem</button></div>`
+          : `<p>Je bent lid van <b>${esc(c.name)}</b>. Je ziet en bewerkt dezelfde wijnen als de anderen.</p>`}
+      </section>
+
+      <section class="mwsec">${head("users", "Wie kan meekijken", `<small>${members.length} ${members.length === 1 ? "persoon" : "personen"}</small>`)}
+        <div>${members.map(([uid, m]) => `<div class="mwrow"><span class="mwav">${initial(m.name)}</span><span class="who"><b>${esc(m.name)}${uid === me.uid ? " (jij)" : ""}</b><small>${esc(m.email)}</small>${m.role === "owner" ? `<span class="mwrole">Eigenaar</span>` : ""}</span>
+          ${owner && uid !== me.uid ? `<button class="mwic danger" type="button" data-a="kick" data-uid="${esc(uid)}" aria-label="${esc(m.name)} verwijderen" title="Verwijder uit de kelder">${ico("userMinus")}</button>` : ""}</div>`).join("")}</div>
+        ${inviteLink ? `<p>${ico("link")} Stuur deze link naar wie je wilt uitnodigen. Hij werkt 7 dagen.</p>
+          <div class="line"><input id="mwLink" readonly value="${esc(inviteLink)}"><button class="btn sm" type="button" data-a="copy">${ico("copy")}Kopieer</button>${navigator.share ? `<button class="btn ghost sm" type="button" data-a="share">${ico("share")}Deel</button>` : ""}</div>`
+          : `<div><button class="btn sm" type="button" data-a="invite">${ico("userPlus")}Nodig iemand uit</button></div>`}
+      </section>
+
+      <section class="mwsec">${head("stack", "Je kelders", `<small>${cloud.cellars.length}</small>`)}
+        ${cloud.cellars.length > 1 ? `<p>Tik op een kelder om ernaar te wisselen.</p>` : ""}
+        ${cloud.cellars.map(x => { const cur = x.id === c.id, n = (x.memberIds || []).length; return `<button class="mwpick" type="button" data-a="switch" data-id="${esc(x.id)}" aria-current="${cur}"><span>${cur ? `<span class="tick">${ico("check")}</span>` : ico("cellar")}<span>${esc(cur ? c.name : x.name)}</span></span><small>${n > 1 ? ico("users") + n : ico("user") + "alleen jij"}${x.owner !== me.uid ? " · gedeeld" : ""}</small></button>`; }).join("")}
+        <div class="line"><input id="mwNew" placeholder="Naam nieuwe kelder, bv. Wijnclub" aria-label="Naam nieuwe kelder"><button class="btn ghost sm" type="button" data-a="new">${ico("plus")}Maak</button></div>
+      </section>
+
+      ${localCount ? `<section class="mwsec">${head("phone", "Wijnen op dit toestel")}<p>Op dit toestel staan nog ${localCount} wijn${localCount === 1 ? "" : "en"} van voor je je aanmeldde. Zet ze in "${esc(c.name)}".</p>
+        <div><button class="btn sm" type="button" data-a="migrate">${ico("upload")}Zet ze in deze kelder</button></div></section>` : ""}
+
       ${prefsHtml()}
-      <div class="sharebox"><h3>Account</h3><p>Aangemeld als <b>${esc(me.name)}</b> (${esc(me.email)})</p>
-        <p class="hint" style="font-size:.72rem;word-break:break-all">Gebruikers-id: <span style="user-select:all">${esc(me.uid)}</span></p>
-        <div><button class="btn ghost sm" type="button" data-a="logout">Afmelden</button></div></div>`;
+
+      <div class="mwdanger">
+        ${owner ? (cloud.cellars.length > 1 ? `<button type="button" data-a="delcellar">${ico("trash")}Verwijder deze kelder</button>` : "") : `<button type="button" data-a="leave">${ico("logout")}Verlaat deze kelder</button>`}
+        <details class="mwtech"><summary>${ico("info")}Technische gegevens</summary><p>Gebruikers-id: <span style="user-select:all">${esc(me.uid)}</span></p></details>
+      </div>`;
     if($("mwNew")) $("mwNew").value = keepNew;
     if($("mwRename") && keepName !== undefined && focus === "mwRename") $("mwRename").value = keepName;
     if(focus && $(focus)) $(focus).focus();
@@ -406,7 +484,7 @@
         inviteLink = location.origin + location.pathname + "?join=" + code + (EMU ? "&emu=1" : "");
         drawSheet(); return;
       }
-      if(a === "copy"){ try{ await navigator.clipboard.writeText(inviteLink); b.textContent = "Gekopieerd"; }catch{ $("mwLink").select(); } return; }
+      if(a === "copy"){ try{ await navigator.clipboard.writeText(inviteLink); b.innerHTML = ico("check") + "Gekopieerd"; }catch{ $("mwLink").select(); } return; }
       if(a === "share"){ try{ await navigator.share({title: "Mijn wijnkelder", text: `${cloud.me.name} nodigt je uit voor de wijnkelder "${c.name}".`, url: inviteLink}); }catch{} return; }
       if(a === "kick"){
         const uid = b.dataset.uid, m = (c.members || {})[uid] || {};
