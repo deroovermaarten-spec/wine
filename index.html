@@ -301,7 +301,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
   <header>
     <div class="brand"><span class="eyebrow">Enoteca di casa · Londerzeel</span><h1>Mijn <em>wijnkelder</em></h1></div>
     <span class="count" id="count"></span>
-    <button class="btn ghost sm" id="themeBtn" type="button" style="padding:7px 9px"></button>
+    <div id="hdrBtns" style="display:flex;gap:8px;align-items:center"><button class="btn ghost sm" id="themeBtn" type="button" style="padding:7px 9px"></button></div>
   </header>
   <nav class="tabs" role="tablist" aria-label="Weergave">
     <button role="tab" id="t_kelder" data-tab="kelder" aria-selected="true">Kelder<span class="n" id="n_kelder"></span></button>
@@ -931,6 +931,7 @@ Noem de Belgische importeur als je die met zekerheid kent, en het soort winkels 
       e.target.disabled = true;
       const w = {...sharedDoc}; delete w.id; delete w.sharedAt;
       Object.assign(w,{status:"wens", stock:0, tastings:[], score:0, tags:["gedeeld"], createdAt:Date.now(), shareId:"", openedAt:""});
+      if(window.mwCloud?.me) w.addedBy = {uid: window.mwCloud.me.uid, name: window.mwCloud.me.name};
       try{ await col.doc().set(w); $("sharedMsg").textContent = "Staat op je verlanglijst."; }
       catch{ $("sharedMsg").textContent = "Bewaren lukte niet. Je hebt mogelijk geen schrijfrechten op deze app."; e.target.disabled=false; }
     }
@@ -1588,6 +1589,7 @@ ${data}`;
     const c = $("c_"+id); if(c){ c.scrollIntoView({behavior: matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth", block:"start"}); c.classList.add("flash"); setTimeout(()=>c.classList.remove("flash"),1600); }
   }
   document.addEventListener("click", e => { const g = e.target.closest("[data-goto]"); if(g) goTo(g.dataset.goto); });
+  window.mwGoTo = goTo;
   document.querySelector(".tabs").addEventListener("click", e => { const b=e.target.closest("[data-tab]"); if(!b) return;
     if(b.dataset.tab===tab){ toTop(); return; }
     const tabsY = document.querySelector(".tabs").getBoundingClientRect().top + scrollY - (parseFloat(getComputedStyle(document.documentElement).paddingTop)||0);
@@ -1837,6 +1839,7 @@ Zet "recognized" op false als er geen wijnetiket op de foto staat.`;
       if(editingId){ await col.doc(editingId).update(w); }
       else {
         w.createdAt=Date.now(); if(draft?.house) w.house = draft.house;
+        if(window.mwCloud?.me) w.addedBy = {uid: window.mwCloud.me.uid, name: window.mwCloud.me.name};
         w.tastings = (w.status==="kelder" && w.score) ? [{date:TODAY, score:w.score, note:""}] : [];
         const ref = col.doc(); await ref.set(w); openIds.add(ref.id); tab = w.status;
       }

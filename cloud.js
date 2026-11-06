@@ -41,6 +41,15 @@
 .mwlogin .err,.mwcell .err{color:var(--accent);font-size:.88rem;margin:0}
 .mwlogin .ok{color:var(--ok);font-size:.88rem;margin:0}
 .mwacct{display:inline-flex;align-items:center;gap:6px;max-width:180px}
+.mwbell{position:relative;padding:7px 9px}
+.mwbell .dot{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--accent);color:#fff;font-size:.7rem;font-weight:700;line-height:18px;text-align:center}
+.mwbellp{position:fixed;z-index:25;top:calc(env(safe-area-inset-top,0px) + 70px);right:max(16px,calc(50% - 360px));width:min(340px,calc(100% - 32px));max-height:70vh;overflow:auto;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,.18);padding:14px;display:flex;flex-direction:column;gap:8px}
+.mwbellp[hidden]{display:none}
+.mwbellp h3{margin:0;font-size:1rem}
+.mwbellp .hint{margin:0;font-size:.85rem;color:var(--muted)}
+.mwbelli{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;font:inherit;color:inherit;background:none;border:0;border-bottom:1px solid var(--line);padding:8px 0;cursor:pointer}
+.mwbelli small{color:var(--muted)}
+.mwbelli.new b::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-right:6px;vertical-align:middle}
 .mwacct span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mwcell{display:flex;flex-direction:column;gap:12px}
 .mwrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:.92rem}
@@ -174,11 +183,12 @@
       if(!s.exists){ return; }
       cloud.cellar = {id: s.id, ...s.data()};
       if(!(cloud.cellar.memberIds || []).includes(user.uid)){ store.set("mw_cellar_" + user.uid, null); location.reload(); return; }
-      paintHeader(); if(!$("mwSheet").hidden) drawSheet();
+      paintHeader(); if($("mwAcct") && typeof paintBell === "function") paintBell(); if(!$("mwSheet").hidden) drawSheet();
     }, () => {});
     paintHeader();
 
     const winesCol = fs.collection("cellars/" + cloud.cellar.id + "/wines");
+    startBell(winesCol, user.uid);
     const db = {
       // includeMetadataChanges: also tell the app when the server confirms what the offline copy showed,
       // otherwise an unchanged cellar never reports "up to date" and the app keeps waiting.
@@ -190,6 +200,62 @@
     };
     resolveReady({db, user: {id: async () => cloud.cellar.id, name: async () => name}, downloads: window.mwLocal.downloads,
       sample: window.MW_AI_URL && window.mwAi ? window.mwAi.make(window.MW_AI_URL, () => auth.currentUser.getIdToken()) : null, mcp: null});
+  }
+
+  // ---------- bell: wines other members added ----------
+  // Each new wine carries addedBy {uid, name} and createdAt. The bell lists those added by
+  // someone else since you last looked; "last looked" is kept in your profile (users/{uid}),
+  // so it is the same on every device.
+  let bellNew = [], bellRecent = [], bellSeen = 0;
+  async function startBell(winesCol, uid){
+    const cid = cloud.cellar.id, prof = fs.doc("users/" + uid);
+    try{ const p = await prof.get(); bellSeen = (p.exists && p.data().seen && p.data().seen[cid]) || 0; }catch{}
+    if(!bellSeen){ bellSeen = Date.now(); prof.set({seen: {[cid]: bellSeen}}, {merge: true}).catch(() => {}); }
+    const since = Date.now() - 30 * 864e5;
+    winesCol.where("createdAt", ">", since).onSnapshot(snap => {
+      bellRecent = snap.docs.map(d => ({id: d.id, ...d.data()}))
+        .filter(w => w.addedBy && w.addedBy.uid && w.addedBy.uid !== uid)
+        .sort((a, b) => b.createdAt - a.createdAt);
+      bellNew = bellRecent.filter(w => w.createdAt > bellSeen);
+      paintBell();
+    }, () => {});
+    window.mwBellSeen = () => {
+      bellSeen = Date.now(); bellNew = [];
+      prof.set({seen: {[cid]: bellSeen}}, {merge: true}).catch(() => {}); paintBell();
+    };
+  }
+  function paintBell(){
+    const shared = (cloud.cellar.memberIds || []).length > 1 || bellRecent.length;
+    let b = $("mwBell");
+    if(!shared){ if(b) b.hidden = true; return; }
+    if(!b){
+      b = document.createElement("button"); b.id = "mwBell"; b.type = "button"; b.className = "btn ghost sm mwbell";
+      b.onclick = () => { const p = $("mwBellPanel"); if(!p.hidden){ p.hidden = true; return; } drawBellPanel(); p.style.top = Math.round(b.getBoundingClientRect().bottom + 8) + "px"; p.hidden = false; };
+      ($("hdrBtns") || $("mwAcct").parentNode).prepend(b);
+      const p = document.createElement("div"); p.id = "mwBellPanel"; p.className = "mwbellp"; p.hidden = true;
+      p.setAttribute("role", "dialog"); p.setAttribute("aria-label", "Meldingen");
+      document.body.appendChild(p);
+      p.addEventListener("click", e => {
+        const g = e.target.closest("[data-bellgo]");
+        if(g){ p.hidden = true; window.mwBellSeen(); window.mwGoTo && window.mwGoTo(g.dataset.bellgo); }
+        if(e.target.closest("[data-bellok]")){ p.hidden = true; window.mwBellSeen(); }
+      });
+      document.addEventListener("click", e => { if(!p.hidden && !p.contains(e.target) && !b.contains(e.target)) p.hidden = true; });
+    }
+    b.hidden = false;
+    const n = bellNew.length;
+    b.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>${n ? `<span class="dot">${n > 9 ? "9+" : n}</span>` : ""}`;
+    b.setAttribute("aria-label", n ? `${n} nieuwe wijn${n === 1 ? "" : "en"} toegevoegd door anderen` : "Meldingen");
+    if(!$("mwBellPanel").hidden) drawBellPanel();
+  }
+  function drawBellPanel(){
+    const when = t => { const d = Math.floor((Date.now() - t) / 864e5); return d <= 0 ? "vandaag" : d === 1 ? "gisteren" : d + " dagen geleden"; };
+    const list = bellNew.length ? bellNew : bellRecent.slice(0, 5);
+    $("mwBellPanel").innerHTML = `<h3>${bellNew.length ? "Nieuw in " + esc(cloud.cellar.name) : "Niets nieuws"}</h3>
+      ${!bellNew.length && list.length ? `<p class="hint">Eerder toegevoegd door anderen:</p>` : ""}
+      ${list.length ? list.map(w => `<button type="button" class="mwbelli${w.createdAt > bellSeen ? " new" : ""}" data-bellgo="${esc(w.id)}"><b>${esc(w.name || "Wijn")}${w.vintage ? " " + esc(w.vintage) : ""}</b><small>${esc(w.addedBy.name || "Iemand")} · ${w.status === "wens" ? "verlanglijst" : "kelder"} · ${when(w.createdAt)}</small></button>`).join("")
+        : `<p class="hint">Hier zie je het als iemand anders een wijn toevoegt aan deze kelder.</p>`}
+      ${bellNew.length ? `<div><button class="btn ghost sm" type="button" data-bellok="1">Alles gezien</button></div>` : ""}`;
   }
 
   // ---------- header + cellar sheet ----------
