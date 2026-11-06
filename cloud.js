@@ -258,17 +258,48 @@
       ${bellNew.length ? `<div><button class="btn ghost sm" type="button" data-bellok="1">Alles gezien</button></div>` : ""}`;
   }
 
+  function openSheet(){
+    $("mwSheet").hidden = false; drawSheet();
+    myCellars(cloud.me.uid).then(l => { cloud.cellars = l; if(!$("mwSheet").hidden) drawSheet(); }).catch(() => {});
+  }
+  function togglePick(b){
+    let p = $("mwPick");
+    if(!p){
+      p = document.createElement("div"); p.id = "mwPick"; p.className = "mwbellp mwpickp"; p.hidden = true;
+      p.setAttribute("role", "menu"); p.setAttribute("aria-label", "Kies een kelder");
+      document.body.appendChild(p);
+      p.addEventListener("click", e => {
+        const s = e.target.closest("[data-pick]");
+        if(s){ if(s.dataset.pick !== cloud.cellar.id){ store.set("mw_cellar_" + cloud.me.uid, s.dataset.pick); location.reload(); } else p.hidden = true; }
+        if(e.target.closest("[data-manage]")){ p.hidden = true; openSheet(); }
+      });
+      document.addEventListener("click", e => { if(!p.hidden && !p.contains(e.target) && !$("mwAcct").contains(e.target)) p.hidden = true; });
+    }
+    if(!p.hidden){ p.hidden = true; return; }
+    const draw = () => {
+      p.innerHTML = cloud.cellars.map(x => { const cur = x.id === cloud.cellar.id, n = (x.memberIds || []).length;
+        return `<button type="button" class="mwbelli" role="menuitemradio" aria-checked="${cur}" data-pick="${esc(x.id)}"><b>${cur ? "✓ " : ""}${esc(cur ? cloud.cellar.name : x.name)}</b><small>${n > 1 ? n + " leden" : "alleen jij"}${x.owner !== cloud.me.uid ? " · gedeeld" : ""}</small></button>`; }).join("")
+        + `<button type="button" class="link" data-manage="1" style="align-self:flex-start;margin-top:4px">Kelders en account beheren</button>`;
+    };
+    draw();
+    const r = b.getBoundingClientRect();
+    p.style.top = Math.round(r.bottom + 8) + "px"; p.style.left = Math.max(16, Math.round(r.left)) + "px"; p.style.right = "auto";
+    p.hidden = false;
+    myCellars(cloud.me.uid).then(l => { cloud.cellars = l; if(!p.hidden) draw(); }).catch(() => {});
+  }
+
   // ---------- header + cellar sheet ----------
   function paintHeader(){
     let b = $("mwAcct");
     if(!b){
       const host = document.querySelector("header");
       b = document.createElement("button"); b.id = "mwAcct"; b.type = "button"; b.className = "btn ghost sm mwacct";
-      b.onclick = () => { $("mwSheet").hidden = false; drawSheet(); myCellars(cloud.me.uid).then(l => { cloud.cellars = l; if(!$("mwSheet").hidden) drawSheet(); }).catch(() => {}); };
+      // With more than one cellar the button is a quick switcher; managing (invites, account) sits one step further.
+      b.onclick = () => { if(cloud.cellars.length > 1) togglePick(b); else openSheet(); };
       host.appendChild(b);
     }
     const n = (cloud.cellar.memberIds || []).length;
-    b.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">${n > 1 ? '<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.6"/><path d="M15.5 14.2c3 .2 5.5 2.6 5.5 5.8"/>' : '<circle cx="12" cy="8" r="3.6"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/>'}</svg><span>${esc(cloud.cellar.name)}</span>`;
+    b.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">${n > 1 ? '<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.6"/><path d="M15.5 14.2c3 .2 5.5 2.6 5.5 5.8"/>' : '<circle cx="12" cy="8" r="3.6"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/>'}</svg><span>${esc(cloud.cellar.name)}</span>${cloud.cellars.length > 1 ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>` : ""}`;
     b.setAttribute("aria-label", "Kelder en account: " + cloud.cellar.name);
   }
 
