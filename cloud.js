@@ -180,7 +180,12 @@
 
     const winesCol = fs.collection("cellars/" + cloud.cellar.id + "/wines");
     const db = {
-      collection: path => (/^data\/users\//.test(path) ? winesCol : fs.collection("unused")),
+      // includeMetadataChanges: also tell the app when the server confirms what the offline copy showed,
+      // otherwise an unchanged cellar never reports "up to date" and the app keeps waiting.
+      collection: path => (/^data\/users\//.test(path) ? Object.assign(Object.create(winesCol), {
+        onSnapshot: (cb, err) => winesCol.onSnapshot({includeMetadataChanges: true}, cb, err),
+        doc: (...a) => winesCol.doc(...a), get: (...a) => winesCol.get(...a)
+      }) : fs.collection("unused")),
       doc: path => { throw Object.assign(new Error("not available"), {code: "unavailable", path}); }
     };
     resolveReady({db, user: {id: async () => cloud.cellar.id, name: async () => name}, downloads: window.mwLocal.downloads,

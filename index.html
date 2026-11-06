@@ -1862,7 +1862,8 @@ Zet "recognized" op false als er geen wijnetiket op de foto staat.`;
     col.onSnapshot(snap => {
       wines = snap.docs.map(x => norm({id:x.id, ...x.data()}));
       if(!factStarted && (snap.size || !snap.metadata.fromCache)){ factStarted = true; setTimeout(() => loadFact(false), 0); }
-      if(!snap.metadata.fromCache){ clearTimeout(timer); $("status").textContent=""; }
+      // Wines from the offline copy are good enough: only warn when nothing could be shown at all.
+      if(!snap.metadata.fromCache || snap.size){ clearTimeout(timer); if(!snap.metadata.fromCache || $("status").textContent.startsWith("Je wijnen zijn nog niet")) $("status").textContent=""; }
       render();
     }, () => { clearTimeout(timer); $("status").textContent = "Je wijnen konden niet geladen worden."; });
   })();
