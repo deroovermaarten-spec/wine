@@ -11,8 +11,9 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <script>try{var t=localStorage.getItem("mw_theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;}catch(e){}</script>
 <title>Mijn wijnkelder</title><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;0,6..96,600;1,6..96,500&family=Titillium+Web:wght@400;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="preload" href="fonts/TitilliumWeb-normal-400-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/BodoniModa-normal-500-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="fonts/fonts.css">
 <style>
 /* Layout: an Italian enoteca ledger; travertine ground, Bodoni (Parma) display with Titillium (Urbino) text; rosso as the one accent, olive as quiet second */
 :root{
@@ -39,6 +40,16 @@ body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--body);-webkit-fon
   display:flex;flex-direction:column;gap:18px}
 header{display:flex;align-items:end;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-bottom:12px;border-bottom:3px double var(--line)}
 header .brand{display:flex;flex-direction:column;gap:6px}
+.brandrow{display:flex;align-items:end;gap:12px}
+.bottle{width:30px;height:72px;flex:none;transform:rotate(-12deg);transform-origin:50% 90%;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.bottle .glass{fill:var(--surface);stroke:var(--ink);stroke-width:2.5;stroke-linejoin:round}
+.bottle .wine{fill:var(--accent)}
+.bottle .cork{fill:var(--gold)}
+.bottle .label{fill:var(--onaccent);opacity:.92}
+.bottle .shine{fill:none;stroke:var(--line);stroke-width:2.5;stroke-linecap:round}
+.bottle.clink{animation:clink .6s ease-in-out}
+@keyframes clink{0%,100%{transform:rotate(-12deg)}25%{transform:rotate(8deg)}50%{transform:rotate(-20deg)}75%{transform:rotate(-6deg)}}
+@media (prefers-reduced-motion:reduce){.bottle.clink{animation:none}}
 h1{font:600 2.5rem/1 var(--display);margin:0;letter-spacing:-.01em;text-wrap:balance}
 h1 em{font-style:italic;font-weight:500;color:var(--accent)}
 h2.sec{font:italic 500 1.3rem var(--display);margin:0}
@@ -219,6 +230,9 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .scale{display:grid;grid-template-columns:88px 1fr;gap:6px 10px;align-items:center;font-size:.85rem}
 .scale .seg{padding:3px}
 .scale .seg button{padding:5px 4px;font-size:.78rem}
+.later{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ownaroma{display:flex;gap:6px;margin-top:4px}
+.ownaroma input{flex:1;min-width:0}
 .tsum{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
 .tsum span{font-size:.72rem;padding:1px 7px;border-radius:999px;background:var(--bg);color:var(--muted)}
 .tastings li .tn{display:flex;flex-direction:column}
@@ -267,6 +281,9 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .legend span{display:inline-flex;align-items:center;gap:5px}
 .hint{font-size:.82rem;color:var(--muted);margin:0}
 /* sheet */
+.upd{position:fixed;z-index:40;left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top,0px));width:min(560px,calc(100% - 32px));
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 12px;border-radius:10px;background:var(--surface);color:var(--ink);border:1px solid var(--line);box-shadow:var(--shadow),0 8px 24px rgba(0,0,0,.12);font-size:.92rem}
+.upd span{flex:1 1 180px}
 .sheet{position:fixed;inset:0;z-index:20;background:rgba(20,10,18,.5);display:flex;align-items:flex-end;justify-content:center}
 .panel{background:var(--surface);width:100%;max-width:640px;max-height:92%;overflow:auto;border-radius:18px 18px 0 0;
   padding:20px max(18px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(18px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:14px}
@@ -289,17 +306,20 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
 .actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
 .err{color:var(--accent);font-size:.88rem}
 .confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:.85rem}
-.ocr{display:flex;flex-direction:column;gap:8px;background:var(--bg);border-radius:12px;padding:12px}
-.ocr .hint b{color:var(--accent)}
-.ocrchips{display:flex;flex-wrap:wrap;gap:6px}
-.ocrchips button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:5px 10px;font-size:.84rem;text-align:left;max-width:100%;overflow-wrap:anywhere}
-.ocrchips button:active{background:var(--accent-soft)}
-.panel input.filled,.panel textarea.filled{box-shadow:0 0 0 2px var(--gold)}
 </style>
 
 <div class="wrap">
   <header>
-    <div class="brand"><span class="eyebrow">Enoteca di casa · Londerzeel</span><h1>Mijn <em>wijnkelder</em></h1></div>
+    <div class="brandrow">
+      <svg class="bottle" viewBox="0 0 40 96" aria-hidden="true">
+        <rect x="15" y="2" width="10" height="9" rx="2" class="cork"/>
+        <path d="M14 11h12v16c0 6 10 10 10 22v40a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V49c0-12 10-16 10-22z" class="glass"/>
+        <path d="M5 60h30v29a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4z" class="wine"/>
+        <rect x="9" y="64" width="22" height="16" rx="2" class="label"/>
+        <path d="M11 30q-3 6-3 18" class="shine"/>
+      </svg>
+      <div class="brand"><span class="eyebrow">Enoteca di casa</span><h1>Mijn <em>wijnkelder</em></h1></div>
+    </div>
     <span class="count" id="count"></span>
     <button class="btn ghost sm" id="themeBtn" type="button" style="padding:7px 9px"></button>
   </header>
@@ -406,8 +426,8 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
       </div>
     </div>
     <div class="err" id="err" hidden></div>
+    <div class="later" id="laterRow" hidden><button class="btn" type="button" id="later">Later herkennen</button><span class="hint">Vul gerust al voorraad en plaats in.</span></div>
     <div class="dup" id="dup" hidden></div>
-    <div class="ocr" id="ocrBox" hidden></div>
     <form id="form" hidden>
       <div style="display:flex;flex-direction:column;gap:10px">
         <div class="seg" id="f_target" role="group" aria-label="Bewaren in">
@@ -428,6 +448,8 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
           <label>Aroma's &amp; smaak<input id="f_taste"></label>
           <label>Past bij<input id="f_food"></label>
           <label>Schenktemperatuur<input id="f_temp"></label>
+          <label>Decanteren<input id="f_decant" placeholder="bv. 1 uur vooraf, let op depot"></label>
+          <label>Glas<input id="f_glass" placeholder="bv. Bourgogneglas"></label>
           <label id="l_stock">Flessen in voorraad<input id="f_stock" type="number" min="0" inputmode="numeric" value="1"></label>
           <label>Drinken vanaf (jaar)<input id="f_from" inputmode="numeric" placeholder="bv. 2025"></label>
           <label>Drinken tot (jaar)<input id="f_to" inputmode="numeric" placeholder="bv. 2032"></label>
@@ -463,7 +485,10 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
   const LABEL = {auto: "Automatisch (volgt je toestel)", light: "Dagmodus", dark: "Nachtmodus"};
   const NEXT = {auto: "light", light: "dark", dark: "auto"};
   const btn = document.getElementById("themeBtn");
-  const get = () => { try{ const t = localStorage.getItem("mw_theme"); return t === "light" || t === "dark" ? t : "auto"; }catch{ return "auto"; } };
+  const bottle = document.querySelector(".bottle");
+  bottle.addEventListener("click", () => { bottle.classList.remove("clink"); void bottle.getBoundingClientRect(); bottle.classList.add("clink"); });
+  bottle.addEventListener("animationend", () => bottle.classList.remove("clink"));
+  const get =() => { try{ const t = localStorage.getItem("mw_theme"); return t === "light" || t === "dark" ? t : "auto"; }catch{ return "auto"; } };
   function apply(t){
     if(t === "auto") delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = t;
     const dark = t === "dark" || (t === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
@@ -485,7 +510,6 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
 <script src="firebase-config.js"></script>
 <script src="ai.js"></script>
 <script src="cloud.js"></script>
-<script src="ocr.js"></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);
@@ -496,7 +520,10 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
   let db=null, sample=null, col=null, wines=[], openIds=new Set();
   let compareIds=[], dupFor=null;
   let tagFilter="", shareFor=null, shareMsg="", sharedId="", downloads=null; const APP_URL="https://claude.ai/artifact/PYMK2uNrCPb2GZpHEmpRrY";
-  let tab="kelder", typeFilter="", draft=null, scanCtl=null, editingId=null, pendingDelete=null, tastingFor=null, tastingScore=0, target="kelder";
+  // Home-screen shortcuts (manifest.webmanifest) open the app with ?go=…; read it once and tidy the address.
+  let goParam = null;
+  try{ const q = new URLSearchParams(location.search); goParam = q.get("go"); if(goParam){ q.delete("go"); history.replaceState(null, "", location.pathname + (q.toString() ? "?" + q : "") + location.hash); } }catch{}
+  let tab = goParam==="wens" || goParam==="stats" ? goParam : "kelder", typeFilter="", draft=null, scanCtl=null, editingId=null, pendingDelete=null, tastingFor=null, tastingScore=0, target="kelder";
   let pickCtl=null, lastPicks=null; const houseBusy=new Map();
   let mcp=null; const shopOpen=new Set(), shopRes=new Map(), tipRes=new Map();
   let city = ""; try{ city = localStorage.getItem("wk_city") || ""; }catch{}
@@ -579,6 +606,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
 
     const pool = tab==="kelder" ? kelder : wens;
     $("tonight").hidden = !(tab==="kelder" && kelder.length && sample);
+    if(goParam==="vanavond" && !$("tonight").hidden){ goParam = null; setTimeout(() => { $("tonight").scrollIntoView({block:"center"}); $("meal").focus({preventScroll:true}); }, 0); }
     renderDrinkBox(tab==="kelder" ? kelder : []);
     renderFact();
     renderPicks();
@@ -618,7 +646,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
     const list = $("list");
     if(!pool.length){
       list.innerHTML = tab==="kelder"
-        ? `<div class="empty"><div class="big">Je kelder is nog leeg</div><p>Tik op "Scan een fles" en fotografeer het etiket. De app leest de tekst en vult al in wat ze herkent. Al wijnen in de Claude-versie? Zet hier je back-upbestand terug.</p><div><button class="btn ghost sm" type="button" data-imp="1">Back-up terugzetten</button></div></div>`
+        ? `<div class="empty"><div class="big">Je kelder is nog leeg</div><p>Tik op "Scan een fles" en fotografeer het etiket. Claude herkent de wijn en vult de gegevens voor je in. Al wijnen in de Claude-versie? Zet hier je back-upbestand terug.</p><div><button class="btn ghost sm" type="button" data-imp="1">Back-up terugzetten</button></div></div>`
         : `<div class="empty"><div class="big">Nog geen wensen</div><p>Proefde je ergens iets lekkers? Scan het etiket en kies "Op verlanglijst". Zo vind je het terug in de winkel.</p></div>`;
       return;
     }
@@ -633,7 +661,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
     const open = openIds.has(w.id), d = drinkState(w), isK = w.status==="kelder";
     const facts = [["Druif",w.grape],["Streek",[w.region,w.country].filter(Boolean).join(", ")],
       ["Prijsklasse",[w.tier?TIERS[w.tier]:"",w.price].filter(Boolean).join(" · ")],["Zelf betaald",w.paid],
-      ["Aroma's & smaak",w.taste],["Past bij",w.food],["Schenken op",w.temp],["Drinkvenster",windowText(w)],
+      ["Aroma's & smaak",w.taste],["Past bij",w.food],["Schenken op",w.temp],["Decanteren",w.decant],["Glas",w.glass],["Drinkvenster",windowText(w)],
       ["Plaats in kelder", isK ? w.loc : ""],["Gekocht",[w.shop, w.bought?fmtDate(w.bought):"", w.boughtQty?w.boughtQty+" fl.":""].filter(Boolean).join(" · ")]].filter(f=>f[1]);
     const ts = [...w.tastings].sort((a,b)=>String(b.date).localeCompare(String(a.date)));
     const del = pendingDelete===w.id
@@ -660,6 +688,8 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
           ${w.tags.length?`<div class="tags">${w.tags.map(t=>`<button class="tag" type="button" data-act="tagf" data-tag="${esc(t)}" aria-pressed="${tagFilter===t}">#${esc(t)}</button>`).join("")}</div>`:""}
           ${isK && w.loc ? `<span class="loc"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>${esc(w.loc)}</span>`:""}
           ${d && isK ? `<div><span class="badge ${d.cls}">${d.label}</span></div>`:""}
+          ${w.pending ? `<div><span class="badge b-young" title="Claude vult deze wijn aan zodra het toestel waarmee je scande online is.">Wacht op herkenning</span></div>`
+            : w.pendingErr ? `<div><span class="badge b-warn">${esc(w.pendingErr)}</span></div>` : ""}
           <div class="line2">
             <div data-act="rate" data-id="${w.id}">${starsHTML(w.score||0,false)}</div>
             ${isK ? `<div class="ctrls"><div class="stock${w.stock?"":" zero"}" role="group" aria-label="Voorraad">
@@ -678,11 +708,13 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
         ${w.desc?`<p>${esc(w.desc)}</p>`:""}
         ${facts.length?`<dl class="facts">${facts.map(f=>`<div><dt>${f[0]}</dt><dd>${esc(f[1])}</dd></div>`).join("")}</dl>`:""}
         ${w.note?`<p class="note">${esc(w.note)}</p>`:""}
+        ${serveHTML(w)}
         ${houseHTML(w)}
         ${shopHTML(w)}
         ${pairHTML(w)}
         <div class="tastings">
           <div class="eyebrow">Proefmomenten${ts.length?` · ${ts.length}`:""}</div>
+          ${tastingProfile(w)}
           ${ts.length?`<ol>${ts.map(t=>`<li><time>${esc(fmtDate(t.date))}${t.by?`<br>${esc(t.by)}`:""}</time>${starsHTML(t.score||0,true)}<span class="tn">${t.note?`<span>${esc(t.note)}</span>`:""}${tastingSummary(t)}</span></li>`).join("")}</ol>`:`<p class="hint">Nog geen proefmomenten. Voeg er een toe telkens je deze wijn drinkt.</p>`}
           ${tform}
         </div>
@@ -692,6 +724,28 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
         <div class="cardfoot">${del}</div>
       </div></div></div>
     </article>`;
+  }
+
+  // ---------- serving advice (temperature, decanting, glass) ----------
+  const serveBusy = new Map();
+  function serveHTML(w){
+    if(!sample || (w.decant && w.glass && w.temp)) return "";
+    const b = serveBusy.get(w.id);
+    return `<div>${b==="err" ? `<p class="hint">Schenkadvies ophalen lukte niet. Probeer opnieuw.</p>` : ""}<button class="btn ghost sm" type="button" data-act="serve" data-id="${w.id}" ${b===true?"disabled":""}>${b===true?"Claude denkt na…":"Schenkadvies: decanteren en glas"}</button></div>`;
+  }
+  async function fetchServe(w){
+    serveBusy.set(w.id, true); render();
+    const age = yr(w.vintage) ? YEAR - yr(w.vintage) : null;
+    const prompt = `Je bent een sommelier. Geef praktisch schenkadvies voor deze fles, in het Nederlands.
+Wijn: ${w.name}${w.vintage?" "+w.vintage:""}${age!==null?` (${age} jaar oud)`:""}, ${COLORS[w.color]||"wijn"}, producent ${w.producer||"onbekend"}, druif ${w.grape||"onbekend"}, ${[w.region,w.country].filter(Boolean).join(", ")||"streek onbekend"}. Smaak: ${w.taste||"onbekend"}.
+Houd rekening met de leeftijd: jonge krachtige wijnen hebben lucht nodig, oude wijnen vooral voorzichtig schenken vanwege depot en kort decanteren.
+Antwoord met ALLEEN dit JSON-object: {"temp": "bv. 16–18 °C", "decant": "één korte zin: hoe lang decanteren of openen vooraf, of 'Niet nodig', en eventueel depot", "glass": "glastype, bv. 'Bourgogneglas (ballon)'"}`;
+    try{
+      const r = await sample.json(prompt);
+      const patch = {}; const s = v => String(v||"").trim().slice(0,160);
+      if(s(r.decant)) patch.decant = s(r.decant); if(s(r.glass)) patch.glass = s(r.glass); if(!w.temp && s(r.temp)) patch.temp = s(r.temp);
+      serveBusy.delete(w.id); Object.assign(w, patch); render(); if(Object.keys(patch).length) save(w.id, patch);
+    }catch(e){ if(e?.code==="cancelled"){ serveBusy.delete(w.id); } else serveBusy.set(w.id, "err"); render(); }
   }
 
   function houseLinks(w){
@@ -782,7 +836,7 @@ Noem de Belgische importeur als je die met zekerheid kent, en het soort winkels 
 
   // ---------- sharing ----------
   function publicCopy(w){
-    const o = {}; ["name","producer","vintage","region","country","grape","color","desc","taste","food","temp","from","to","tier","price","score","photo"].forEach(k=>{ if(w[k]) o[k]=w[k]; });
+    const o = {}; ["name","producer","vintage","region","country","grape","color","desc","taste","food","temp","decant","glass","from","to","tier","price","score","photo"].forEach(k=>{ if(w[k]) o[k]=w[k]; });
     if(w.house && !w.house.unknown) o.house = w.house;
     o.sharedAt = Date.now(); return o;
   }
@@ -880,7 +934,7 @@ Noem de Belgische importeur als je die met zekerheid kent, en het soort winkels 
     y = Math.max(ty, w.photo ? top+51 : ty) + 4;
     doc.setDrawColor(225,219,227); doc.line(M,y,W-M,y); y+=2;
     if(w.desc){ label("Beschrijving"); para(w.desc, 11); }
-    const facts = [["Druif",w.grape],["Aroma's & smaak",w.taste],["Past bij",w.food],["Schenktemperatuur",w.temp],["Drinkvenster",windowText(w)]].filter(f=>f[1]);
+    const facts = [["Druif",w.grape],["Aroma's & smaak",w.taste],["Past bij",w.food],["Schenktemperatuur",w.temp],["Decanteren",w.decant],["Glas",w.glass],["Drinkvenster",windowText(w)]].filter(f=>f[1]);
     if(facts.length){ label("Kenmerken"); facts.forEach(f=>{ ensure(7); y+=5.5; doc.setFont("helvetica","bold"); doc.setFontSize(9.5); doc.setTextColor(...muted); doc.text(lat(f[0]), M, y);
       doc.setFont("helvetica","normal"); doc.setTextColor(...ink); const ls = doc.splitTextToSize(lat(f[1]), CW-42); doc.text(ls, M+42, y); y += (ls.length-1)*4.6; }); }
     const h = w.house;
@@ -899,7 +953,7 @@ Noem de Belgische importeur als je die met zekerheid kent, en het soort winkels 
 
   // ---------- shared view ----------
   function sharedHTML(w){
-    const f = [["Druif",w.grape],["Streek",[w.region,w.country].filter(Boolean).join(", ")],["Prijs",w.price],["Aroma's & smaak",w.taste],["Past bij",w.food],["Schenken op",w.temp],["Drinkvenster",windowText(w)]].filter(x=>x[1]);
+    const f = [["Druif",w.grape],["Streek",[w.region,w.country].filter(Boolean).join(", ")],["Prijs",w.price],["Aroma's & smaak",w.taste],["Past bij",w.food],["Schenken op",w.temp],["Decanteren",w.decant],["Glas",w.glass],["Drinkvenster",windowText(w)]].filter(x=>x[1]);
     return `<article class="card shared open"><div class="row">${thumb(w)}<div class="meta">
         <div class="eyebrow">Gedeelde wijn</div>
         ${w.producer?`<div class="prod">${esc(w.producer)}</div>`:""}<h3 class="name">${esc(w.name)}</h3>
@@ -1247,7 +1301,7 @@ Sleutels (streek|land): ${JSON.stringify(keys.slice(0,60))}`;
       "Flessen in huis": w.status==="kelder"?w.stock:"", "Geopend sinds": w.openedAt||"", "Plaats": w.loc||"",
       "Drinken vanaf": w.from||"", "Drinken tot": w.to||"", "Prijsklasse": w.tier?TIERS[w.tier]:"", "Geschatte prijs": w.price||"",
       "Zelf betaald": w.paid||"", "Gekocht bij": w.shop||"", "Aankoopdatum": w.bought||"", "Aantal gekocht": w.boughtQty||"",
-      "Tags": w.tags.join(", "), "Aroma's & smaak": w.taste||"", "Past bij": w.food||"", "Schenktemperatuur": w.temp||"",
+      "Tags": w.tags.join(", "), "Aroma's & smaak": w.taste||"", "Past bij": w.food||"", "Schenktemperatuur": w.temp||"", "Decanteren": w.decant||"", "Glas": w.glass||"",
       "Beschrijving": w.desc||"", "Eigen notitie": w.note||"", "Proefmomenten": w.tastings.map(t=>[`${t.date} ${t.score||"-"}/5`, t.note, t.color, (t.aromas||[]).join(", "), Object.entries(t.struct||{}).map(([k,v])=>k+" "+v).join(", ")].filter(Boolean).join(" · ")).join(" | "),
       "Toegevoegd": w.createdAt ? new Date(w.createdAt).toISOString().slice(0,10) : "" }));
   }
@@ -1310,29 +1364,55 @@ Sleutels (streek|land): ${JSON.stringify(keys.slice(0,60))}`;
     "Bloemen":["viooltje","roos","vlierbloesem","acacia","oranjebloesem"],
     "Kruiden & specerijen":["zwarte peper","munt","tijm","eucalyptus","kaneel","kruidnagel","drop"],
     "Hout & rijping":["vanille","toast","rook","kokos","boter","brioche","noten","koffie","cacao","tabak","leer"],
-    "Aards & mineraal":["paddenstoel","bosgrond","natte steen","krijt","vuursteen","aarde"]};
-  const SCALES = [["zoet","Zoetheid",["droog","halfdroog","zoet"]],["zuur","Frisheid",["laag","middel","hoog"]],["tannine","Tannine",["zacht","middel","stevig"]],["body","Body",["licht","middel","vol"]],["afdronk","Afdronk",["kort","middel","lang"]]];
+    "Aards & mineraal":["paddenstoel","bosgrond","natte steen","krijt","vuursteen","aarde"],
+    "Groen & plantaardig":["gras","groene paprika","tomatenblad","hooi","asperge"],
+    "Gedroogd & zoet":["rozijn","gedroogde abrikoos","honing","karamel","marmelade"]};
+  const KNOWN_AROMAS = new Set(Object.values(AROMAS).flat());
+  // Scales per step. The fourth field limits a scale to some wine types.
+  const NOSE = [["neus","Intensiteit",["zwak","middel","uitgesproken"]]];
+  const SCALES = [["zoet","Zoetheid",["droog","halfdroog","zoet"]],["zuur","Frisheid",["laag","middel","hoog"]],["tannine","Tannine",["zacht","middel","stevig"],["rood"]],
+    ["alcohol","Alcohol",["laag","middel","hoog"]],["mousse","Mousse",["fijn","middel","grof"],["mousserend"]],["body","Body",["licht","middel","vol"]],["afdronk","Afdronk",["kort","middel","lang"]]];
+  const VERDICT = [["balans","Balans",["onevenwichtig","in balans","harmonieus"]],["rijp","Rijpheid",["nog te jong","op dronk","over hoogtepunt"]]];
+  const ALL_SCALES = [...NOSE, ...SCALES, ...VERDICT];
   let tDraft = {color:"", aromas:new Set(), struct:{}};
   function resetDraft(){ tDraft = {color:"", aromas:new Set(), struct:{}}; }
   const draftCount = () => (tDraft.color?1:0) + tDraft.aromas.size + Object.values(tDraft.struct).filter(Boolean).length;
   function guideHTML(w){
     const sw = COLORSWATCH[w.color] || COLORSWATCH.rood;
     const expTxt = nrm([w.taste, w.desc].join(" "));
-    const scales = SCALES.filter(([k]) => !(k==="tannine" && w.color!=="rood"));
+    const fits = s => !s[3] || s[3].includes(w.color);
+    const scales = SCALES.filter(fits);
     const seg = (k, opts) => `<div class="seg" role="group">${opts.map(o=>`<button type="button" data-act="tg" data-k="${k}" data-v="${o}" aria-pressed="${tDraft.struct[k]===o}">${o}</button>`).join("")}</div>`;
+    const own = [...tDraft.aromas].filter(a => !KNOWN_AROMAS.has(a));
+    // Aromas you noted earlier for this wine float to a group of their own, so a second tasting is quicker.
+    const before = [...new Set(w.tastings.flatMap(t => t.aromas || []))].filter(a => !KNOWN_AROMAS.has(a) && !own.includes(a));
     return `<details class="guide"${draftCount()?" open":""}><summary><span>Begeleid proeven</span><span><span class="hint gcount">${draftCount()?draftCount()+" gekozen":""}</span> <span class="chev" aria-hidden="true">▾</span></span></summary>
       <div class="gbody">
         <div class="gstep"><h5>1 · Kijk</h5><p class="hint">Houd het glas schuin tegen een witte achtergrond.</p>
           <div class="ach">${sw.map(([n,c])=>`<button type="button" class="swatch" style="background:${c}" data-act="tg" data-k="color" data-v="${n}" aria-pressed="${tDraft.color===n}" aria-label="${n}" title="${n}"></button>`).join("")}<span class="hint" style="align-self:center">${esc(tDraft.color)}</span></div></div>
         <div class="gstep"><h5>2 · Ruik</h5><p class="hint">Walsen, kort ruiken, en nog eens. Kies wat je herkent.${expTxt?' Een gouden stip betekent: die geur wordt bij deze wijn vaak genoemd.':''}</p>
-          <div class="ach">${Object.entries(AROMAS).map(([g,list])=>`<span class="grp">${g}</span>`+list.map(a=>`<button type="button" class="${expTxt.includes(nrm(a))?"exp":""}" data-act="tg" data-k="aroma" data-v="${a}" aria-pressed="${tDraft.aromas.has(a)}">${a}</button>`).join("")).join("")}</div></div>
+          <div class="scale">${NOSE.map(([k,l,o])=>`<span>${l}</span>${seg(k,o)}`).join("")}</div>
+          <div class="ach">${Object.entries(AROMAS).map(([g,list])=>`<span class="grp">${g}</span>`+list.map(a=>`<button type="button" class="${expTxt.includes(nrm(a))?"exp":""}" data-act="tg" data-k="aroma" data-v="${esc(a)}" aria-pressed="${tDraft.aromas.has(a)}">${esc(a)}</button>`).join("")).join("")}
+            ${own.length || before.length ? `<span class="grp">Eigen</span>${[...own, ...before].map(a=>`<button type="button" data-act="tg" data-k="aroma" data-v="${esc(a)}" aria-pressed="${tDraft.aromas.has(a)}">${esc(a)}</button>`).join("")}` : ""}</div>
+          <div class="ownaroma"><input id="tg_own" placeholder="Iets anders? bv. potloodslijpsel" aria-label="Eigen geur" autocomplete="off" maxlength="40"><button class="btn ghost sm" type="button" data-act="tg-add">Voeg toe</button></div></div>
         <div class="gstep"><h5>3 · Proef</h5><p class="hint">Laat de wijn even door je mond gaan en let op wat je voelt.</p>
           <div class="scale">${scales.map(([k,l,o])=>`<span>${l}</span>${seg(k,o)}`).join("")}</div></div>
+        <div class="gstep"><h5>4 · Oordeel</h5><p class="hint">Hoe past alles samen, en is dit het goede moment voor deze fles?</p>
+          <div class="scale">${VERDICT.map(([k,l,o])=>`<span>${l}</span>${seg(k,o)}`).join("")}</div></div>
       </div></details>`;
   }
   function tastingSummary(t){
-    const bits = [t.color, ...(t.aromas||[]), ...Object.entries(t.struct||{}).map(([k,v])=> (SCALES.find(s=>s[0]===k)||[,k])[1].toLowerCase()+" "+v)].filter(Boolean);
+    const bits = [t.color, ...(t.aromas||[]), ...Object.entries(t.struct||{}).map(([k,v])=> VERDICT.some(s=>s[0]===k) ? v : k==="neus" ? "geur "+v : (ALL_SCALES.find(s=>s[0]===k)||[,k])[1].toLowerCase()+" "+v)].filter(Boolean);
     return bits.length ? `<span class="tsum">${bits.map(b=>`<span>${esc(b)}</span>`).join("")}</span>` : "";
+  }
+  // What keeps coming back across your tastings of this wine.
+  function tastingProfile(w){
+    const withA = w.tastings.filter(t => (t.aromas||[]).length);
+    if(withA.length < 2) return "";
+    const n = new Map(); withA.forEach(t => t.aromas.forEach(a => n.set(a, (n.get(a)||0) + 1)));
+    const top = [...n].filter(([,c]) => c >= 2).sort((a,b) => b[1]-a[1]).slice(0, 6);
+    if(!top.length) return "";
+    return `<p class="hint">Telkens terug: ${top.map(([a,c]) => `<b>${esc(a)}</b> (${c}×)`).join(", ")}</p>`;
   }
 
   // ---------- food pairing ----------
@@ -1484,7 +1564,7 @@ Wijnen (JSON): ${JSON.stringify(cellar)}`;
       druif: w.grape, streek: w.region, land: w.country, score: w.score||null, flessen: w.status==="kelder" ? w.stock : null,
       geopendSinds: w.openedAt||null, plaats: w.loc, drinkvenster: windowText(w), prijsklasse: w.tier?TIERS[w.tier]:null,
       geschattePrijs: w.price, betaald: w.paid, gekochtBij: w.shop, aankoopdatum: w.bought, aantalGekocht: w.boughtQty||null,
-      tags: w.tags.length ? w.tags : null, smaak: w.taste, pastBij: w.food, schenktemp: w.temp, notitie: w.note,
+      tags: w.tags.length ? w.tags : null, smaak: w.taste, pastBij: w.food, schenktemp: w.temp, decanteren: w.decant, glas: w.glass, notitie: w.note,
       beschrijving: cut(w.desc, 280), wijnhuis: w.house && !w.house.unknown ? cut([w.house.about, w.house.location].filter(Boolean).join(" "), 220) : null,
       proefmomenten: w.tastings.length ? w.tastings.map(t=>({datum:t.date, score:t.score||null, notitie:t.note||null, kleur:t.color||null, aromas:t.aromas||null, structuur:t.struct||null})) : null,
       toegevoegd: w.createdAt ? new Date(w.createdAt).toISOString().slice(0,10) : null };
@@ -1575,7 +1655,7 @@ ${data}`;
     b.disabled = true;
     try{
       const stock = (w.status==="kelder" ? w.stock : 0) + 1;
-      await col.doc(w.id).update({stock, status:"kelder"});
+      await commit(col.doc(w.id).update({stock, status:"kelder"}));
       const id = w.id; closeSheet(); goTo(id);
     }catch{ $("err").textContent="Bijtellen lukte niet. Probeer opnieuw."; $("err").hidden=false; b.disabled=false; }
   });
@@ -1633,7 +1713,9 @@ ${data}`;
         t.parentElement.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.v===nv)); }
       const cnt = t.closest(".guide")?.querySelector(".gcount"); if(cnt) cnt.textContent = draftCount() ? `${draftCount()} gekozen` : "";
     }
+    else if(act==="tg-add"){ addOwnAroma(); }
     else if(act==="pair"){ if(w) fetchPair(w); }
+    else if(act==="serve"){ if(w && serveBusy.get(id)!==true) fetchServe(w); }
     else if(act==="pairstop"){ pairCtl.get(id)?.abort(); }
     else if(act==="tagf"){ const tg=t.dataset.tag; tagFilter = tagFilter===tg ? "" : tg; render(); window.scrollTo({top:0}); }
     else if(act==="cmp"){
@@ -1656,6 +1738,10 @@ ${data}`;
       const tastings = [...w.tastings, entry];
       const patch = {tastings}; if(tastingScore) patch.score = tastingScore;
       tastingFor=null; Object.assign(w,patch); render(); save(id, patch);
+      // Your verdict disagrees with the drink window: point it out.
+      const left = w.status==="kelder" && w.stock > 0;
+      if(st.rijp==="nog te jong" && (!w.from || w.from <= YEAR)) $("status").textContent = `Je vond ${w.name} nog te jong. Moet hij langer liggen? Pas het drinkvenster aan via Bewerken.`;
+      else if(st.rijp==="over hoogtepunt" && left && (!w.to || w.to >= YEAR)) $("status").textContent = `Je vond ${w.name} over zijn hoogtepunt. Drink de ${w.stock===1?"laatste fles":w.stock+" andere flessen"} best snel.`;
     } else if(act==="bought"){
       if(!w) return; w.status="kelder"; w.stock=Math.max(1,w.stock); w.bought=w.bought||TODAY; w.boughtQty=w.boughtQty||w.stock; render(); save(id,{status:"kelder",stock:w.stock,bought:w.bought,boughtQty:w.boughtQty});
     } else if(act==="del"){ pendingDelete=id; render(); }
@@ -1663,6 +1749,12 @@ ${data}`;
     else if(act==="del-yes"){ pendingDelete=null; try{ await col.doc(id).delete(); }catch{ $("status").textContent="Verwijderen lukte niet."; } }
     else if(act==="edit"){ if(!w) return; editingId=id; draft={...w}; openSheet(w.photo,true); fillForm(w); }
   });
+
+  function addOwnAroma(){
+    const inp = $("tg_own"); const v = (inp?.value || "").trim().toLowerCase().replace(/\s+/g," ").slice(0,40); if(!v) return;
+    tDraft.aromas.add(v); render(); $("tg_own")?.focus();
+  }
+  $("list").addEventListener("keydown", e => { if(e.target.id==="tg_own" && e.key==="Enter"){ e.preventDefault(); addOwnAroma(); } });
 
   $("list").addEventListener("submit", e => {
     const f = e.target.closest("[data-shopform]"); if(!f) return;
@@ -1725,19 +1817,18 @@ ${JSON.stringify(data)}`;
     $("sheet").hidden=false;
     $("sheetTitle").textContent = editing ? "Wijn bewerken" : "Nieuwe wijn";
     $("pimg").src = photo || ""; $("pimg").hidden = !photo;
-    $("ocrBox").hidden = true;
     $("thinking").querySelector("strong").textContent = "Etiket lezen…";
-    $("thinking").querySelector(".status").textContent = sample ? "Claude herkent de wijn en schrijft een beschrijving." : "De tekst op het etiket wordt herkend op je telefoon.";
-    $("thinking").hidden = !!editing; $("form").hidden = !editing; $("cancelOnly").hidden = !!editing; $("err").hidden=true;
+    $("thinking").querySelector(".status").textContent = "Claude herkent de wijn en schrijft een beschrijving.";
+    $("thinking").hidden = !!editing; $("form").hidden = !editing; $("cancelOnly").hidden = !!editing; $("err").hidden=true; $("laterRow").hidden = true;
   }
-  function closeSheet(){ $("ocrBox").hidden = true; $("dup").hidden = true; dupFor = null; scanCtl?.abort(); scanCtl=null; $("sheet").hidden=true; draft=null; editingId=null; $("file").value=""; }
+  function closeSheet(){ $("dup").hidden = true; dupFor = null; scanCtl?.abort(); scanCtl=null; $("sheet").hidden=true; draft=null; editingId=null; $("file").value=""; }
   $("cancel").onclick = closeSheet; $("cancel2").onclick = closeSheet;
 
   function fillForm(w){
     const v = (id,val)=>{ $(id).value = val ?? ""; };
     v("f_name",w.name); v("f_producer",w.producer); v("f_vintage",w.vintage); v("f_region",w.region); v("f_country",w.country);
     v("f_grape",w.grape); $("f_color").value = COLORS[w.color]?w.color:"rood"; v("f_desc",w.desc); v("f_taste",w.taste); v("f_food",w.food);
-    v("f_temp",w.temp); v("f_from",w.from||""); v("f_to",w.to||""); $("f_tier").value=String(w.tier||0); v("f_price",w.price); v("f_paid",w.paid); v("f_note",w.note);
+    v("f_temp",w.temp); v("f_decant",w.decant); v("f_glass",w.glass); v("f_from",w.from||""); v("f_to",w.to||""); $("f_tier").value=String(w.tier||0); v("f_price",w.price); v("f_paid",w.paid); v("f_note",w.note);
     v("f_stock", w.stock ?? 1);
     v("f_tags", (w.tags||[]).join(", ")); paintTagSugg();
     v("f_loc", w.loc); v("f_shop", w.shop); v("f_bought", w.bought || (editingId ? "" : TODAY)); v("f_qty", w.boughtQty || (editingId ? "" : (w.stock ?? 1)));
@@ -1750,102 +1841,156 @@ ${JSON.stringify(data)}`;
     const file = $("file").files[0]; if(!file) return;
     const photo = await thumbFrom(file);
     draft = {photo}; editingId=null; openSheet(photo,false);
-    const showManual = msg => { $("thinking").hidden=true; $("cancelOnly").hidden=true; $("form").hidden=false; fillForm({photo}); if(msg){$("err").textContent=msg;$("err").hidden=false;} };
-    const runOcr = async note => {
-      if(!window.mwOcr){ showManual(note || "Automatisch herkennen is hier niet beschikbaar. Vul de gegevens zelf in."); return; }
-      const ctl = scanCtl = new AbortController(), st = $("thinking").querySelector(".status");
-      st.textContent = "De tekst op het etiket wordt herkend op je telefoon.";
-      try{
-        const r = await mwOcr.read(file, (s, p) => {
-          const pct = Math.round(p * 100);
-          if(/recogni/i.test(s)) st.textContent = `Tekst herkennen… ${pct}%`;
-          else if(p < 1) st.textContent = `Tekstherkenning klaarzetten… ${pct}% (de eerste keer duurt dit even)`;
-        });
-        if(ctl.signal.aborted || !draft) return;
-        Object.assign(draft, r.fields, {photo});
-        $("thinking").hidden=true; $("cancelOnly").hidden=true; $("form").hidden=false; fillForm(draft);
-        showOcr(r);
-        if(note){ $("err").textContent = note; $("err").hidden = false; }
-        if(r.fields.name) showDup(r.fields);
-      }catch(e){
-        if(ctl.signal.aborted || !draft) return;
-        showManual(navigator.onLine ? "De tekst kon niet gelezen worden. Vul de gegevens zelf in." : "Tekstherkenning moet de eerste keer met internet klaargezet worden. Vul de gegevens nu zelf in.");
-      }
-    };
-    if(!sample) return runOcr();
+    // canLater: offer "Later herkennen", which saves the bottle now and lets Claude read the label once online.
+    const showManual = (msg, canLater) => { $("thinking").hidden=true; $("cancelOnly").hidden=true; $("form").hidden=false; fillForm({photo});
+      if(msg){$("err").textContent=msg;$("err").hidden=false;}
+      if(canLater){ draft.file = file; $("laterRow").hidden = false; } };
+    const LATER = " Tik op \"Later herkennen\": de fles wordt nu bewaard en Claude vult de gegevens in zodra je weer online bent.";
+    if(!sample) return showManual();
+    if(!navigator.onLine) return showManual("Je bent offline, dus Claude kan het etiket nu niet lezen." + LATER, true);
     scanCtl = new AbortController();
-    const prompt = `Je bent een sommelier. De foto toont een wijnfles of het etiket ervan. Herken de wijn zo nauwkeurig mogelijk op basis van wat op het etiket staat en je kennis van deze wijn of producent. Schrijf alles in het Nederlands. Dit jaar is ${YEAR}.
-Antwoord met ALLEEN één JSON-object met deze velden (lege string of 0 als iets niet te bepalen is):
-{"recognized": true|false, "name": "naam van de wijn/cuvée", "producer": "", "vintage": "jaartal of ''", "region": "appellatie/streek", "country": "", "grape": "enkel de druivennamen, gescheiden door komma's, bv. 'Touriga Nacional, Tinta Roriz'", "color": "rood|wit|rose|mousserend|dessert", "desc": "een vlotte beschrijving van 3 tot 5 zinnen: stijl, karakter, wat deze wijn bijzonder maakt", "taste": "korte opsomming aroma's en smaak", "food": "2-3 gerechten", "temp": "bv. 16–18 °C", "from": eerste jaar waarin de wijn op dronk is (getal), "to": laatste jaar waarin hij op zijn best is (getal), "price": "geschatte winkelprijs per fles in België/Europa als bereik, bv. €18–22", "tier": 1|2|3|4 (1 = tot €10, 2 = €10–25, 3 = €25–60, 4 = boven €60; 0 als onbekend), "house": info over het wijnhuis in deze vorm: ${HOUSE_FIELDS} (laat velden leeg als je ze niet zeker weet; verzin niets)}
-Zet "recognized" op false als er geen wijnetiket op de foto staat.`;
     try{
-      const r = await sample.json(prompt, {images:[file], signal:scanCtl.signal});
+      const r = await sample.json(scanPrompt(), {images:[file], signal:scanCtl.signal});
       if(!draft) return;
       if(!r || r.recognized===false){ showManual("Geen wijnetiket herkend. Probeer een scherpere foto van het etiket, of vul de gegevens zelf in."); return; }
-      r.house = r.house ? cleanHouse(r.house) : null; if(r.house?.unknown) r.house = null;
-      r.tier = Math.max(0,Math.min(4,parseInt(r.tier)||0)); r.from = yr(r.from); r.to = yr(r.to);
-      Object.assign(draft, r, {photo});
+      Object.assign(draft, cleanScan(r), {photo});
       $("thinking").hidden=true; $("cancelOnly").hidden=true; $("form").hidden=false; fillForm(draft); showDup(r);
     }catch(e){
       if(e?.code==="cancelled" || !draft) return;
+      if(e?.code==="failed" && (e.message==="offline" || e.message==="network")) return showManual("Er is geen verbinding met Claude." + LATER, true);
+      if(e?.code==="rate_limited") return showManual("Claude is even te druk." + LATER, true);
       const m = {not_granted:"Claude is niet beschikbaar voor jouw account. Vul de gegevens zelf in.",
-        rate_limited:"Even te veel aanvragen. Vul de gegevens zelf in of probeer straks opnieuw.",
         image_rejected:"Deze foto kon niet gelezen worden. Probeer een andere foto.",
         images_unavailable:"Foto's herkennen werkt niet in deze weergave. Vul de gegevens zelf in."}[e?.code] || "Herkennen lukte niet. Vul de gegevens zelf in of probeer opnieuw.";
-      runOcr(m.replace(" Vul de gegevens zelf in.", "").replace(/ Vul de gegevens zelf in of probeer.*$/, "") + " De tekst is nu op je telefoon gelezen: kijk de velden na.");
+      showManual(m);
     }
   });
 
-  // ---------- free label reading (OCR) ----------
-  const OCR_FIELDS = {f_name:"Naam", f_producer:"Producent", f_vintage:"Jaargang", f_region:"Streek", f_country:"Land", f_grape:"Druif", f_desc:"Beschrijving", f_taste:"Aroma's & smaak", f_food:"Past bij", f_note:"Eigen notitie", f_tags:"Tags", f_loc:"Plaats in kelder", f_shop:"Gekocht bij", f_price:"Geschatte prijs", f_paid:"Zelf betaald", f_temp:"Schenktemperatuur"};
-  let ocrField = "f_name";
-  function showOcr(r){
-    const f = r.fields, box = $("ocrBox");
-    const got = [["name","naam"],["producer","producent"],["vintage","jaargang"],["region","streek"],["country","land"],["grape","druif"],["color","type"]].filter(([k])=>f[k]).map(x=>x[1]);
-    const chips = [...new Set(r.lines.filter(l=>l.useful).map(l=>l.text))].slice(0,30);
-    ocrField = "f_name";
-    if(!chips.length && !got.length){ box.innerHTML = `<p class="hint">Er werd weinig tekst gevonden. Probeer een scherpe foto recht van voor met goed licht, of vul de gegevens zelf in.</p>`; box.hidden = false; return; }
-    box.innerHTML = `<div class="eyebrow">Gelezen op het etiket</div>
-      ${got.length ? `<p class="hint">Al ingevuld: ${got.join(", ")}. Kijk het even na, de herkenning is niet altijd juist.</p>` : ""}
-      ${chips.length ? `<p class="hint">Tik in een veld en daarna op een stukje tekst. Nu vul je in: <b id="ocrTarget">${OCR_FIELDS[ocrField]}</b></p>
-      <div class="ocrchips">${chips.map(t=>`<button type="button" data-ocr="${esc(t)}">${esc(t)}</button>`).join("")}</div>` : ""}`;
-    box.hidden = false;
+  function cleanScan(r){
+    r.house = r.house ? cleanHouse(r.house) : null; if(r.house?.unknown) r.house = null;
+    r.tier = Math.max(0,Math.min(4,parseInt(r.tier)||0)); r.from = yr(r.from); r.to = yr(r.to);
+    return r;
   }
-  $("form").addEventListener("focusin", e => { if(OCR_FIELDS[e.target.id]){ ocrField = e.target.id; const t = $("ocrTarget"); if(t) t.textContent = OCR_FIELDS[ocrField]; } });
-  $("ocrBox").addEventListener("mousedown", e => { if(e.target.closest("[data-ocr]")) e.preventDefault(); });
-  $("ocrBox").addEventListener("click", e => {
-    const b = e.target.closest("[data-ocr]"), el = $(ocrField); if(!b || !el) return;
-    const t = b.dataset.ocr;
-    el.value = el.tagName==="TEXTAREA" && el.value.trim() ? el.value.trim() + " " + t : t;
-    if(ocrField==="f_tags") paintTagSugg();
-    el.classList.add("filled"); setTimeout(()=>el.classList.remove("filled"), 900);
-  });
+  function scanPrompt(){
+    return `Je bent een sommelier. De foto toont een wijnfles of het etiket ervan. Herken de wijn zo nauwkeurig mogelijk op basis van wat op het etiket staat en je kennis van deze wijn of producent. Schrijf alles in het Nederlands. Dit jaar is ${YEAR}.
+Antwoord met ALLEEN één JSON-object met deze velden (lege string of 0 als iets niet te bepalen is):
+{"recognized": true|false, "name": "naam van de wijn/cuvée", "producer": "", "vintage": "jaartal of ''", "region": "appellatie/streek", "country": "", "grape": "enkel de druivennamen, gescheiden door komma's, bv. 'Touriga Nacional, Tinta Roriz'", "color": "rood|wit|rose|mousserend|dessert", "desc": "een vlotte beschrijving van 3 tot 5 zinnen: stijl, karakter, wat deze wijn bijzonder maakt", "taste": "korte opsomming aroma's en smaak", "food": "2-3 gerechten", "temp": "bv. 16–18 °C", "decant": "één korte zin: hoe lang decanteren of openen vooraf, of 'Niet nodig' (houd rekening met de leeftijd en depot)", "glass": "glastype, bv. 'Bordeauxglas'", "from": eerste jaar waarin de wijn op dronk is (getal), "to": laatste jaar waarin hij op zijn best is (getal), "price": "geschatte winkelprijs per fles in België/Europa als bereik, bv. €18–22", "tier": 1|2|3|4 (1 = tot €10, 2 = €10–25, 3 = €25–60, 4 = boven €60; 0 als onbekend), "house": info over het wijnhuis in deze vorm: ${HOUSE_FIELDS} (laat velden leeg als je ze niet zeker weet; verzin niets)}
+Zet "recognized" op false als er geen wijnetiket op de foto staat.`;
+  }
 
-  $("form").addEventListener("submit", async e => {
-    e.preventDefault();
+  // Firestore only confirms a write once the server has it, which never happens offline.
+  // The change is already saved on the phone and syncs later, so don't keep the screen waiting.
+  const commit = p => Promise.race([p, new Promise(r => setTimeout(r, navigator.onLine ? 4000 : 300))]);
+  function readForm(){
     const g = id => $(id).value.trim();
     const w = { name:g("f_name"), producer:g("f_producer"), vintage:g("f_vintage"), region:g("f_region"), country:g("f_country"),
-      grape:g("f_grape"), color:$("f_color").value, desc:g("f_desc"), taste:g("f_taste"), food:g("f_food"), temp:g("f_temp"),
+      grape:g("f_grape"), color:$("f_color").value, desc:g("f_desc"), taste:g("f_taste"), food:g("f_food"), temp:g("f_temp"), decant:g("f_decant"), glass:g("f_glass"),
       from:yr(g("f_from")), to:yr(g("f_to")), window:"", tier:+$("f_tier").value, price:g("f_price"), paid:g("f_paid"), note:g("f_note"),
       tags:[...new Set(g("f_tags").split(",").map(x=>x.trim().replace(/^#/,"").slice(0,40)).filter(Boolean))].slice(0,12),
       loc:g("f_loc"), shop:g("f_shop"), bought:g("f_bought"), boughtQty:Math.max(0,parseInt(g("f_qty"))||0),
       score:formScore, status:target, stock: target==="kelder" ? Math.max(0,parseInt(g("f_stock"))||0) : 0, photo:draft?.photo||"" };
-    if(!w.name) return;
     if(w.status!=="kelder"){ w.loc=""; w.shop=""; w.bought=""; w.boughtQty=0; }
+    return w;
+  }
+  const saveErr = err => { $("err").textContent = err?.code==="quota_exceeded" ? "Je kelder zit vol. Verwijder eerst een paar wijnen." : "Bewaren lukte niet. Probeer opnieuw."; $("err").hidden=false; };
+  function newWine(w){
+    w.createdAt=Date.now(); if(draft?.house) w.house = draft.house;
+    w.tastings = (w.status==="kelder" && w.score) ? [{date:TODAY, score:w.score, note:""}] : [];
+    const ref = col.doc(); return {ref, done: commit(ref.set(w))};
+  }
+
+  $("form").addEventListener("submit", async e => {
+    e.preventDefault();
+    const w = readForm();
+    if(!w.name) return;
     $("save").disabled=true;
     try{
-      if(editingId){ await col.doc(editingId).update(w); }
-      else {
-        w.createdAt=Date.now(); if(draft?.house) w.house = draft.house;
-        w.tastings = (w.status==="kelder" && w.score) ? [{date:TODAY, score:w.score, note:""}] : [];
-        const ref = col.doc(); await ref.set(w); openIds.add(ref.id); tab = w.status;
-      }
+      if(editingId){ w.pendingErr = ""; await commit(col.doc(editingId).update(w)); }
+      else { const {ref, done} = newWine(w); await done; openIds.add(ref.id); tab = w.status; }
       closeSheet(); render();
-    }catch(err){
-      $("err").textContent = err?.code==="quota_exceeded" ? "Je kelder zit vol. Verwijder eerst een paar wijnen." : "Bewaren lukte niet. Probeer opnieuw.";
-      $("err").hidden=false;
-    }finally{ $("save").disabled=false; }
+    }catch(err){ saveErr(err); }
+    finally{ $("save").disabled=false; }
   });
+
+  // ---------- scans for later ----------
+  // Offline (often the case in a cellar) the bottle is saved right away with what you typed, marked
+  // "pending". The photo waits on this phone (IndexedDB) and Claude fills in the empty fields once online.
+  const PLACEHOLDER = "Nog te herkennen";
+  const queue = (() => {
+    let p = null;
+    const open = () => p ||= new Promise((res, rej) => { const r = indexedDB.open("mw-scan-queue", 1);
+      r.onupgradeneeded = () => r.result.createObjectStore("scans", {keyPath: "id"});
+      r.onsuccess = () => res(r.result); r.onerror = () => { p = null; rej(r.error); }; });
+    const run = async (mode, fn) => { const d = await open(); return new Promise((res, rej) => {
+      const t = d.transaction("scans", mode), q = fn(t.objectStore("scans")); let out;
+      if(q) q.onsuccess = () => out = q.result; t.oncomplete = () => res(out); t.onerror = t.onabort = () => rej(t.error); }); };
+    return { put: v => run("readwrite", s => s.put(v)), del: id => run("readwrite", s => s.delete(id)), all: () => run("readonly", s => s.getAll()) };
+  })();
+  // Keep the waiting photo small: Claude reads up to ~1568 px anyway.
+  function shrink(file){
+    return new Promise(res => { const img = new Image(), url = URL.createObjectURL(file);
+      img.onload = () => { const r = Math.min(1, 1568/Math.max(img.width, img.height)), c = document.createElement("canvas");
+        c.width = Math.round(img.width*r); c.height = Math.round(img.height*r); c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url); c.toBlob(b => res(b || file), "image/jpeg", .85); };
+      img.onerror = () => { URL.revokeObjectURL(url); res(file); }; img.src = url; });
+  }
+  $("later").addEventListener("click", async () => {
+    if(!draft?.file || !col) return;
+    const w = readForm(); w.name = w.name || PLACEHOLDER; w.pending = true;
+    $("later").disabled = true;
+    try{
+      const blob = await shrink(draft.file);
+      const {ref, done} = newWine(w);
+      await queue.put({id: ref.id, col: col.path, blob, at: Date.now()});
+      await done; tab = w.status; closeSheet(); render();
+      $("status").textContent = navigator.onLine ? "Bewaard. Claude leest het etiket zo meteen." : "Bewaard. Claude leest het etiket zodra je weer online bent.";
+      setTimeout(processQueue, 800);
+    }catch(err){ saveErr(err); }
+    finally{ $("later").disabled = false; }
+  });
+
+  let queueBusy = false, winesLoaded = false, serverSeen = false;
+  async function processQueue(){
+    if(queueBusy || !sample || !col || !winesLoaded || !navigator.onLine) return;
+    queueBusy = true;
+    try{
+      const items = (await queue.all()).filter(x => x.col === col.path);
+      let left = items.length;
+      for(const it of items){
+        const w = wines.find(x => x.id === it.id);
+        if(!w){
+          // Not in the list (yet): a fresh save can arrive a moment later. Only drop the photo once the wine is really gone.
+          const s = await col.doc(it.id).get().catch(() => null);
+          if(s && !s.exists){ await queue.del(it.id); } left--; continue;
+        }
+        if(!w.pending){ await queue.del(it.id); left--; continue; }
+        $("status").textContent = `Claude leest ${left===1 ? "een etiket" : left + " etiketten"} die je offline scande…`;
+        let r;
+        try{ r = await sample.json(scanPrompt(), {images:[it.blob]}); }
+        catch(e){
+          if(e?.code==="image_rejected"){ await save(w.id, {pending:false, pendingErr:"De foto kon niet gelezen worden. Vul de gegevens zelf in."}); await queue.del(it.id); left--; continue; }
+          // offline again, busy or not allowed: try again later
+          $("status").textContent = `${left===1 ? "Eén fles wacht" : left + " flessen wachten"} nog op herkenning. Claude probeert het opnieuw zodra het kan.`; break;
+        }
+        const patch = {pending: false};
+        if(!r || r.recognized===false) patch.pendingErr = "Claude vond geen wijnetiket op de foto. Vul de gegevens zelf in.";
+        else {
+          cleanScan(r);
+          // Only fill what is still empty, so what you typed in the cellar (stock, place…) stays.
+          ["name","producer","vintage","region","country","grape","desc","taste","food","temp","decant","glass","price","tier","from","to"].forEach(k => {
+            const empty = !w[k] || (k==="name" && w.name===PLACEHOLDER);
+            if(empty && r[k]) patch[k] = typeof r[k]==="string" ? r[k].trim() : r[k]; });
+          if(r.color && ["rood","wit","rose","mousserend","dessert"].includes(r.color)) patch.color = r.color;
+          if(r.house && !w.house) patch.house = r.house;
+        }
+        Object.assign(w, patch); render(); await save(w.id, patch); await queue.del(it.id); left--;
+      }
+      if(!left) $("status").textContent = items.length ? "Je offline scans zijn aangevuld." : $("status").textContent;
+    }catch{}
+    finally{ queueBusy = false; }
+  }
+  addEventListener("online", () => processQueue());
+  document.addEventListener("visibilitychange", () => { if(document.visibilityState==="visible") processQueue(); });
 
   // ---------- boot ----------
   render();
@@ -1862,13 +2007,31 @@ Zet "recognized" op false als er geen wijnetiket op de foto staat.`;
     col.onSnapshot(snap => {
       wines = snap.docs.map(x => norm({id:x.id, ...x.data()}));
       if(!factStarted && (snap.size || !snap.metadata.fromCache)){ factStarted = true; setTimeout(() => loadFact(false), 0); }
-      if(!snap.metadata.fromCache){ clearTimeout(timer); $("status").textContent=""; }
+      // Clear the loading message once; later updates must not wipe messages shown since.
+      if(!snap.metadata.fromCache && !serverSeen){ serverSeen = true; clearTimeout(timer); $("status").textContent=""; }
       render();
+      if(!winesLoaded){ winesLoaded = true; setTimeout(processQueue, 1500); }
     }, () => { clearTimeout(timer); $("status").textContent = "Je wijnen konden niet geladen worden."; });
   })();
 })();
 </script>
+<div class="upd" id="upd" role="status" hidden><span>Er is een nieuwe versie van de app.</span><button class="btn sm" type="button" id="updBtn">Vernieuwen</button><button class="btn ghost sm" type="button" id="updLater" aria-label="Later">Later</button></div>
 <script>
-if("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(()=>{}));
+// Offline support plus a gentle update: a new version waits until you tap "Vernieuwen",
+// so it never reloads the page while you are filling in a form.
+if("serviceWorker" in navigator) addEventListener("load", async () => {
+  let reg; try{ reg = await navigator.serviceWorker.register("sw.js"); }catch{ return; }
+  const bar = document.getElementById("upd"); let wanted = false;
+  const offer = w => { if(!w || !navigator.serviceWorker.controller) return; bar.hidden = false;
+    document.getElementById("updBtn").onclick = () => { wanted = true; w.postMessage("skipWaiting"); bar.hidden = true; }; };
+  document.getElementById("updLater").onclick = () => { bar.hidden = true; };
+  offer(reg.waiting);
+  reg.addEventListener("updatefound", () => { const w = reg.installing;
+    w && w.addEventListener("statechange", () => { if(w.state === "installed") offer(w); }); });
+  // Reload once the new version takes over, but only after you tapped "Vernieuwen".
+  navigator.serviceWorker.addEventListener("controllerchange", () => { if(!wanted) return; wanted = false; location.reload(); });
+  // A phone keeps the app open for days: look for a new version whenever it comes back to the front.
+  document.addEventListener("visibilitychange", () => { if(document.visibilityState === "visible") reg.update().catch(()=>{}); });
+});
 </script>
 </body></html>
