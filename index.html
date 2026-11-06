@@ -1387,7 +1387,7 @@ Laat een lege regel tussen de gerechten. Geen inleiding, geen afsluiter.`;
       <h3>${esc(fact.titel)}</h3><p>${esc(fact.weetje)}</p>
       ${linked.length ? `<div class="drinkrow"><span class="eyebrow">Proef het zelf</span>${linked.map(w=>`<button class="drink" type="button" data-goto="${w.id}"><span class="t"><b>${esc(w.name)}</b>${w.vintage?` <span class="vint">${esc(w.vintage)}</span>`:""}</span><span class="badge ${w.status==="kelder"&&w.stock?"b-ok":"b-young"}">${w.status==="kelder"? (w.stock?w.stock+" fl. in huis":"op") : "verlanglijst"}</span></button>`).join("")}</div>`
         : `<p class="hint">Geen wijn in je kelder die hierbij past. Een mooie reden om iets nieuws te proberen.</p>`}
-      <div class="foot"><span class="hint">${fact.extra ? "Extra weetje" : new Date().toLocaleDateString("nl-BE",{weekday:"long",day:"numeric",month:"long"})}</span>
+      <div class="foot"><span class="hint">${fact.extra ? "Extra weetje" : (fact.day ? new Date(fact.day) : new Date()).toLocaleDateString("nl-BE",{weekday:"long",day:"numeric",month:"long"})}</span>
       <button class="link" type="button" data-fact="more" ${factBusy?"disabled":""}>${factBusy?"Weetje wordt ingeschonken…":"Nog een weetje"}</button></div>`;
   }
   function factWines(f){
@@ -1411,9 +1411,19 @@ Laat een lege regel tussen de gerechten. Geen inleiding, geen afsluiter.`;
     return askFact(theme, true).catch(() => null);
   }
   function prefetch(){ if(sample && !nextP && !nextFact){ nextP = fetchExtra().then(f => { nextFact = f; nextP = null; return f; }); } }
+  // The daily fact is kept on the device per cellar, so it shows at once on the next start.
+  const factCellar = () => window.mwCloud?.cellar?.id || "local";
+  function cachedFact(){
+    try{ const c = JSON.parse(localStorage.getItem("wk_fact_last")||"null"); if(c && c.fact && c.fact.titel && (!c.cellar || !window.mwCloud?.cellar || c.cellar===factCellar())) return c; }catch{}
+    return null;
+  }
+  function showCachedFact(){ const c = cachedFact(); if(c && !fact){ fact = {...c.fact, day:c.day}; renderFact(); } return c; }
   async function loadFact(more){
-    const key = "wk_fact_" + TODAY;
-    if(!more){ try{ const c = JSON.parse(localStorage.getItem(key)||"null"); if(c && c.titel){ fact = c; seenTitles.push(c.titel); renderFact(); return; } }catch{} }
+    if(!more){
+      const c = cachedFact();
+      if(c && c.day===TODAY && c.cellar===factCellar()){ fact = {...c.fact, day:c.day}; seenTitles.push(c.fact.titel); renderFact(); return; }
+      if(c){ fact = {...c.fact, day:c.day}; seenTitles.push(c.fact.titel); } else fact = null;
+    }
     if(!sample) return;
     if(more){
       if(nextFact){ fact = nextFact; nextFact = null; seenTitles.push(fact.titel); renderFact(); prefetch(); return; }
@@ -1425,10 +1435,10 @@ Laat een lege regel tussen de gerechten. Geen inleiding, geen afsluiter.`;
     factBusy = true; factErr = ""; renderFact();
     try{
       const f = await askFact(THEMES[dayNum % THEMES.length], false);
-      if(f){ fact = f; seenTitles.push(f.titel); try{ localStorage.setItem(key, JSON.stringify(f)); }catch{} }
-      else factErr = "Het weetje van vandaag kon niet geladen worden.";
+      if(f){ fact = f; seenTitles.push(f.titel); try{ localStorage.setItem("wk_fact_last", JSON.stringify({cellar:factCellar(), day:TODAY, fact:f})); }catch{} }
+      else if(!fact) factErr = "Het weetje van vandaag kon niet geladen worden.";
     }catch(e){
-      factErr = e?.code==="rate_limited" ? "Claude is even niet beschikbaar. Het weetje volgt later." : e?.code==="not_granted" ? "" : "Het weetje van vandaag kon niet geladen worden.";
+      if(!fact) factErr = e?.code==="rate_limited" ? "Claude is even niet beschikbaar. Het weetje volgt later." : e?.code==="not_granted" ? "" : "Het weetje van vandaag kon niet geladen worden.";
     }
     factBusy = false; renderFact();
   }
@@ -1839,6 +1849,7 @@ Zet "recognized" op false als er geen wijnetiket op de foto staat.`;
 
   // ---------- boot ----------
   render();
+  showCachedFact();
   (async () => {
     const [d, u, s, m, dl] = await Promise.all([claude.use("db"), claude.use("user"), claude.use("sample"), claude.use("mcp"), claude.use("downloads")]);
     sample = s; db = d; mcp = m; downloads = dl;
@@ -1850,7 +1861,8 @@ Zet "recognized" op false als er geen wijnetiket op de foto staat.`;
     const timer = setTimeout(()=>{ $("status").textContent="Je wijnen zijn nog niet bereikbaar. Even geduld…"; }, 10000);
     col.onSnapshot(snap => {
       wines = snap.docs.map(x => norm({id:x.id, ...x.data()}));
-      if(!snap.metadata.fromCache){ clearTimeout(timer); $("status").textContent=""; if(!factStarted){ factStarted = true; loadFact(false); } }
+      if(!factStarted && (snap.size || !snap.metadata.fromCache)){ factStarted = true; setTimeout(() => loadFact(false), 0); }
+      if(!snap.metadata.fromCache){ clearTimeout(timer); $("status").textContent=""; }
       render();
     }, () => { clearTimeout(timer); $("status").textContent = "Je wijnen konden niet geladen worden."; });
   })();
