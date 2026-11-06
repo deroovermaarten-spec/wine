@@ -40,6 +40,8 @@
 .mwlogin input,.mwcell input{font:inherit;font-size:1rem;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:11px 12px;min-width:0}
 .mwlogin .err,.mwcell .err{color:var(--accent);font-size:.88rem;margin:0}
 .mwlogin .ok{color:var(--ok);font-size:.88rem;margin:0}
+.mwchips{display:flex;flex-wrap:wrap;gap:6px}
+.mwlab{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:600}
 .mwacct{display:inline-flex;align-items:center;gap:6px;max-width:180px}
 .mwbell{position:relative;padding:7px 9px}
 .mwbell .dot{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--accent);color:#fff;font-size:.7rem;font-weight:700;line-height:18px;text-align:center}
@@ -158,6 +160,7 @@
     const prof = pendingName ? null : await fs.doc("users/" + user.uid).get().catch(() => null);
     const name = pendingName || user.displayName || (prof && prof.exists && prof.data().name) || (user.email || "").split("@")[0];
     cloud.me.name = name;
+    cloud.prefs = normPrefs(prof && prof.exists ? prof.data().prefs : null);
     $("status").textContent = "Je kelders worden geladen…";
 
     let notice = "";
@@ -200,6 +203,39 @@
     };
     resolveReady({db, user: {id: async () => cloud.cellar.id, name: async () => name}, downloads: window.mwLocal.downloads,
       sample: window.MW_AI_URL && window.mwAi ? window.mwAi.make(window.MW_AI_URL, () => auth.currentUser.getIdToken()) : null, mcp: null});
+  }
+
+  // ---------- taste profile: users/{uid}.prefs ----------
+  const PREF_COLORS = {rood: "Rood", wit: "Wit", rose: "Rosé", mousserend: "Mousserend", dessert: "Dessert"};
+  const splitList = v => String(v || "").split(/[,;\n]/).map(x => x.trim()).filter(Boolean).slice(0, 30);
+  function normPrefs(p){
+    p = p || {};
+    return {colors: (Array.isArray(p.colors) ? p.colors : []).filter(c => PREF_COLORS[c]),
+      grapes: Array.isArray(p.grapes) ? p.grapes : [], regions: Array.isArray(p.regions) ? p.regions : [],
+      avoid: Array.isArray(p.avoid) ? p.avoid : [], note: String(p.note || "").slice(0, 300)};
+  }
+  const hasPrefs = p => p && (p.colors.length || p.grapes.length || p.regions.length || p.avoid.length || p.note);
+  window.mwPrefs = {get: () => cloud.prefs || null, has: () => !!hasPrefs(cloud.prefs)};
+  let prefDraft = null;
+  function prefsHtml(){
+    const d = prefDraft || (prefDraft = {...cloud.prefs, grapesTxt: cloud.prefs.grapes.join(", "), regionsTxt: cloud.prefs.regions.join(", "), avoidTxt: cloud.prefs.avoid.join(", ")});
+    const sugg = (window.mwSuggest && window.mwSuggest()) || [];
+    return `<div class="sharebox"><h3>Mijn smaak</h3>
+      <p class="hint" style="margin:0">Daarmee kun je in de kelder filteren op "Mijn smaak", en houdt "Wat drink ik vanavond?" er rekening mee. Alleen jij past dit aan; het geldt in al je kelders.</p>
+      <div class="mwchips">${Object.entries(PREF_COLORS).map(([k, v]) => `<button type="button" class="chip" data-pcolor="${k}" aria-pressed="${d.colors.includes(k)}"><span class="dot ${k}"></span>${v}</button>`).join("")}</div>
+      <label class="mwlab">Favoriete druiven<input id="mwPG" data-pf="grapesTxt" list="mwSugg" value="${esc(d.grapesTxt)}" placeholder="bv. Albariño, Tempranillo"></label>
+      <label class="mwlab">Favoriete streken of landen<input id="mwPR" data-pf="regionsTxt" list="mwSugg" value="${esc(d.regionsTxt)}" placeholder="bv. Rioja, Douro, Portugal"></label>
+      <label class="mwlab">Liever niet<input id="mwPA" data-pf="avoidTxt" list="mwSugg" value="${esc(d.avoidTxt)}" placeholder="bv. Chardonnay, zoete wijn"></label>
+      <label class="mwlab">In je eigen woorden (optioneel)<input id="mwPN" data-pf="note" value="${esc(d.note)}" placeholder="bv. fris en droog, niet te veel hout"></label>
+      <datalist id="mwSugg">${sugg.map(x => `<option value="${esc(x)}">`).join("")}</datalist>
+      <div><button class="btn sm" type="button" data-a="prefs">Bewaar mijn smaak</button></div></div>`;
+  }
+  async function savePrefs(){
+    const d = prefDraft;
+    const p = normPrefs({colors: d.colors, grapes: splitList(d.grapesTxt), regions: splitList(d.regionsTxt), avoid: splitList(d.avoidTxt), note: d.note});
+    await fs.doc("users/" + cloud.me.uid).set({prefs: p}, {merge: true});
+    cloud.prefs = p; prefDraft = null;
+    window.dispatchEvent(new Event("mwprefs"));
   }
 
   // ---------- bell: wines other members added ----------
@@ -309,8 +345,9 @@
     sh.innerHTML = `<div class="panel" role="dialog" aria-modal="true" aria-labelledby="mwSheetTitle"><h2 id="mwSheetTitle">Kelders en account</h2><div class="mwcell" id="mwBody"></div>
       <div class="actions"><button class="btn ghost" type="button" id="mwClose">Sluiten</button></div></div>`;
     document.body.appendChild(sh);
-    $("mwClose").onclick = () => { sh.hidden = true; sheetMsg = ""; inviteLink = ""; };
+    $("mwClose").onclick = () => { sh.hidden = true; sheetMsg = ""; inviteLink = ""; prefDraft = null; };
     $("mwBody").addEventListener("click", onSheetClick);
+    $("mwBody").addEventListener("input", e => { const k = e.target.dataset.pf; if(k && prefDraft) prefDraft[k] = e.target.value; });
   }
   function drawSheet(){
     const c = cloud.cellar, me = cloud.me, owner = c.owner === me.uid;
@@ -335,6 +372,7 @@
       </div>
       ${localCount ? `<div class="sharebox"><h3>Wijnen op dit toestel</h3><p>Op dit toestel staan nog ${localCount} wijn${localCount === 1 ? "" : "en"} van voor je je aanmeldde. Zet ze in "${esc(c.name)}".</p>
         <div><button class="btn sm" type="button" data-a="migrate">Zet ze in deze kelder</button></div></div>` : ""}
+      ${prefsHtml()}
       <div class="sharebox"><h3>Account</h3><p>Aangemeld als <b>${esc(me.name)}</b> (${esc(me.email)})</p>
         <p class="hint" style="font-size:.72rem;word-break:break-all">Gebruikers-id: <span style="user-select:all">${esc(me.uid)}</span></p>
         <div><button class="btn ghost sm" type="button" data-a="logout">Afmelden</button></div></div>`;
@@ -351,6 +389,8 @@
     }catch{}
   }
   async function onSheetClick(e){
+    const pc = e.target.closest("[data-pcolor]");
+    if(pc && prefDraft){ const k = pc.dataset.pcolor; prefDraft.colors = prefDraft.colors.includes(k) ? prefDraft.colors.filter(x => x !== k) : [...prefDraft.colors, k]; pc.setAttribute("aria-pressed", prefDraft.colors.includes(k)); return; }
     const b = e.target.closest("[data-a]"); if(!b) return;
     const a = b.dataset.a, c = cloud.cellar, F = firebase.firestore.FieldValue;
     sheetMsg = "";
@@ -398,6 +438,7 @@
         store.set("mw_migrated_" + cloud.me.uid, "1"); localCount = 0; sheetMsg = ""; drawSheet();
         $("status").textContent = `${n} wijn${n === 1 ? "" : "en"} overgezet naar "${c.name}".`; return;
       }
+      if(a === "prefs"){ b.disabled = true; await savePrefs(); sheetMsg = ""; drawSheet(); $("status").textContent = "Je smaak is bewaard."; return; }
       if(a === "logout"){ await auth.signOut(); store.set("mw_cellar_" + cloud.me.uid, null); location.reload(); return; }
     }catch(err){ sheetMsg = msgOf(err); drawSheet(); }
   }

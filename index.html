@@ -535,6 +535,27 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
   const nrm = s => String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"");
   const paidNum = w => { const p = String(w.paid||"").replace(",",".").match(/\d+(\.\d+)?/); return p ? +p[0] : 0; };
   const eur = n => "€" + Math.round(n).toLocaleString("nl-BE");
+  function tasteText(){
+    const p = window.mwPrefs?.has() ? window.mwPrefs.get() : null; if(!p) return "";
+    const parts = [p.colors.length && "drinkt graag " + p.colors.map(c=>COLORS[c]).join(", "), p.grapes.length && "favoriete druiven: " + p.grapes.join(", "),
+      p.regions.length && "favoriete streken: " + p.regions.join(", "), p.avoid.length && "liever niet: " + p.avoid.join(", "), p.note && "eigen woorden: " + p.note].filter(Boolean);
+    return ` Smaak van wie kiest: ${parts.join("; ")}. Weeg die smaak mee, maar de combinatie met het gerecht blijft het belangrijkst.`;
+  }
+  // How well a wine fits the signed-in person's taste profile: 0 = not at all or on the "liever niet" list.
+  function tasteScore(w){
+    const p = window.mwPrefs?.get(); if(!p) return 0;
+    const hay = [w.grape, w.region, w.country, w.name, w.producer, COLORS[w.color], w.color==="dessert"?"zoet":"", ...(w.tags||[])].map(nrm).join(" ");
+    const hit = t => { const k = nrm(t); return k.length > 2 && hay.includes(k); };
+    if(p.avoid.some(hit)) return 0;
+    let n = 0;
+    if(p.colors.includes(w.color)) n += 2;
+    n += p.grapes.filter(hit).length * 3;
+    n += p.regions.filter(hit).length * 2;
+    if(n && w.score) n += w.score / 5;
+    return n;
+  }
+  window.mwSuggest = () => [...new Set(wines.flatMap(w => [...grapesOf(w), w.region, w.country]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"nl")).slice(0,200);
+  window.addEventListener("mwprefs", () => { if(typeFilter==="__me" && !window.mwPrefs?.has()) typeFilter=""; render(); });
   function grapesOf(w){
     return String(w.grape||"").split(/,|\/|&|\+|;| en | and /i)
       .map(x=>x.replace(/\(.*?\)|\d+\s*%/g,"").replace(/\b(waarschijnlijk|vermoedelijk|vooral|onder andere|o\.a\.|mogelijk)\b/gi,"").replace(/\s+/g," ").trim())
@@ -588,7 +609,8 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
     const types = [...new Set(pool.map(w=>w.color).filter(c=>COLORS[c]))];
     $("chips").innerHTML = `<button class="chip" data-type="" aria-pressed="${!typeFilter}">Alles</button>` +
       types.map(t=>`<button class="chip" data-type="${t}" aria-pressed="${typeFilter===t}"><span class="dot ${t}"></span>${COLORS[t]}</button>`).join("") +
-      (tab==="kelder" ? `<button class="chip" data-type="__stock" aria-pressed="${typeFilter==="__stock"}">Op voorraad</button>` : "");
+      (tab==="kelder" ? `<button class="chip" data-type="__stock" aria-pressed="${typeFilter==="__stock"}">Op voorraad</button>` : "") +
+      (window.mwPrefs?.has() ? `<button class="chip" data-type="__me" aria-pressed="${typeFilter==="__me"}">♥ Mijn smaak</button>` : "");
     const allTags = [...new Set(pool.flatMap(w=>w.tags))].sort((a,b)=>a.localeCompare(b,"nl"));
     if(tagFilter && !allTags.includes(tagFilter)) tagFilter="";
     if(allTags.length){ $("chips").hidden=false; $("chips").innerHTML += `<span style="flex-basis:100%;height:0"></span>` + allTags.map(t=>`<button class="tag" data-tag="${esc(t)}" aria-pressed="${tagFilter===t}">#${esc(t)}</button>`).join(""); }
@@ -606,14 +628,14 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
     let rows = pool.filter(w =>
       (!q || [w.name,w.producer,w.region,w.country,w.grape,w.vintage,w.loc,w.shop,...w.tags].join(" ").toLowerCase().includes(q)) &&
       (!tagFilter || w.tags.includes(tagFilter)) &&
-      (!typeFilter || (typeFilter==="__stock" ? w.stock>0 : w.color===typeFilter)) &&
+      (!typeFilter || (typeFilter==="__stock" ? w.stock>0 : typeFilter==="__me" ? tasteScore(w) > 0 : w.color===typeFilter)) &&
       (!country || w.country===country) &&
       (!grape || grapesOf(w).includes(grape)));
     const ds = w => { const d=drinkState(w); return d? d.k*10000 + (w.to||9999) : 99999; };
-    rows.sort((a,b)=> sort==="score" ? (b.score||0)-(a.score||0) || (b.createdAt||0)-(a.createdAt||0)
+    rows.sort((a,b)=> (typeFilter==="__me" ? tasteScore(b)-tasteScore(a) : 0) || (sort==="score" ? (b.score||0)-(a.score||0) || (b.createdAt||0)-(a.createdAt||0)
       : sort==="price" ? (priceNum(a)||999)-(priceNum(b)||999) || (a.tier||9)-(b.tier||9)
       : sort==="drink" ? ds(a)-ds(b)
-      : sort==="recent" ? (b.createdAt||0)-(a.createdAt||0) : String(a.name).localeCompare(String(b.name),"nl"));
+      : sort==="recent" ? (b.createdAt||0)-(a.createdAt||0) : String(a.name).localeCompare(String(b.name),"nl")));
 
     const list = $("list");
     if(!pool.length){
@@ -1683,7 +1705,7 @@ ${data}`;
     pickCtl?.abort(); pickCtl = new AbortController();
     $("pickBtn").disabled = true; $("picks").innerHTML = `<p class="hint">Claude kijkt in je kelder…</p>`;
     const data = cand.slice(0,150).map(w=>({id:w.id,naam:w.name,producent:w.producer,jaar:w.vintage,type:w.color,druif:w.grape,streek:[w.region,w.country].filter(Boolean).join(", "),score:w.score||null,flessen:w.stock,drinkvenster:windowText(w)||null,smaak:w.taste||null}));
-    const prompt = `Je bent een sommelier. Kies uit de wijnkelder hieronder de 3 flessen (of minder als er minder passen) die het best passen bij dit gerecht: "${meal}". Houd rekening met de combinatie met het eten, het drinkvenster (dit jaar is ${YEAR}; geef voorrang aan wijnen die snel gedronken moeten worden) en de persoonlijke score. Schrijf in het Nederlands.
+    const prompt = `Je bent een sommelier. Kies uit de wijnkelder hieronder de 3 flessen (of minder als er minder passen) die het best passen bij dit gerecht: "${meal}". Houd rekening met de combinatie met het eten, het drinkvenster (dit jaar is ${YEAR}; geef voorrang aan wijnen die snel gedronken moeten worden) en de persoonlijke score.${tasteText()} Schrijf in het Nederlands.
 Antwoord met ALLEEN dit JSON-object: {"picks":[{"id":"exacte id uit de lijst","why":"één zin waarom deze wijn past"}],"tip":"optioneel: één korte serveertip of ''"}
 Kelder:
 ${JSON.stringify(data)}`;
