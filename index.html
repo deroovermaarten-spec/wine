@@ -1061,7 +1061,8 @@ Antwoord met ALLEEN één JSON-object in deze vorm: ${HOUSE_FIELDS}`;
     if(scrollTick) return; scrollTick = true;
     requestAnimationFrame(() => {
       scrollTick = false;
-      const far = scrollY > innerHeight * 1.2;
+      // the long cellar and wish lists show it after more than a screen; shorter pages (events, insights) sooner
+      const far = scrollY > innerHeight * (tab==="kelder" || tab==="wens" ? 1.2 : .5);
       const tt = $("toTop");
       if(far && tt.hidden){ tt.hidden = false; requestAnimationFrame(()=>tt.classList.add("show")); }
       else if(!far && !tt.hidden){ tt.classList.remove("show"); tt.hidden = true; }
