@@ -263,10 +263,10 @@
     }, () => {});
     paintHeader();
     if(pendingName) showWelcome();
-    else if(joined) cheer("Welkom in de kelder!", `Je bent nu lid van "${cloud.cellar.name}". Proost!`);
+    else if(joined) cheer("Welkom in de kelder!", `Je bent nu lid van "${cloud.cellar.name}". Schollekes!`);
     else if(store.get("mw_new")){
       const [first, id] = store.get("mw_new").split(":"); store.set("mw_new", null);
-      if(id === cloud.cellar.id) cheer(first === "1" ? "Je eerste kelder!" : "Nieuwe kelder!", `"${cloud.cellar.name}" staat klaar. Proost!`);
+      if(id === cloud.cellar.id) cheer(first === "1" ? "Je eerste kelder!" : "Nieuwe kelder!", `"${cloud.cellar.name}" staat klaar. Schollekes!`);
     }
 
     const winesCol = fs.collection("cellars/" + cloud.cellar.id + "/wines");
