@@ -67,7 +67,18 @@
 .evgroup .dot{margin:0}
 .evform label{min-width:0}
 .evform input[type=date]{-webkit-appearance:none;appearance:none;display:block;min-height:44px;text-align:left}
-.evform input[type=date]::-webkit-date-and-time-value{text-align:left}`;
+.evform input[type=date]::-webkit-date-and-time-value{text-align:left}
+#evNext{margin-left:auto;display:inline-flex;align-items:center;gap:8px;max-width:min(220px,calc(100% - 200px));min-width:0;padding:5px 12px 5px 8px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);font:inherit;cursor:pointer;text-align:right}
+#evNext:hover{border-color:var(--accent)}
+#evNext[hidden]{display:none}
+#evNext svg{width:22px;height:22px;flex:none}
+#evNext .gl{fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;opacity:.8}
+#evNext .wn{fill:#9b1c2c;animation:evnfill 1.2s .3s cubic-bezier(.3,.6,.4,1) both}
+@keyframes evnfill{from{transform:translateY(12px)}}
+#evNext .tx{display:flex;flex-direction:column;min-width:0;line-height:1.15}
+#evNext small{font-size:11px;color:var(--accent);font-weight:600;white-space:nowrap}
+#evNext b{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (prefers-reduced-motion:reduce){#evNext .wn{animation:none}}`;
 
   // ---------- data ----------
   function listenEvents(){
@@ -76,7 +87,7 @@
         .sort((a, b) => (isPast(a) - isPast(b)) || (isPast(a) ? String(b.date).localeCompare(String(a.date)) : String(a.date || "9999").localeCompare(String(b.date || "9999"))));
       loaded = true;
       if(current && !ev()){ current = null; msg = "Dit event bestaat niet meer, of je bent er geen gast meer."; }
-      watchWines(); paint();
+      watchWines(); paint(); paintNext();
     }, err => { loaded = true; msg = err && err.code === "permission-denied" ? errText(err, true) : "Je events konden niet geladen worden."; paint(); });
   }
   function watchWines(){
@@ -365,6 +376,35 @@
     $("evSheetBody").innerHTML = `<p class="hint">Kies het event waar je <b>${ui.esc(w.name)}</b> meebrengt. De andere gasten zien de wijn meteen op de lijst.</p>`
       + (up.length ? up.map(itemHtml).join("") : `<div class="empty"><p>Je hebt geen komende events.</p><button class="btn sm" type="button" data-go="1">${ui.ico("plus")}Maak een event</button></div>`);
     sh.hidden = false;
+  }
+
+  // ---------- header: the next event, with a small glass that is fuller the closer it gets ----------
+  let nextKey = "";
+  function paintNext(){
+    let b = $("evNext");
+    if(!b){
+      b = document.createElement("button"); b.id = "evNext"; b.type = "button"; b.hidden = true;
+      b.onclick = () => { window.mwSetTab && window.mwSetTab("events"); open(b.dataset.ev); };
+    }
+    const acct = $("mwAcct"), host = document.querySelector("header");
+    if(acct){ if(acct.nextSibling !== b) acct.after(b); } else if(host && b.parentNode !== host) host.appendChild(b);
+    const today = TODAY();
+    const e = events.filter(x => x.date && x.date >= today).sort((x, y) => x.date.localeCompare(y.date))[0];
+    if(!e){ b.hidden = true; nextKey = ""; return; }
+    const days = Math.round((new Date(e.date + "T12:00:00") - new Date(today + "T12:00:00")) / 864e5);
+    const when = days === 0 ? "Vandaag!" : days === 1 ? "Morgen"
+      : days < 7 ? "Over " + days + " dagen"
+      : (() => { try{ return new Date(e.date + "T12:00:00").toLocaleDateString("nl-BE", {weekday: "short", day: "numeric", month: "short"}); }catch{ return e.date; } })();
+    const fill = days <= 0 ? 1 : Math.max(.15, 1 - days / 30); // full glass on the day itself
+    const key = e.id + "|" + e.name + "|" + when;
+    b.dataset.ev = e.id; b.hidden = false;
+    b.setAttribute("aria-label", "Volgend event: " + e.name + ", " + when.toLowerCase());
+    if(key === nextKey) return; // don't restart the fill animation on every snapshot
+    nextKey = key;
+    b.innerHTML = `<span class="tx"><small>${ui.esc(when)}</small><b>${ui.esc(e.name)}</b></span>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><defs><clipPath id="evNextBowl"><path d="M6 3h12c0 8-2 11.5-6 12C8 14.5 6 11 6 3z"/></clipPath></defs>
+      <g clip-path="url(#evNextBowl)"><rect class="wn" x="0" y="${(15 - 12 * fill).toFixed(1)}" width="24" height="16"/></g>
+      <path class="gl" d="M6 3h12c0 8-2 11.5-6 12C8 14.5 6 11 6 3zM12 15v6M8.5 21h7"/></svg>`;
   }
 
   // ---------- boot ----------
