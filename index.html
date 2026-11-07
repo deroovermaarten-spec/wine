@@ -74,6 +74,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .tabs button{flex:1;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;background:none;color:var(--muted);padding:10px 4px 11px;border-radius:0;font-weight:600;font-size:.86rem;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
 .tabs .n{font:500 .72rem var(--mono);opacity:.8;margin-left:3px}
+.tabs .ti{display:none}
 .scanbar{position:fixed;left:0;right:0;bottom:0;z-index:5;display:flex;justify-content:center;
   padding:14px max(16px,env(safe-area-inset-right,0px)) calc(14px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));
   background:linear-gradient(to top,var(--bg) 60%,transparent)}
@@ -306,6 +307,21 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
 .actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
 .err{color:var(--accent);font-size:.88rem}
 .confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:.85rem}
+/* phones: the tabs become a bar at the bottom, within reach of your thumb; "Scan een fles" floats just above it */
+@media (max-width:600px){
+  .tabs,.tabs.stuck{position:fixed;top:auto;bottom:0;left:0;right:0;margin:0;z-index:7;gap:0;border-bottom:0;border-top:1px solid var(--line);background:var(--surface);
+    padding:3px max(4px,env(safe-area-inset-right,0px)) calc(3px + env(safe-area-inset-bottom,0px)) max(4px,env(safe-area-inset-left,0px));box-shadow:0 -8px 18px -14px rgba(60,35,20,.4)}
+  .tabs button{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 2px 6px;margin:0;border-bottom:0;font-size:.7rem;letter-spacing:.01em}
+  .tabs .ti{display:block;width:23px;height:23px;transition:transform .2s}
+  .tabs .tl{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+  .tabs button[aria-selected="true"]{color:var(--accent)}
+  .tabs button[aria-selected="true"] .ti{transform:translateY(-1px);stroke-width:2.2}
+  .tabs .n{position:absolute;top:3px;left:calc(50% + 7px);margin:0;padding:0 5px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:.6rem;line-height:1.55;opacity:1}
+  .tabs .n:empty{display:none}
+  .scanbar{bottom:calc(58px + env(safe-area-inset-bottom,0px));padding-bottom:12px;padding-top:8px;background:none}
+  .wrap{padding-bottom:170px}
+}
+@media (max-width:600px) and (prefers-reduced-motion:reduce){.tabs .ti{transition:none}}
 </style>
 
 <div class="wrap">
@@ -324,10 +340,10 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
     <div id="hdrBtns" style="display:flex;gap:8px;align-items:center"><button class="btn ghost sm" id="themeBtn" type="button" style="padding:7px 9px"></button></div>
   </header>
   <nav class="tabs" role="tablist" aria-label="Weergave">
-    <button role="tab" id="t_kelder" data-tab="kelder" aria-selected="true">Kelder<span class="n" id="n_kelder"></span></button>
-    <button role="tab" id="t_wens" data-tab="wens" aria-selected="false">Verlanglijst<span class="n" id="n_wens"></span></button>
-    <button role="tab" id="t_stats" data-tab="stats" aria-selected="false">Inzichten</button>
-    <button role="tab" id="t_ask" data-tab="ask" aria-selected="false">Vraag</button>
+    <button role="tab" id="t_kelder" data-tab="kelder" aria-selected="true"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2h4v4c0 1.2 3 2.2 3 6v9a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1v-9c0-3.8 3-4.8 3-6zM7 14h10"/></svg><span class="tl">Kelder</span><span class="n" id="n_kelder"></span></button>
+    <button role="tab" id="t_wens" data-tab="wens" aria-selected="false"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg><span class="tl">Verlanglijst</span><span class="n" id="n_wens"></span></button>
+    <button role="tab" id="t_stats" data-tab="stats" aria-selected="false"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20v-8M12 20V5M19 20v-5M3 20h18"/></svg><span class="tl">Inzichten</span></button>
+    <button role="tab" id="t_ask" data-tab="ask" aria-selected="false"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5h14a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-8l-4 4v-4H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/></svg><span class="tl">Vraag</span></button>
   </nav>
   <div class="status" id="status">Je wijnen worden geladen…</div>
   <section id="sharedView" hidden></section>
@@ -1700,8 +1716,10 @@ ${data}`;
   window.mwWines = () => wines;
   document.querySelector(".tabs").addEventListener("click", e => { const b=e.target.closest("[data-tab]"); if(!b) return;
     if(b.dataset.tab===tab){ toTop(); return; }
-    const tabsY = document.querySelector(".tabs").getBoundingClientRect().top + scrollY - (parseFloat(getComputedStyle(document.documentElement).paddingTop)||0);
-    if(scrollY > tabsY) requestAnimationFrame(()=>window.scrollTo({top:tabsY}));
+    const tabsEl = document.querySelector(".tabs");
+    if(getComputedStyle(tabsEl).position === "fixed") requestAnimationFrame(()=>window.scrollTo({top:0})); // bottom bar on a phone: start at the top
+    else { const tabsY = tabsEl.getBoundingClientRect().top + scrollY - (parseFloat(getComputedStyle(document.documentElement).paddingTop)||0);
+      if(scrollY > tabsY) requestAnimationFrame(()=>window.scrollTo({top:tabsY})); }
     tab=b.dataset.tab; typeFilter=""; tastingFor=null; render(); });
   $("chips").addEventListener("click", e => { const t=e.target.closest("[data-tag]"); if(t){ tagFilter = tagFilter===t.dataset.tag ? "" : t.dataset.tag; render(); return; } const b=e.target.closest("[data-type]"); if(!b) return; typeFilter=b.dataset.type; render(); });
   $("q").addEventListener("input", render); $("sort").addEventListener("change", render); $("country").addEventListener("change", render); $("grape").addEventListener("change", render);

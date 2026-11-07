@@ -413,7 +413,8 @@
     if(!fs || !ui) return;
     const st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
     const tab = document.createElement("button");
-    tab.setAttribute("role", "tab"); tab.id = "t_events"; tab.dataset.tab = "events"; tab.setAttribute("aria-selected", "false"); tab.textContent = "Events";
+    tab.setAttribute("role", "tab"); tab.id = "t_events"; tab.dataset.tab = "events"; tab.setAttribute("aria-selected", "false");
+    tab.innerHTML = `<svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 6h14a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1zM4 10h16M8 3v4M16 3v4"/></svg><span class="tl">Events</span>`;
     document.querySelector(".tabs")?.appendChild(tab);
     const sec = document.createElement("section"); sec.id = "v_events"; sec.hidden = true; sec.style.cssText = "display:flex;flex-direction:column;gap:14px";
     $("v_ask").after(sec);
