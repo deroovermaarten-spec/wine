@@ -96,7 +96,21 @@
 .mwtech summary::-webkit-details-marker{display:none}
 .mwmanage{align-self:flex-start;margin-top:4px;display:inline-flex;align-items:center;gap:6px;text-decoration:none;font-weight:600}
 .mwmanage .mwi{width:15px;height:15px}
-.mwtech p{font-size:.74rem;color:var(--muted);word-break:break-all;margin:6px 0 0}`;
+.mwtech p{font-size:.74rem;color:var(--muted);word-break:break-all;margin:6px 0 0}
+.mwglass{width:56px;height:84px;display:block;margin:0 auto;overflow:visible}
+.mwglass .gl{fill:none;stroke:var(--ink);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;opacity:.75}
+.mwglass .mwwine,.mwglass .mwstream{fill:#9b1c2c}
+.mwglass .mwwine{transform:translateY(38px);animation:mwfill 1.8s .45s cubic-bezier(.3,.6,.4,1) forwards}
+.mwglass .mwstream{transform-box:fill-box;transform-origin:top;transform:scaleY(0);animation:mwpour 2.4s .1s ease-in-out forwards}
+@keyframes mwfill{to{transform:translateY(16px)}}
+@keyframes mwpour{18%{transform:scaleY(1);opacity:1}85%{transform:scaleY(1);opacity:1}100%{transform:scaleY(1);opacity:0}}
+@media (prefers-reduced-motion:reduce){.mwglass .mwwine{animation:none;transform:translateY(16px)}.mwglass .mwstream{display:none}}
+.mwcheer{position:fixed;z-index:25;left:50%;top:50%;transform:translate(-50%,-50%);width:min(260px,calc(100% - 32px));background:var(--surface);color:var(--ink);
+  border:1px solid var(--line);border-radius:18px;box-shadow:0 12px 32px rgba(0,0,0,.2);padding:20px 16px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;
+  transition:opacity .4s}
+.mwcheer b{font:400 1.2rem var(--display)}
+.mwcheer span{font-size:.86rem;color:var(--muted)}
+.mwcheer.out{opacity:0}`;
   const ICONS = {
     user: '<circle cx="12" cy="8" r="3.6"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/>',
     users: '<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.6"/><path d="M15.5 14.2c3 .2 5.5 2.6 5.5 5.8"/>',
@@ -249,6 +263,7 @@
     }, () => {});
     paintHeader();
     if(pendingName) showWelcome();
+    else if(store.get("mw_first")){ if(store.get("mw_first") === cloud.cellar.id) cheer("Je eerste kelder!", `"${cloud.cellar.name}" staat klaar. Proost!`); store.set("mw_first", null); }
 
     const winesCol = fs.collection("cellars/" + cloud.cellar.id + "/wines");
     startBell(winesCol, user.uid);
@@ -265,11 +280,30 @@
       sample: window.MW_AI_URL && window.mwAi ? window.mwAi.make(window.MW_AI_URL, () => auth.currentUser.getIdToken()) : null, mcp: null});
   }
 
+  // ---------- first cellar: a small glass that fills with wine (CSS only, runs once) ----------
+  let glassN = 0;
+  function glassSvg(){
+    const id = "mwBowl" + (++glassN);
+    return `<svg class="mwglass" viewBox="0 0 64 96" aria-hidden="true">
+      <defs><clipPath id="${id}"><path d="M14 8h36c0 22-6 34-18 36C20 42 14 30 14 8z"/></clipPath></defs>
+      <rect class="mwstream" x="31" y="-6" width="2" height="50" rx="1"/>
+      <g clip-path="url(#${id})"><rect class="mwwine" x="0" y="8" width="64" height="40"/></g>
+      <path class="gl" d="M14 8h36c0 22-6 34-18 36C20 42 14 30 14 8zM32 44v36M20 84h24"/></svg>`;
+  }
+  function cheer(title, text){
+    const el = document.createElement("div"); el.className = "mwcheer"; el.setAttribute("role", "status");
+    el.innerHTML = `${glassSvg()}<b>${esc(title)}</b><span>${esc(text)}</span>`;
+    document.body.appendChild(el);
+    const bye = () => { el.classList.add("out"); setTimeout(() => el.remove(), 400); };
+    el.onclick = bye; setTimeout(bye, 3600);
+  }
+
   // ---------- welcome: shown once, right after someone creates their account ----------
   function showWelcome(){
     const c = cloud.cellar, own = c.owner === cloud.me.uid;
     const sh = document.createElement("div"); sh.className = "sheet"; sh.id = "mwWelcome";
     sh.innerHTML = `<div class="panel" role="dialog" aria-modal="true" aria-labelledby="mwWelcomeTitle">
+      ${own ? glassSvg() : ""}
       <div><span class="eyebrow">Enoteca di casa</span><h2 id="mwWelcomeTitle">Welkom, ${esc(cloud.me.name)}!</h2></div>
       ${own
         ? `<p>Fijn dat je er bent. Je hebt nu je eigen kelder, <b>${esc(c.name)}</b>. Hij is nog leeg en alleen jij ziet hem.</p>`
@@ -497,7 +531,7 @@
     sheetMsg = "";
     try{
       if(a === "switch"){ if(b.dataset.id !== c.id){ store.set("mw_cellar_" + cloud.me.uid, b.dataset.id); location.reload(); } return; }
-      if(a === "new"){ const n = $("mwNew").value.trim(); if(!n){ $("mwNew").focus(); return; } b.disabled = true; const id = await createCellar(n); store.set("mw_cellar_" + cloud.me.uid, id); location.reload(); return; }
+      if(a === "new"){ const n = $("mwNew").value.trim(); if(!n){ $("mwNew").focus(); return; } b.disabled = true; const first = !cloud.cellars.some(x => x.owner === cloud.me.uid); const id = await createCellar(n); store.set("mw_cellar_" + cloud.me.uid, id); if(first) store.set("mw_first", id); location.reload(); return; }
       if(a === "rename"){ const n = $("mwRename").value.trim(); if(n && n !== c.name){ await fs.doc("cellars/" + c.id).update({name: n}); cloud.cellars = cloud.cellars.map(x => x.id === c.id ? {...x, name: n} : x); } return; }
       if(a === "invite"){
         b.disabled = true;
