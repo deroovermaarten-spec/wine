@@ -248,6 +248,7 @@
       paintHeader(); if($("mwAcct") && typeof paintBell === "function") paintBell(); if(!$("mwSheet").hidden) drawSheet();
     }, () => {});
     paintHeader();
+    if(pendingName) showWelcome();
 
     const winesCol = fs.collection("cellars/" + cloud.cellar.id + "/wines");
     startBell(winesCol, user.uid);
@@ -262,6 +263,28 @@
     };
     resolveReady({db, user: {id: async () => cloud.cellar.id, name: async () => name}, downloads: window.mwLocal.downloads,
       sample: window.MW_AI_URL && window.mwAi ? window.mwAi.make(window.MW_AI_URL, () => auth.currentUser.getIdToken()) : null, mcp: null});
+  }
+
+  // ---------- welcome: shown once, right after someone creates their account ----------
+  function showWelcome(){
+    const c = cloud.cellar, own = c.owner === cloud.me.uid;
+    const sh = document.createElement("div"); sh.className = "sheet"; sh.id = "mwWelcome";
+    sh.innerHTML = `<div class="panel" role="dialog" aria-modal="true" aria-labelledby="mwWelcomeTitle">
+      <div><span class="eyebrow">Enoteca di casa</span><h2 id="mwWelcomeTitle">Welkom, ${esc(cloud.me.name)}!</h2></div>
+      ${own
+        ? `<p>Fijn dat je er bent. Je hebt nu je eigen kelder, <b>${esc(c.name)}</b>. Hij is nog leeg en alleen jij ziet hem.</p>`
+        : `<p>Fijn dat je er bent. Je bent nu lid van de kelder <b>${esc(c.name)}</b> en ziet dezelfde wijnen als de andere leden.</p>`}
+      <section class="mwsec">${head("plus", "Je eerste fles")}<p>Voeg een wijn toe met de knop onderaan. Bewaar flessen in de kelder, of zet ze op je verlanglijst om ze later terug te vinden.</p></section>
+      <section class="mwsec">${head("cellar", "Je kelder")}<p>Tik bovenaan op de naam van je kelder om hem een andere naam te geven, een nieuwe kelder te maken of iemand uit te nodigen.</p></section>
+      <section class="mwsec">${head("heart", "Je smaak")}<p>Vul daar ook "Mijn smaak" in. Dan kun je filteren op wat jij lekker vindt.</p></section>
+      <div class="actions"><button class="btn" type="button" id="mwWelcomeGo">Aan de slag</button></div></div>`;
+    document.body.appendChild(sh);
+    const close = () => { sh.remove(); document.removeEventListener("keydown", onKey); };
+    const onKey = e => { if(e.key === "Escape") close(); };
+    $("mwWelcomeGo").onclick = close;
+    sh.addEventListener("click", e => { if(e.target === sh) close(); });
+    document.addEventListener("keydown", onKey);
+    $("mwWelcomeGo").focus();
   }
 
   // ---------- taste profile: users/{uid}.prefs ----------
