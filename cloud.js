@@ -216,13 +216,13 @@
     if(d.expiresAt && d.expiresAt.toMillis() < Date.now()) throw Object.assign(new Error("invite"), {code: "invite-expired"});
     const me = cloud.me;
     const already = await fs.doc("cellars/" + d.cellarId).get().then(s => s.exists && (s.data().memberIds || []).includes(me.uid)).catch(() => false);
-    if(already) return d.cellarId;
+    if(already) return {id: d.cellarId, fresh: false};
     await fs.doc("cellars/" + d.cellarId).update({
       memberIds: firebase.firestore.FieldValue.arrayUnion(me.uid),
       ["members." + me.uid]: {name: me.name, email: me.email, role: "member"},
       lastJoin: {uid: me.uid, code}
     });
-    return d.cellarId;
+    return {id: d.cellarId, fresh: true};
   }
 
   async function start(user){
@@ -236,12 +236,12 @@
     cloud.prefs = normPrefs(prof && prof.exists ? prof.data().prefs : null);
     $("status").textContent = "Je kelders worden geladen…";
 
-    let notice = "";
+    let notice = "", joined = false;
     const code = store.get("mw_join");
     if(code){
       store.set("mw_join", null);
       try{ const q = new URLSearchParams(location.search); q.delete("join"); history.replaceState(null, "", location.pathname + (q.toString() ? "?" + q : "") + location.hash); }catch{}
-      try{ const id = await joinWithCode(code); store.set("mw_cellar_" + user.uid, id); notice = "Je bent lid van de gedeelde kelder."; }
+      try{ const j = await joinWithCode(code); store.set("mw_cellar_" + user.uid, j.id); notice = "Je bent lid van de gedeelde kelder."; joined = j.fresh; }
       catch(e){ notice = e.code === "invite-expired" ? "Deze uitnodiging is verlopen. Vraag een nieuwe link." : e.code === "invite-missing" ? "Deze uitnodiging bestaat niet meer. Vraag een nieuwe link." : "Lid worden lukte niet: " + msgOf(e); }
     }
 
@@ -263,7 +263,11 @@
     }, () => {});
     paintHeader();
     if(pendingName) showWelcome();
-    else if(store.get("mw_first")){ if(store.get("mw_first") === cloud.cellar.id) cheer("Je eerste kelder!", `"${cloud.cellar.name}" staat klaar. Proost!`); store.set("mw_first", null); }
+    else if(joined) cheer("Welkom in de kelder!", `Je bent nu lid van "${cloud.cellar.name}". Proost!`);
+    else if(store.get("mw_new")){
+      const [first, id] = store.get("mw_new").split(":"); store.set("mw_new", null);
+      if(id === cloud.cellar.id) cheer(first === "1" ? "Je eerste kelder!" : "Nieuwe kelder!", `"${cloud.cellar.name}" staat klaar. Proost!`);
+    }
 
     const winesCol = fs.collection("cellars/" + cloud.cellar.id + "/wines");
     startBell(winesCol, user.uid);
@@ -280,7 +284,7 @@
       sample: window.MW_AI_URL && window.mwAi ? window.mwAi.make(window.MW_AI_URL, () => auth.currentUser.getIdToken()) : null, mcp: null});
   }
 
-  // ---------- first cellar: a small glass that fills with wine (CSS only, runs once) ----------
+  // ---------- new or joined cellar: a small glass that fills with wine (CSS only, runs once) ----------
   let glassN = 0;
   function glassSvg(){
     const id = "mwBowl" + (++glassN);
@@ -303,7 +307,7 @@
     const c = cloud.cellar, own = c.owner === cloud.me.uid;
     const sh = document.createElement("div"); sh.className = "sheet"; sh.id = "mwWelcome";
     sh.innerHTML = `<div class="panel" role="dialog" aria-modal="true" aria-labelledby="mwWelcomeTitle">
-      ${own ? glassSvg() : ""}
+      ${glassSvg()}
       <div><span class="eyebrow">Enoteca di casa</span><h2 id="mwWelcomeTitle">Welkom, ${esc(cloud.me.name)}!</h2></div>
       ${own
         ? `<p>Fijn dat je er bent. Je hebt nu je eigen kelder, <b>${esc(c.name)}</b>. Hij is nog leeg en alleen jij ziet hem.</p>`
@@ -531,7 +535,7 @@
     sheetMsg = "";
     try{
       if(a === "switch"){ if(b.dataset.id !== c.id){ store.set("mw_cellar_" + cloud.me.uid, b.dataset.id); location.reload(); } return; }
-      if(a === "new"){ const n = $("mwNew").value.trim(); if(!n){ $("mwNew").focus(); return; } b.disabled = true; const first = !cloud.cellars.some(x => x.owner === cloud.me.uid); const id = await createCellar(n); store.set("mw_cellar_" + cloud.me.uid, id); if(first) store.set("mw_first", id); location.reload(); return; }
+      if(a === "new"){ const n = $("mwNew").value.trim(); if(!n){ $("mwNew").focus(); return; } b.disabled = true; const first = !cloud.cellars.some(x => x.owner === cloud.me.uid); const id = await createCellar(n); store.set("mw_cellar_" + cloud.me.uid, id); store.set("mw_new", (first ? "1:" : "0:") + id); location.reload(); return; }
       if(a === "rename"){ const n = $("mwRename").value.trim(); if(n && n !== c.name){ await fs.doc("cellars/" + c.id).update({name: n}); cloud.cellars = cloud.cellars.map(x => x.id === c.id ? {...x, name: n} : x); } return; }
       if(a === "invite"){
         b.disabled = true;
