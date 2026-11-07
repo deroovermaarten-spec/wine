@@ -87,6 +87,7 @@ Bestaande wijnen op de telefoon zet je over met "Zet ze in deze kelder" in het k
 | `manifest.webmanifest`, `icons/` | Naam en icoon op het beginscherm |
 | `.github/workflows/pages.yml` | Publiceert de app op GitHub Pages bij elke push |
 | `cloud.js`, `firebase-config.js`, `vendor/firebase/` | Aanmelden en gedeelde kelders (Firebase) |
+| `events.js` | Events: samen een wijnlijst opstellen voor een etentje of proefavond |
 | `firestore.rules` | Beveiligingsregels om in Firebase te plakken |
 
 Lokaal testen: `python3 -m http.server` in deze map en open `http://localhost:8000`.

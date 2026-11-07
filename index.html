@@ -510,6 +510,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
 <script src="firebase-config.js"></script>
 <script src="ai.js"></script>
 <script src="cloud.js"></script>
+<script src="events.js"></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);
@@ -621,7 +622,9 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
     $("n_kelder").textContent = kelder.length ? kelder.length : "";
     $("n_wens").textContent = wens.length ? wens.length : "";
     document.querySelectorAll(".tabs button").forEach(b=>b.setAttribute("aria-selected", b.dataset.tab===tab));
-    $("v_list").hidden = tab==="stats" || tab==="ask"; $("v_stats").hidden = tab!=="stats"; $("v_ask").hidden = tab!=="ask";
+    $("v_list").hidden = tab!=="kelder" && tab!=="wens"; $("v_stats").hidden = tab!=="stats"; $("v_ask").hidden = tab!=="ask";
+    if($("v_events")) $("v_events").hidden = tab!=="events";
+    if(tab==="events"){ updateCollapse(); return window.mwEvents?.render(); }
     if(tab==="ask"){ updateCollapse(); return renderChat(); }
     if(tab==="stats"){ updateCollapse(); return renderStats(); }
 
@@ -688,7 +691,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
     const ts = [...w.tastings].sort((a,b)=>String(b.date).localeCompare(String(a.date)));
     const del = pendingDelete===w.id
       ? `<span class="confirm">Verwijderen? <button class="btn ghost sm" data-act="del-yes" data-id="${w.id}" type="button">Ja</button><button class="link" data-act="del-no" type="button">Nee</button></span>`
-      : `<button class="link" data-act="cmp" data-id="${w.id}" type="button">${compareIds.includes(w.id)?"Gekozen om te vergelijken":"Vergelijk"}</button><button class="link" data-act="share" data-id="${w.id}" type="button">Delen</button><button class="link" data-act="edit" data-id="${w.id}" type="button">Bewerken</button><button class="link" data-act="del" data-id="${w.id}" type="button">Verwijderen</button>`;
+      : `<button class="link" data-act="cmp" data-id="${w.id}" type="button">${compareIds.includes(w.id)?"Gekozen om te vergelijken":"Vergelijk"}</button>${isK && window.mwEvents?.ready ? `<button class="link" data-act="toevent" data-id="${w.id}" type="button">Naar event</button>` : ""}<button class="link" data-act="share" data-id="${w.id}" type="button">Delen</button><button class="link" data-act="edit" data-id="${w.id}" type="button">Bewerken</button><button class="link" data-act="del" data-id="${w.id}" type="button">Verwijderen</button>`;
     const tform = tastingFor===w.id ? `<div class="tform">
         <div class="r"><input type="date" id="tf_date" value="${TODAY}" aria-label="Datum"><div data-act="tstar">${starsHTML(tastingScore,false)}</div></div>
         ${guideHTML(w)}
@@ -1051,7 +1054,7 @@ Antwoord met ALLEEN één JSON-object in deze vorm: ${HOUSE_FIELDS}`;
   }
   addEventListener("scroll", onScroll, {passive:true});
   function updateCollapse(){
-    const n = tab==="stats" ? 0 : document.querySelectorAll("#list .card.open").length;
+    const n = tab!=="kelder" && tab!=="wens" ? 0 : document.querySelectorAll("#list .card.open").length;
     $("collapseAll").hidden = n < 2;
   }
   $("collapseAll").addEventListener("click", () => {
@@ -1692,6 +1695,9 @@ ${data}`;
   }
   document.addEventListener("click", e => { const g = e.target.closest("[data-goto]"); if(g) goTo(g.dataset.goto); });
   window.mwGoTo = goTo;
+  // for events.js: switch tabs, and read the wines of the open cellar
+  window.mwSetTab = t => { tab = t; typeFilter = ""; tastingFor = null; render(); window.scrollTo({top:0}); };
+  window.mwWines = () => wines;
   document.querySelector(".tabs").addEventListener("click", e => { const b=e.target.closest("[data-tab]"); if(!b) return;
     if(b.dataset.tab===tab){ toTop(); return; }
     const tabsY = document.querySelector(".tabs").getBoundingClientRect().top + scrollY - (parseFloat(getComputedStyle(document.documentElement).paddingTop)||0);
@@ -1715,6 +1721,8 @@ ${data}`;
       card.classList.toggle("open", open); t.setAttribute("aria-expanded", open);
       t.firstElementChild.textContent = open ? "Beschrijving inklappen" : "Lees de beschrijving";
       updateCollapse();
+    } else if(act==="toevent"){
+      if(w && window.mwEvents) window.mwEvents.pickFor(w);
     } else if(act==="rate"){
       const s = e.target.closest("[data-s]"); if(!s||!w) return;
       const n=+s.dataset.s; w.score = w.score===n ? n-1 : n; render(); save(id,{score:w.score});

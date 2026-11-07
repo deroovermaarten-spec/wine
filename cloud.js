@@ -26,6 +26,9 @@
   // Remember an invite code from the link before anything else changes the URL.
   const joinParam = params.get("join");
   if(joinParam) store.set("mw_join", joinParam.replace(/[^A-Za-z0-9]/g, "").slice(0, 32));
+  // Same for an event invite (events.js picks it up once you are signed in).
+  const eventParam = params.get("event");
+  if(eventParam) store.set("mw_event", eventParam.replace(/[^A-Za-z0-9]/g, "").slice(0, 32));
 
   let resolveReady;
   const cloud = window.mwCloud = {ready: new Promise(r => { resolveReady = r; }), me: null, cellar: null, cellars: []};
@@ -131,6 +134,10 @@
     close: '<path d="M6 6l12 12M18 6 6 18"/>',
     info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
     heart: '<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/>',
+    calendar: '<rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+    glass: '<path d="M7 3h10c0 6-2 9-5 9.5C9 12 7 9 7 3z"/><path d="M12 12.5V20M8.5 21h7"/>',
+    back: '<path d="M15 5l-7 7 7 7"/>',
+    pin: '<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
     gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/>'
   };
   const ico = n => `<svg class="mwi" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n]}</svg>`;
@@ -161,7 +168,8 @@
       const keep = {name: $("mwName")?.value || "", email: $("mwEmail")?.value || ""};
       el.innerHTML = `<div class="in">
         <div><span class="eyebrow">Enoteca di casa</span><h1>Mijn <em>wijnkelder</em></h1></div>
-        ${invite ? `<div class="box tonight"><b>Je bent uitgenodigd voor een gedeelde kelder.</b><span class="hint">Meld je aan of maak een account, dan word je meteen lid.</span></div>` : ""}
+        ${invite ? `<div class="box tonight"><b>Je bent uitgenodigd voor een gedeelde kelder.</b><span class="hint">Meld je aan of maak een account, dan word je meteen lid.</span></div>`
+          : store.get("mw_event") ? `<div class="box tonight"><b>Je bent uitgenodigd voor een event.</b><span class="hint">Meld je aan of maak een account, dan zie je meteen welke wijnen er gedronken worden.</span></div>` : ""}
         ${note ? `<p class="hint">${esc(note)}</p>` : ""}
         <div class="seg" role="group"><button type="button" data-m="in" aria-pressed="${mode === "in"}">Aanmelden</button><button type="button" data-m="up" aria-pressed="${mode === "up"}">Account maken</button></div>
         <form id="mwForm" novalidate>
@@ -280,6 +288,9 @@
       }) : fs.collection("unused")),
       doc: path => { throw Object.assign(new Error("not available"), {code: "unavailable", path}); }
     };
+    // shared with events.js
+    cloud.fs = fs;
+    cloud.ui = {esc, ico, head, initial, glassSvg, cheer, msgOf, store};
     resolveReady({db, user: {id: async () => cloud.cellar.id, name: async () => name}, downloads: window.mwLocal.downloads,
       sample: window.MW_AI_URL && window.mwAi ? window.mwAi.make(window.MW_AI_URL, () => auth.currentUser.getIdToken()) : null, mcp: null});
   }
