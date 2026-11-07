@@ -68,12 +68,12 @@
 .evform label{min-width:0}
 .evform input[type=date]{-webkit-appearance:none;appearance:none;display:block;min-height:44px;text-align:left}
 .evform input[type=date]::-webkit-date-and-time-value{text-align:left}
-#evNext{margin-left:auto;display:inline-flex;align-items:center;gap:8px;max-width:min(220px,calc(100% - 200px));min-width:0;padding:5px 12px 5px 8px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);font:inherit;cursor:pointer;text-align:right}
+#evNext{margin-left:auto;align-self:stretch;display:inline-flex;align-items:center;gap:8px;max-width:min(220px,calc(100% - 200px));min-width:0;padding:4px 10px;border:1px solid var(--line);border-radius:6px;background:transparent;color:var(--ink);font:inherit;cursor:pointer;text-align:right}
 #evNext:hover{border-color:var(--accent)}
 #evNext[hidden]{display:none}
 #evNext svg{width:22px;height:22px;flex:none}
 #evNext .gl{fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;opacity:.8}
-#evNext .wn{fill:#9b1c2c;animation:evnfill 1.2s .3s cubic-bezier(.3,.6,.4,1) both}
+#evNext .wn{fill:#b0212f;animation:evnfill 1.2s .3s cubic-bezier(.3,.6,.4,1) both}
 @keyframes evnfill{from{transform:translateY(12px)}}
 #evNext .tx{display:flex;flex-direction:column;min-width:0;line-height:1.15}
 #evNext small{font-size:11px;color:var(--accent);font-weight:600;white-space:nowrap}
@@ -378,7 +378,7 @@
     sh.hidden = false;
   }
 
-  // ---------- header: the next event, with a small glass that is fuller the closer it gets ----------
+  // ---------- header: the next event, with a small half-full glass of red ----------
   let nextKey = "";
   function paintNext(){
     let b = $("evNext");
@@ -395,7 +395,6 @@
     const when = days === 0 ? "Vandaag!" : days === 1 ? "Morgen"
       : days < 7 ? "Over " + days + " dagen"
       : (() => { try{ return new Date(e.date + "T12:00:00").toLocaleDateString("nl-BE", {weekday: "short", day: "numeric", month: "short"}); }catch{ return e.date; } })();
-    const fill = days <= 0 ? 1 : Math.max(.15, 1 - days / 30); // full glass on the day itself
     const key = e.id + "|" + e.name + "|" + when;
     b.dataset.ev = e.id; b.hidden = false;
     b.setAttribute("aria-label", "Volgend event: " + e.name + ", " + when.toLowerCase());
@@ -403,7 +402,7 @@
     nextKey = key;
     b.innerHTML = `<span class="tx"><small>${ui.esc(when)}</small><b>${ui.esc(e.name)}</b></span>
       <svg viewBox="0 0 24 24" aria-hidden="true"><defs><clipPath id="evNextBowl"><path d="M6 3h12c0 8-2 11.5-6 12C8 14.5 6 11 6 3z"/></clipPath></defs>
-      <g clip-path="url(#evNextBowl)"><rect class="wn" x="0" y="${(15 - 12 * fill).toFixed(1)}" width="24" height="16"/></g>
+      <g clip-path="url(#evNextBowl)"><rect class="wn" x="0" y="9" width="24" height="16"/></g>
       <path class="gl" d="M6 3h12c0 8-2 11.5-6 12C8 14.5 6 11 6 3zM12 15v6M8.5 21h7"/></svg>`;
   }
 
