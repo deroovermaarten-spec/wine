@@ -25,6 +25,10 @@
   const isPast = e => e.date && e.date < TODAY();
   const ev = () => events.find(e => e.id === current) || null;
   const mine = e => e && e.owner === me.uid;
+  // permission-denied means something else here than in a cellar
+  const errText = (err, creating) => err && err.code === "permission-denied"
+    ? (creating ? "Events zijn nog niet actief in de database: de beveiligingsregels met events zijn niet gepubliceerd in Firebase." : "Dat mag je niet doen bij dit event.")
+    : ui.msgOf(err);
 
   const css = `
 .evlist{display:flex;flex-direction:column;gap:10px}
@@ -60,7 +64,10 @@
 .evwines .thumb{width:56px;height:75px}
 .mwsec .line{display:flex;gap:8px;flex-wrap:wrap}
 .mwsec .line input{flex:1 1 180px;font:inherit;font-size:.9rem;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:9px 12px;min-width:0}
-.evgroup .dot{margin:0}`;
+.evgroup .dot{margin:0}
+.evform label{min-width:0}
+.evform input[type=date]{-webkit-appearance:none;appearance:none;display:block;min-height:44px;text-align:left}
+.evform input[type=date]::-webkit-date-and-time-value{text-align:left}`;
 
   // ---------- data ----------
   function listenEvents(){
@@ -70,7 +77,7 @@
       loaded = true;
       if(current && !ev()){ current = null; msg = "Dit event bestaat niet meer, of je bent er geen gast meer."; }
       watchWines(); paint();
-    }, () => { loaded = true; msg = "Je events konden niet geladen worden."; paint(); });
+    }, err => { loaded = true; msg = err && err.code === "permission-denied" ? errText(err, true) : "Je events konden niet geladen worden."; paint(); });
   }
   function watchWines(){
     if(winesFor === current) return;
@@ -312,7 +319,7 @@
         await fs.doc("events/" + e.id).update({memberIds: F.arrayRemove(me.uid), ["members." + me.uid]: F.delete()});
         current = null; watchWines(); msg = `Je hebt "${e.name}" verlaten.`; paint(); return;
       }
-    }catch(err){ msg = ui.msgOf(err); paint(); }
+    }catch(err){ msg = errText(err); paint(); }
   }
   async function onSubmit(ev_){
     ev_.preventDefault();
@@ -330,7 +337,7 @@
         await fs.doc("events/" + current).update({name, date: $("evEdDate").value || "", place: $("evEdPlace").value.trim(), note: $("evEdNote").value.trim()});
         editing = false; paint();
       }
-    }catch(err){ msg = ui.msgOf(err); if(btn) btn.disabled = false; paint(); }
+    }catch(err){ msg = errText(err, f.id === "evNewForm"); if(btn) btn.disabled = false; paint(); }
   }
 
   // ---------- "Naar event" from a wine card ----------
@@ -350,7 +357,7 @@
         const target = events.find(x => x.id === b.dataset.ev);
         try{ const r = await addWine(target.id, sh._w); sh.hidden = true;
           $("status").textContent = r === "more" ? `Nog een fles erbij voor "${target.name}".` : `${sh._w.name} staat op de wijnlijst van "${target.name}".`; }
-        catch(err){ b.disabled = false; $("status").textContent = ui.msgOf(err); }
+        catch(err){ b.disabled = false; $("status").textContent = errText(err); }
       });
       document.addEventListener("keydown", e => { if(e.key === "Escape" && !sh.hidden) sh.hidden = true; });
     }
