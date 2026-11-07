@@ -138,7 +138,7 @@
     glass: '<path d="M7 3h10c0 6-2 9-5 9.5C9 12 7 9 7 3z"/><path d="M12 12.5V20M8.5 21h7"/>',
     back: '<path d="M15 5l-7 7 7 7"/>',
     pin: '<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
-    gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/>'
+    gear: '<path d="M12.2 2h-.4a2 2 0 0 0-2 2v.2a2 2 0 0 1-1 1.7l-.4.3a2 2 0 0 1-2 0l-.2-.1a2 2 0 0 0-2.7.7l-.2.4a2 2 0 0 0 .7 2.7l.2.1a2 2 0 0 1 1 1.7v.5a2 2 0 0 1-1 1.7l-.2.1a2 2 0 0 0-.7 2.7l.2.4a2 2 0 0 0 2.7.7l.2-.1a2 2 0 0 1 2 0l.4.3a2 2 0 0 1 1 1.7v.2a2 2 0 0 0 2 2h.4a2 2 0 0 0 2-2v-.2a2 2 0 0 1 1-1.7l.4-.3a2 2 0 0 1 2 0l.2.1a2 2 0 0 0 2.7-.7l.2-.4a2 2 0 0 0-.7-2.7l-.2-.1a2 2 0 0 1-1-1.7v-.5a2 2 0 0 1 1-1.7l.2-.1a2 2 0 0 0 .7-2.7l-.2-.4a2 2 0 0 0-2.7-.7l-.2.1a2 2 0 0 1-2 0l-.4-.3a2 2 0 0 1-1-1.7V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>'
   };
   const ico = n => `<svg class="mwi" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n]}</svg>`;
   const initial = s => esc((String(s || "?").trim()[0] || "?").toUpperCase());
@@ -464,6 +464,13 @@
       // With more than one cellar the button is a quick switcher; managing (invites, account) sits one step further.
       b.onclick = () => { if(cloud.cellars.length > 1) togglePick(b); else openSheet(); };
       host.appendChild(b);
+    }
+    // settings always one tap away: a cog at the far right of the header, where people look for it
+    if(!$("mwGear")){
+      const g = document.createElement("button"); g.id = "mwGear"; g.type = "button"; g.className = "btn ghost sm";
+      g.style.padding = "7px 9px"; g.setAttribute("aria-label", "Instellingen"); g.title = "Instellingen";
+      g.innerHTML = ico("gear"); g.onclick = () => { $("mwPick") && ($("mwPick").hidden = true); openSheet(); };
+      ($("hdrBtns") || b.parentNode).appendChild(g);
     }
     const n = (cloud.cellar.memberIds || []).length;
     const many = cloud.cellars.length > 1;
