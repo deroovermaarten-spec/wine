@@ -106,6 +106,19 @@
 .mwmanage{align-self:flex-start;margin-top:4px;display:inline-flex;align-items:center;gap:6px;text-decoration:none;font-weight:600}
 .mwmanage .mwi{width:15px;height:15px}
 .mwtech p{font-size:.74rem;color:var(--muted);word-break:break-all;margin:6px 0 0}
+.mwapp{display:flex;align-items:center;gap:12px}
+.mwapp img{border-radius:12px;flex:none}
+.mwapp span{display:flex;flex-direction:column;min-width:0}
+.mwapp b{font:500 1.15rem var(--display)}
+.mwapp small{color:var(--muted);font-size:.84rem}
+.mwfacts{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.mwfacts > div{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line)}
+.mwfacts > div:last-child{border-bottom:0;padding-bottom:0}
+.mwfacts .mwi{color:var(--accent);margin-top:1px}
+.mwfacts span{display:flex;flex-direction:column;min-width:0;font-size:.88rem}
+.mwfacts small{color:var(--muted);font-size:.82rem}
+.mwcopy{display:flex;align-items:center;justify-content:center;gap:6px;color:var(--muted);font-size:.76rem;padding:4px 0 8px;text-align:center}
+.mwcopy .mwi{width:14px;height:14px}
 .mwglass{width:56px;height:84px;display:block;margin:0 auto;overflow:visible}
 .mwglass .gl{fill:none;stroke:var(--ink);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;opacity:.75}
 .mwglass .mwwine,.mwglass .mwstream{fill:#9b1c2c}
@@ -139,6 +152,9 @@
     check: '<path d="m5 12 5 5 9-10"/>',
     close: '<path d="M6 6l12 12M18 6 6 18"/>',
     info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+    copyright: '<circle cx="12" cy="12" r="9"/><path d="M14.8 9.4a4 4 0 1 0 0 5.2"/>',
+    shield: '<path d="M12 3 5 6v5c0 4.5 3 8.3 7 10 4-1.7 7-5.5 7-10V6z"/><path d="m9 12 2 2 4-4"/>',
+    spark: '<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/>',
     bell: '<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/>',
     heart: '<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/>',
     calendar: '<rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
@@ -545,11 +561,41 @@
       <div class="mwdanger">
         ${owner ? (cloud.cellars.length > 1 ? `<button type="button" data-a="delcellar">${ico("trash")}Verwijder deze kelder</button>` : "") : `<button type="button" data-a="leave">${ico("logout")}Verlaat deze kelder</button>`}
         <details class="mwtech"><summary>${ico("info")}Technische gegevens</summary><p>Gebruikers-id: <span style="user-select:all">${esc(me.uid)}</span></p></details>
-      </div>`;
+      </div>
+
+      ${aboutHtml()}`;
+    showVersion();
     if($("mwNew")) $("mwNew").value = keepNew;
     if($("mwRename") && keepName !== undefined && focus === "mwRename") $("mwRename").value = keepName;
     if(focus && $(focus)) $(focus).focus();
   }
+  // ---------- about the app + copyright, at the bottom of Settings ----------
+  const FIRST_YEAR = 2026;
+  function aboutHtml(){
+    const y = new Date().getFullYear(), years = y > FIRST_YEAR ? `${FIRST_YEAR}–${y}` : String(FIRST_YEAR);
+    return `<section class="mwsec mwabout">
+        <div class="mwapp"><img src="icons/icon.svg" alt="" width="44" height="44"><span><b>Meerstraat wines</b><small>Je wijnkelder, gedeeld met wie je wilt</small></span></div>
+        <div class="mwfacts">
+          <div>${ico("info")}<span><b>Versie</b><small id="mwVer">…</small></span></div>
+          <div>${ico("shield")}<span><b>Je gegevens</b><small>Je wijnen staan in Google Firebase in de cloud. Alleen leden van een kelder zien die kelder. Geen reclame, en er wordt niets doorverkocht.</small></span></div>
+          <div>${ico("spark")}<span><b>Slimme functies</b><small>Vragen, etiketten lezen en suggesties gebruiken Claude van Anthropic, via een eigen beveiligde server.</small></span></div>
+          <div>${ico("bell")}<span><b>Meldingen</b><small>Alleen als je ze zelf aanzet, en alleen op dit toestel.</small></span></div>
+        </div>
+      </section>
+      <footer class="mwcopy">${ico("copyright")}<span>${years} Meerstraat wines · Alle rechten voorbehouden</span></footer>`;
+  }
+  // The service worker's cache is named after the published build (mw-<commit>), so that is the version.
+  function showVersion(){
+    const el = $("mwVer"); if(!el) return;
+    const local = /^(localhost|127\.|\[::1\])/.test(location.hostname);
+    if(!window.caches){ el.textContent = local ? "ontwikkelversie" : "onbekend"; return; }
+    caches.keys().then(ks => {
+      const k = ks.find(x => /^mw-/.test(x) && !/^mw-libs/.test(x));
+      const v = k ? k.slice(3) : "";
+      if($("mwVer")) $("mwVer").textContent = !v || v === "__BUILD__" ? "ontwikkelversie" : "build " + v.slice(0, 7);
+    }).catch(() => {});
+  }
+
   async function countLocal(){
     localCount = 0;
     try{
