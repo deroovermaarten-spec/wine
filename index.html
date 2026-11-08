@@ -102,6 +102,26 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .chip{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 11px;font-size:.82rem;font-weight:600;display:inline-flex;align-items:center;gap:6px}
 .chip[aria-pressed="true"]{background:var(--accent);color:var(--onaccent);border-color:var(--accent)}
 .list{display:flex;flex-direction:column;gap:12px}
+.viewsw{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--surface);margin-left:auto}
+.viewsw button{border:0;background:none;color:var(--muted);width:42px;display:grid;place-items:center;min-height:40px}
+.viewsw button+button{border-left:1px solid var(--line)}
+.viewsw button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
+.list.compact{gap:0;background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);overflow:hidden}
+.list.compact .card{border-radius:0;border:0;border-bottom:1px solid var(--line);box-shadow:none}
+.list.compact .card:last-child{border-bottom:0}
+.list.compact .card.open{box-shadow:inset 3px 0 0 var(--accent)}
+.crow{width:100%;border:0;background:none;color:var(--ink);text-align:left;font:inherit;display:grid;grid-template-columns:36px 1fr auto;gap:12px;align-items:center;padding:10px 14px}
+.crow .thumb{width:36px;height:48px}
+.crow .thumb.ph{font-size:1.1rem}
+.crow .cn{font:600 1.02rem/1.2 var(--display);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.crow .cn .vint{font-size:.88rem;margin-right:4px}
+.crow .cs{color:var(--muted);font-size:.8rem;display:flex;gap:6px;align-items:center;overflow:hidden;white-space:nowrap;min-width:0}
+.crow .cs span:last-child{overflow:hidden;text-overflow:ellipsis}
+.crow .cr{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.crow .cq{font:500 .8rem var(--mono);font-variant-numeric:tabular-nums}
+.crow .cq.zero{color:var(--muted)}
+.crow .cst{font-size:.8rem;color:var(--gold);letter-spacing:.04em;white-space:nowrap}
+.crow .cst s{text-decoration:none;color:var(--line)}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);overflow:hidden;scroll-margin-top:64px}
 .card.flash{box-shadow:0 0 0 2px var(--accent)}
 .row{display:grid;grid-template-columns:72px 1fr;gap:16px;padding:16px}
@@ -370,6 +390,10 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
       </select>
       <select id="country" aria-label="Land"><option value="">Alle landen</option></select>
       <select id="grape" aria-label="Druif"><option value="">Alle druiven</option></select>
+      <div class="viewsw" role="group" aria-label="Weergave">
+        <button type="button" data-view="cards" aria-label="Kaarten" title="Kaarten"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="4" width="16" height="7" rx="1.5"/><rect x="4" y="13" width="16" height="7" rx="1.5"/></svg></button>
+        <button type="button" data-view="compact" aria-label="Compacte lijst" title="Compacte lijst"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg></button>
+      </div>
     </div>
     <div class="chips" id="chips" hidden></div>
     <div class="list" id="list"></div>
@@ -535,6 +559,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
   const TIERS = {1:"Budget",2:"Middenklasse",3:"Premium",4:"Topwijn"};
   const COLORS = {rood:"Rood",wit:"Wit",rose:"Rosé",mousserend:"Mousserend",dessert:"Dessert"};
   let db=null, sample=null, col=null, wines=[], openIds=new Set();
+  let viewMode = "cards"; try{ if(localStorage.getItem("mw_view")==="compact") viewMode = "compact"; }catch(e){}
   let compareIds=[], dupFor=null;
   let tagFilter="", shareFor=null, shareMsg="", sharedId="", downloads=null; const APP_URL="https://claude.ai/artifact/PYMK2uNrCPb2GZpHEmpRrY";
   // Home-screen shortcuts (manifest.webmanifest) open the app with ?go=…; read it once and tidy the address.
@@ -693,9 +718,29 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
     }
     if(!rows.length){ list.innerHTML = `<div class="empty"><p>Geen wijn gevonden met deze filters.</p></div>`; return; }
     const kn = $("tf_note")?.value, kd = $("tf_date")?.value, focused = document.activeElement?.id;
-    list.innerHTML = rows.map(cardHTML).join("");
+    list.classList.toggle("compact", viewMode==="compact");
+    document.querySelectorAll(".viewsw button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.view===viewMode));
+    list.innerHTML = rows.map(w => viewMode==="compact" && !openIds.has(w.id) ? compactHTML(w) : cardHTML(w)).join("");
     updateCollapse();
     if($("tf_note")){ if(kn!==undefined) $("tf_note").value = kn; if(kd) $("tf_date").value = kd; if(focused==="tf_note"||focused==="tf_date") $(focused).focus(); }
+  }
+
+  function compactHTML(w){
+    const isK = w.status==="kelder", s = Math.round(w.score||0);
+    const sub = [w.region, w.country].filter(Boolean).join(", ");
+    return `<article class="card" id="c_${w.id}" data-id="${w.id}">
+      <button class="crow" type="button" data-act="expand" data-id="${w.id}" aria-label="${esc(w.name)} openen">
+        ${thumb(w)}
+        <div style="min-width:0">
+          <div class="cn">${w.vintage?`<span class="vint">${esc(w.vintage)}</span>`:""}${esc(w.name)}</div>
+          <div class="cs"><span class="dot ${esc(w.color)}"></span><span>${esc(sub || COLORS[w.color] || "Wijn")}</span></div>
+        </div>
+        <div class="cr">
+          ${isK ? `<span class="cq${w.stock?"":" zero"}">${w.stock} fl.</span>` : ""}
+          ${s ? `<span class="cst" aria-label="${s} van 5 sterren">${"★".repeat(s)}<s>${"★".repeat(Math.max(0,5-s))}</s></span>` : ""}
+        </div>
+      </button>
+    </article>`;
   }
 
   function cardHTML(w){
@@ -1723,6 +1768,12 @@ ${data}`;
       if(scrollY > tabsY) requestAnimationFrame(()=>window.scrollTo({top:tabsY})); }
     tab=b.dataset.tab; typeFilter=""; tastingFor=null; render(); });
   $("chips").addEventListener("click", e => { const t=e.target.closest("[data-tag]"); if(t){ tagFilter = tagFilter===t.dataset.tag ? "" : t.dataset.tag; render(); return; } const b=e.target.closest("[data-type]"); if(!b) return; typeFilter=b.dataset.type; render(); });
+  document.querySelector(".viewsw").addEventListener("click", e => {
+    const b = e.target.closest("[data-view]"); if(!b || b.dataset.view===viewMode) return;
+    viewMode = b.dataset.view; try{ localStorage.setItem("mw_view", viewMode); }catch(err){}
+    if(viewMode==="compact") openIds.clear();
+    render();
+  });
   $("q").addEventListener("input", render); $("sort").addEventListener("change", render); $("country").addEventListener("change", render); $("grape").addEventListener("change", render);
 
   async function save(id, patch, msg){
@@ -1733,7 +1784,11 @@ ${data}`;
   $("list").addEventListener("click", async e => {
     const t = e.target.closest("[data-act]"); if(!t) return;
     const act = t.dataset.act, id = t.dataset.id, w = wines.find(x=>x.id===id);
-    if(act==="toggle"){
+    if(act==="expand"){
+      openIds.add(id); render();
+    } else if(act==="toggle" && viewMode==="compact" && openIds.has(id)){
+      openIds.delete(id); render();
+    } else if(act==="toggle"){
       const card = t.closest(".card");
       openIds.has(id) ? openIds.delete(id) : openIds.add(id);
       const open = openIds.has(id);
