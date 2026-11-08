@@ -546,7 +546,7 @@
       </section>
 
       <section class="mwsec">${head("users", "Wie kan meekijken", `<small>${members.length} ${members.length === 1 ? "persoon" : "personen"}</small>`)}
-        <div>${members.map(([uid, m]) => `<div class="mwrow"><span class="mwav">${initial(m.name)}</span><span class="who"><b>${esc(m.name)}${uid === me.uid ? " (jij)" : ""}</b><small>${esc(m.email)}</small>${m.role === "owner" ? `<span class="mwrole">Eigenaar</span>` : ""}</span>
+        <div>${members.map(([uid, m]) => `<div class="mwrow"><span class="mwav">${initial(m.name)}</span><span class="who"><b>${esc(m.name)}${uid === me.uid ? " (jij)" : ""}</b><small>${esc(uid === me.uid ? m.email : maskEmail(m.email))}</small>${m.role === "owner" ? `<span class="mwrole">Eigenaar</span>` : ""}</span>
           ${owner && uid !== me.uid ? `<button class="mwic danger" type="button" data-a="kick" data-uid="${esc(uid)}" aria-label="${esc(m.name)} verwijderen" title="Verwijder uit de kelder">${ico("userMinus")}</button>` : ""}</div>`).join("")}</div>
         ${inviteLink ? `<p>${ico("link")} Stuur deze link naar wie je wilt uitnodigen. Hij werkt 7 dagen.</p>
           <div class="line"><input id="mwLink" readonly value="${esc(inviteLink)}"><button class="btn sm" type="button" data-a="copy">${ico("copy")}Kopieer</button>${navigator.share ? `<button class="btn ghost sm" type="button" data-a="share">${ico("share")}Deel</button>` : ""}</div>`
@@ -577,6 +577,15 @@
     if($("mwRename") && keepName !== undefined && focus === "mwRename") $("mwRename").value = keepName;
     if(focus && $(focus)) $(focus).focus();
   }
+  // Other members' e-mail, half hidden: "maarten@gmail.com" → "m•••••@g••••.com". Enough to tell people apart.
+  function maskEmail(e){
+    const [user, dom] = String(e || "").split("@");
+    if(!dom) return user ? user[0] + "•••" : "";
+    const dot = dom.lastIndexOf("."), host = dot > 0 ? dom.slice(0, dot) : dom, tld = dot > 0 ? dom.slice(dot) : "";
+    const hide = s => s[0] + "•".repeat(Math.min(Math.max(s.length - 1, 3), 6));
+    return hide(user) + "@" + hide(host) + tld;
+  }
+
   // ---------- about the app + copyright, at the bottom of Settings ----------
   const FIRST_YEAR = 2026;
   let aboutOpen = false;
