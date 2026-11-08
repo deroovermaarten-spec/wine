@@ -45,6 +45,7 @@
       if(opts.signal && opts.signal.aborted) throw err("cancelled");
       const stream = !!opts.onText;
       const payload = {tier: opts.modelTier === "quick" ? "quick" : "default", max_tokens: 8000, stream, messages: await buildMessages(input, opts.images)};
+      if(typeof opts.system === "string") payload.system = opts.system;
       let res;
       try{
         const token = await getToken();

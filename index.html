@@ -96,7 +96,12 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .drink:last-child{border-bottom:0}
 .drink .t{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tools{display:flex;gap:8px;flex-wrap:wrap}
-.tools input[type=search]{flex:1 1 180px;min-width:0;padding:10px 14px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit}
+.searchbar{display:flex;align-items:center;gap:10px;padding:4px 6px 4px 14px;border:1px solid var(--accent);border-radius:999px;background:var(--surface);color:var(--muted)}
+.searchbar[hidden]{display:none}
+.searchbar input{flex:1;min-width:0;border:0;background:none;color:var(--ink);font:inherit;padding:9px 0;outline:none}
+.searchbar .link{padding:8px 10px;white-space:nowrap}
+#v_list.searching #factbox,#v_list.searching #tonight,#v_list.searching #drinkbox{display:none}
+#searchBtn[aria-expanded="true"]{color:var(--accent);border-color:var(--accent)}
 .tools select{padding:10px 12px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;max-width:100%}
 .chips{display:flex;gap:6px;flex-wrap:wrap}
 .chip{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 11px;font-size:.82rem;font-weight:600;display:inline-flex;align-items:center;gap:6px}
@@ -207,6 +212,8 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .askform{display:flex;gap:8px;align-items:flex-end}
 .askform textarea{flex:1;min-width:0;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:10px 14px;resize:none;min-height:44px;max-height:140px}
 .starters{display:flex;flex-direction:column;gap:6px}
+.askwines{align-self:flex-start;max-width:88%;display:flex;flex-direction:column;gap:6px;margin-top:-2px}
+.askwines .drink{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px}
 .starters button{text-align:left;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:9px 12px;font-size:.88rem}
 .fact{border-left:3px solid var(--accent)}
 .fact h3{font:italic 500 1.15rem/1.25 var(--display);margin:0}
@@ -357,7 +364,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
       <div class="brand"><span class="eyebrow">Enoteca di casa</span><h1>Mijn <em>wijnkelder</em></h1></div>
     </div>
     <span class="count" id="count"></span>
-    <div id="hdrBtns" style="display:flex;gap:8px;align-items:center"><button class="btn ghost sm" id="themeBtn" type="button" style="padding:7px 9px"></button></div>
+    <div id="hdrBtns" style="display:flex;gap:8px;align-items:center"><button class="btn ghost sm" id="searchBtn" type="button" style="padding:7px 9px" aria-label="Zoeken" title="Zoeken" aria-expanded="false" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></button><button class="btn ghost sm" id="themeBtn" type="button" style="padding:7px 9px"></button></div>
   </header>
   <nav class="tabs" role="tablist" aria-label="Weergave">
     <button role="tab" id="t_kelder" data-tab="kelder" aria-selected="true"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2h4v4c0 1.2 3 2.2 3 6v9a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1v-9c0-3.8 3-4.8 3-6zM7 14h10"/></svg><span class="tl">Kelder</span><span class="n" id="n_kelder"></span></button>
@@ -369,6 +376,11 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
   <section id="sharedView" hidden></section>
 
   <section id="v_list" style="display:flex;flex-direction:column;gap:18px">
+    <div class="searchbar" id="searchbar" hidden>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
+      <input id="q" type="search" placeholder="Zoek op naam, streek, druif…" aria-label="Zoeken" enterkeyhint="search">
+      <button class="link" type="button" id="searchClose">Sluiten</button>
+    </div>
     <div class="box fact" id="factbox" hidden></div>
     <div class="box tonight" id="tonight" hidden>
       <h2 class="sec">Wat drink ik vanavond?</h2>
@@ -380,7 +392,6 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
     </div>
     <div class="box" id="drinkbox" hidden></div>
     <div class="tools" id="tools" hidden>
-      <input id="q" type="search" placeholder="Zoek op naam, streek, druif…" aria-label="Zoeken">
       <select id="sort" aria-label="Sorteren">
         <option value="score">Hoogste score</option>
         <option value="recent">Recent toegevoegd</option>
@@ -404,14 +415,9 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
   <section id="v_ask" hidden style="display:flex;flex-direction:column;gap:14px">
     <div class="box">
       <h2 class="sec">Vraag het aan je kelder</h2>
-      <p class="hint">Stel een vraag over je wijnen, je proefnotities of je verlanglijst. Liever spreken? Tik op de microfoon van je toetsenbord en dicteer je vraag.</p>
+      <p class="hint">Claude kent je kelder, je proefnotities en je verlanglijst. Tik op een wijn in het antwoord om hem te openen.</p>
     </div>
-    <div class="starters" id="starters">
-      <button type="button">Welke rode wijnen heb ik nog onder de €20?</button>
-      <button type="button">Wat vond ik de vorige keer van mijn best gescoorde wijn?</button>
-      <button type="button">Welke flessen moet ik dit jaar nog drinken?</button>
-      <button type="button">Welke wijnen op mijn verlanglijst kreeg ik als tip, en van wie?</button>
-    </div>
+    <div class="starters" id="starters"></div>
     <div class="chat" id="chat" aria-live="polite"></div>
     <form class="askform" id="askform">
       <textarea id="askq" rows="1" placeholder="Stel je vraag…" aria-label="Je vraag"></textarea>
@@ -559,6 +565,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
   const TIERS = {1:"Budget",2:"Middenklasse",3:"Premium",4:"Topwijn"};
   const COLORS = {rood:"Rood",wit:"Wit",rose:"Rosé",mousserend:"Mousserend",dessert:"Dessert"};
   let db=null, sample=null, col=null, wines=[], openIds=new Set();
+  let searchOpen = false;
   let viewMode = "cards"; try{ if(localStorage.getItem("mw_view")==="compact") viewMode = "compact"; }catch(e){}
   let compareIds=[], dupFor=null;
   let tagFilter="", shareFor=null, shareMsg="", sharedId="", downloads=null; const APP_URL="https://claude.ai/artifact/PYMK2uNrCPb2GZpHEmpRrY";
@@ -665,6 +672,12 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
     document.querySelectorAll(".tabs button").forEach(b=>b.setAttribute("aria-selected", b.dataset.tab===tab));
     $("v_list").hidden = tab!=="kelder" && tab!=="wens"; $("v_stats").hidden = tab!=="stats"; $("v_ask").hidden = tab!=="ask";
     if($("v_events")) $("v_events").hidden = tab!=="events";
+    const listTab = tab==="kelder" || tab==="wens", canSearch = listTab && (tab==="kelder" ? kelder : wens).length >= 2;
+    if(!canSearch){ searchOpen = false; $("q").value = ""; }
+    $("searchBtn").hidden = !canSearch; $("searchbar").hidden = !searchOpen;
+    $("searchBtn").setAttribute("aria-expanded", searchOpen);
+    $("v_list").classList.toggle("searching", !!$("q").value.trim());
+    $("scanBtn").hidden = tab==="ask"; // the floating button would cover the question box
     if(tab==="events"){ updateCollapse(); return window.mwEvents?.render(); }
     if(tab==="ask"){ updateCollapse(); return renderChat(); }
     if(tab==="stats"){ updateCollapse(); return renderStats(); }
@@ -1636,19 +1649,41 @@ Wijnen (JSON): ${JSON.stringify(cellar)}`;
     }
     return out + (inList ? "</ul>" : "");
   }
+  // Starter questions that fit what is actually in the cellar right now.
+  function starterQs(){
+    const kelder = wines.filter(w=>w.status==="kelder"), inStock = kelder.filter(w=>w.stock>0), wens = wines.filter(w=>w.status==="wens");
+    const qs = [];
+    if(kelder.some(w=>w.openedAt)) qs.push("Welke geopende flessen moet ik eerst opdrinken?");
+    if(inStock.some(w=>{ const d=drinkState(w); return d && d.k<=1; })) qs.push("Welke flessen moet ik dit jaar nog drinken, en waarom?");
+    if(wines.some(w=>w.tastings.length)) qs.push("Welke wijn vond ik het lekkerst de laatste maanden, en wat schreef ik erover?");
+    if(inStock.length >= 6) qs.push("Ik krijg zes gasten voor een diner. Welke flessen open ik, in welke volgorde?");
+    if(wens.some(w=>w.tags.some(t=>/tip/i.test(t)))) qs.push("Welke wijnen op mijn verlanglijst kreeg ik als tip, en van wie?");
+    else if(wens.length) qs.push("Wat moet ik van mijn verlanglijst als eerste kopen?");
+    if(inStock.length >= 3) qs.push("Welke stijl of streek ontbreekt nog in mijn kelder?");
+    qs.push("Welke wijn onder €20 is mijn beste koop?");
+    return qs.slice(0,4);
+  }
+  const askMark = /\[\[\s*wijnen\s*:([^\]]*)(\]\]|$)/i;
+  function askWinesHTML(m){
+    const ws = (m.ids||[]).map(id=>wines.find(w=>w.id===id)).filter(Boolean);
+    if(!ws.length) return "";
+    return `<div class="askwines">${ws.map(w=>`<button class="drink" type="button" data-goto="${w.id}"><span class="t"><b>${esc(w.name)}</b>${w.vintage?` <span class="vint">${esc(w.vintage)}</span>`:""}</span><span class="badge ${w.status==="kelder"&&w.stock?"b-ok":"b-young"}">${w.status==="kelder" ? (w.stock?w.stock+" fl.":"op") : "verlanglijst"}</span></button>`).join("")}</div>`;
+  }
   function renderChat(){
     $("starters").hidden = chat.length > 0;
+    if(!chat.length) $("starters").innerHTML = starterQs().map(q=>`<button type="button">${esc(q)}</button>`).join("");
     $("askNew").hidden = !chat.length || !!askCtl;
     $("askStop").hidden = !askCtl;
     $("askBtn").disabled = !!askCtl || !sample;
     if(!sample) $("chat").innerHTML = `<p class="hint">Vragen stellen kan niet in deze weergave.</p>`;
     else $("chat").innerHTML = chat.map(m => m.role==="user" ? `<div class="msg me">${esc(m.content)}</div>`
-      : `<div class="msg ai${m.err?" err":""}">${m.pending && !m.content ? "<p>Even in je kelder kijken…</p>" : mdLite(m.content)}</div>`).join("");
+      : `<div class="msg ai${m.err?" err":""}">${m.pending && !m.content ? "<p>Even in je kelder kijken…</p>" : mdLite(m.content.replace(askMark,"").trim())}</div>${m.pending?"":askWinesHTML(m)}`).join("");
   }
-  function cellarData(){
+  // lean = for a big cellar: leave out the long texts so everything still fits
+  function cellarData(lean){
     const cut = (s,n) => { s = String(s||""); return s.length>n ? s.slice(0,n)+"…" : s; };
     return wines.map(w => { const o = {
-      lijst: w.status==="wens" ? "verlanglijst" : "kelder", naam: w.name, producent: w.producer, jaargang: w.vintage, type: COLORS[w.color],
+      id: w.id, lijst: w.status==="wens" ? "verlanglijst" : "kelder", naam: w.name, producent: w.producer, jaargang: w.vintage, type: COLORS[w.color],
       druif: w.grape, streek: w.region, land: w.country, score: w.score||null, flessen: w.status==="kelder" ? w.stock : null,
       geopendSinds: w.openedAt||null, plaats: w.loc, drinkvenster: windowText(w), prijsklasse: w.tier?TIERS[w.tier]:null,
       geschattePrijs: w.price, betaald: w.paid, gekochtBij: w.shop, aankoopdatum: w.bought, aantalGekocht: w.boughtQty||null,
@@ -1656,6 +1691,7 @@ Wijnen (JSON): ${JSON.stringify(cellar)}`;
       beschrijving: cut(w.desc, 280), wijnhuis: w.house && !w.house.unknown ? cut([w.house.about, w.house.location].filter(Boolean).join(" "), 220) : null,
       proefmomenten: w.tastings.length ? w.tastings.map(t=>({datum:t.date, score:t.score||null, notitie:t.note||null, kleur:t.color||null, aromas:t.aromas||null, structuur:t.struct||null})) : null,
       toegevoegd: w.createdAt ? new Date(w.createdAt).toISOString().slice(0,10) : null };
+      if(lean){ delete o.beschrijving; delete o.wijnhuis; delete o.smaak; delete o.pastBij; delete o.schenktemp; delete o.decanteren; delete o.glas; }
       Object.keys(o).forEach(k => (o[k]===null || o[k]==="" || o[k]===undefined) && delete o[k]); return o; });
   }
   async function ask(q){
@@ -1663,16 +1699,23 @@ Wijnen (JSON): ${JSON.stringify(cellar)}`;
     chat.push({role:"user", content:q});
     const reply = {role:"assistant", content:"", pending:true}; chat.push(reply);
     askCtl = new AbortController(); renderChat(); scrollChat();
-    let data = JSON.stringify(cellarData()); if(data.length > 200000) data = data.slice(0, 200000);
-    const rules = `Je bent de assistent van Maarten's wijnapp "Mijn wijnkelder". Beantwoord vragen over zijn wijnen enkel op basis van de gegevens hieronder. Vandaag is ${TODAY}.
-Regels: antwoord in de taal van de vraag; kort en concreet; noem wijnen bij naam en jaargang; gebruik gewone tekst, eventueel een korte lijst met "- " en **vet** voor wijnnamen; geen tabellen of koppen. "kelder" = wijnen in huis (flessen = aantal in voorraad), "verlanglijst" = nog niet gekocht. Tags zoals "tip van Jan" geven aan van wie een tip kwam. Staat iets niet in de gegevens, zeg dat eerlijk. Algemene wijnkennis mag je erbij geven, maar maak duidelijk wat uit zijn kelder komt.
+    let data = JSON.stringify(cellarData(false)); if(data.length > 150000) data = JSON.stringify(cellarData(true));
+    const system = `Je bent de sommelier in de wijnapp "Mijn wijnkelder". Je praat met de eigenaar van deze kelder en spreekt hem of haar aan met "je". Vandaag is ${TODAY}.
+Beantwoord vragen over de eigen wijnen enkel op basis van de gegevens hieronder.
+- Antwoord in de taal van de vraag. Begin meteen met het antwoord, zonder inleiding of herhaling van de vraag.
+- Kort en concreet: hoogstens een paar zinnen of een korte lijst met "- ". Geen tabellen of koppen. Zet wijnnamen in **vet** met jaargang.
+- Kies en adviseer echt: zeg welke fles en waarom (drinkvenster, score, proefnotities, prijs), in plaats van alles op te sommen.
+- "kelder" = in huis (flessen = voorraad; 0 = op), "verlanglijst" = nog niet gekocht, "geopendSinds" = fles staat open. Tags zoals "tip van Jan" zeggen van wie een tip kwam.
+- Staat iets niet in de gegevens, zeg dat eerlijk. Algemene wijnkennis mag, maar maak duidelijk wat uit de eigen kelder komt.
+- Sluit af met één laatste regel [[wijnen: id, id]] met de id's van de wijnen uit de gegevens die je aanraadt of noemt (hoogstens 5, belangrijkste eerst). Noem je geen eigen wijn, laat die regel weg.
 Gegevens (JSON):
 ${data}`;
-    const hist = [{role:"user", content:rules}, {role:"assistant", content:"Begrepen. Wat wil je weten over je wijnen?"},
-      ...chat.filter(m=>!m.pending && !m.err && m.content).slice(-12).map(m=>({role:m.role, content:m.content}))];
+    const hist = chat.filter(m=>!m.pending && !m.err && m.content).slice(-12).map(m=>({role:m.role, content:m.content}));
     try{
-      const r = await sample(hist, {cache:false, signal:askCtl.signal, onText:({text})=>{ reply.content = text; renderChat(); scrollChat(); }});
+      const r = await sample(hist, {system, cache:false, signal:askCtl.signal, onText:({text})=>{ reply.content = text; renderChat(); scrollChat(); }});
       reply.content = r.text; if(r.truncated) reply.content += "\n\n(Antwoord afgebroken. Stel een kleinere vraag.)";
+      const mk = reply.content.match(askMark);
+      if(mk) reply.ids = [...new Set(mk[1].split(/[\s,]+/).filter(Boolean))].slice(0,5);
     }catch(e){
       if(e?.code==="cancelled"){ reply.content = (e.text||"") + (e.text?"\n\n(Gestopt)":"Gestopt."); }
       else { reply.err = true; reply.content = (e.text ? e.text+"\n\n" : "") + ({not_granted:"Claude is niet beschikbaar voor jouw account.", rate_limited:"Claude is even niet beschikbaar (gebruikslimiet of te veel aanvragen). Probeer later opnieuw.", prompt_too_large:"Je kelder is te groot om in één keer mee te sturen."}[e?.code] || "Er ging iets mis. Probeer opnieuw."); }
@@ -1751,7 +1794,7 @@ ${data}`;
   // ---------- interactions ----------
   function goTo(id){
     const w = wines.find(x=>x.id===id); if(!w) return;
-    tab = w.status; typeFilter=""; tagFilter=""; $("q").value=""; $("country").value=""; $("grape").value="";
+    tab = w.status; typeFilter=""; tagFilter=""; $("q").value=""; searchOpen=false; $("country").value=""; $("grape").value="";
     openIds.add(id); render();
     const c = $("c_"+id); if(c){ c.scrollIntoView({behavior: matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth", block:"start"}); c.classList.add("flash"); setTimeout(()=>c.classList.remove("flash"),1600); }
   }
@@ -1768,6 +1811,13 @@ ${data}`;
       if(scrollY > tabsY) requestAnimationFrame(()=>window.scrollTo({top:tabsY})); }
     tab=b.dataset.tab; typeFilter=""; tastingFor=null; render(); });
   $("chips").addEventListener("click", e => { const t=e.target.closest("[data-tag]"); if(t){ tagFilter = tagFilter===t.dataset.tag ? "" : t.dataset.tag; render(); return; } const b=e.target.closest("[data-type]"); if(!b) return; typeFilter=b.dataset.type; render(); });
+  $("searchBtn").addEventListener("click", () => {
+    if(searchOpen){ searchOpen = false; $("q").value = ""; render(); return; }
+    searchOpen = true; render();
+    window.scrollTo({top:0}); $("q").focus();
+  });
+  $("searchClose").addEventListener("click", () => { searchOpen = false; $("q").value = ""; render(); });
+  $("q").addEventListener("keydown", e => { if(e.key==="Escape"){ searchOpen = false; $("q").value = ""; render(); } else if(e.key==="Enter") $("q").blur(); });
   document.querySelector(".viewsw").addEventListener("click", e => {
     const b = e.target.closest("[data-view]"); if(!b || b.dataset.view===viewMode) return;
     viewMode = b.dataset.view; try{ localStorage.setItem("mw_view", viewMode); }catch(err){}
