@@ -106,7 +106,13 @@
 .mwmanage{align-self:flex-start;margin-top:4px;display:inline-flex;align-items:center;gap:6px;text-decoration:none;font-weight:600}
 .mwmanage .mwi{width:15px;height:15px}
 .mwtech p{font-size:.74rem;color:var(--muted);word-break:break-all;margin:6px 0 0}
-.mwapp{display:flex;align-items:center;gap:12px}
+.mwapp{display:flex;align-items:center;gap:12px;cursor:pointer;list-style:none}
+.mwapp::-webkit-details-marker{display:none}
+.mwapp > span{flex:1}
+.mwchev{color:var(--muted);transition:transform .2s}
+.mwabout[open] .mwchev{transform:rotate(180deg)}
+.mwabout:not([open]){gap:0}
+.mwabout p.mwtag{margin:0}
 .mwapp img{border-radius:12px;flex:none}
 .mwapp span{display:flex;flex-direction:column;min-width:0}
 .mwapp b{font:500 1.15rem var(--display)}
@@ -509,7 +515,9 @@
       <div class="mwtop"><h2 id="mwSheetTitle">Instellingen</h2><button class="mwx" type="button" id="mwClose" aria-label="Sluiten">${ico("close")}</button></div>
       <div class="mwcell" id="mwBody"></div></div>`;
     document.body.appendChild(sh);
-    const close = () => { sh.hidden = true; sheetMsg = ""; inviteLink = ""; prefDraft = null; };
+    const close = () => { sh.hidden = true; sheetMsg = ""; inviteLink = ""; prefDraft = null; aboutOpen = false; };
+    // "toggle" does not bubble, so listen in the capture phase
+    $("mwBody").addEventListener("toggle", e => { if(e.target.id === "mwAbout") aboutOpen = e.target.open; }, true);
     $("mwClose").onclick = close;
     sh.addEventListener("click", e => { if(e.target === sh) close(); });
     document.addEventListener("keydown", e => { if(e.key === "Escape" && !sh.hidden) close(); });
@@ -571,17 +579,21 @@
   }
   // ---------- about the app + copyright, at the bottom of Settings ----------
   const FIRST_YEAR = 2026;
+  let aboutOpen = false;
   function aboutHtml(){
     const y = new Date().getFullYear(), years = y > FIRST_YEAR ? `${FIRST_YEAR}–${y}` : String(FIRST_YEAR);
-    return `<section class="mwsec mwabout">
-        <div class="mwapp"><img src="icons/icon.svg" alt="" width="44" height="44"><span><b>Meerstraat wines</b><small>Je wijnkelder, gedeeld met wie je wilt</small></span></div>
+    // Folded by default; stays open while Settings is open (the sheet redraws often).
+    return `<details class="mwsec mwabout" id="mwAbout"${aboutOpen ? " open" : ""}>
+        <summary class="mwapp"><img src="icons/icon.svg" alt="" width="44" height="44"><span><b>Meerstraat wines</b><small>Over de app</small></span>
+          <svg class="mwi mwchev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>
+        <p class="mwtag">Je wijnkelder, gedeeld met wie je wilt.</p>
         <div class="mwfacts">
           <div>${ico("info")}<span><b>Versie</b><small id="mwVer">…</small></span></div>
           <div>${ico("shield")}<span><b>Je gegevens</b><small>Je wijnen staan in Google Firebase in de cloud. Alleen leden van een kelder zien die kelder. Geen reclame, en er wordt niets doorverkocht.</small></span></div>
           <div>${ico("spark")}<span><b>Slimme functies</b><small>Vragen, etiketten lezen en suggesties gebruiken Claude van Anthropic, via een eigen beveiligde server.</small></span></div>
           <div>${ico("bell")}<span><b>Meldingen</b><small>Alleen als je ze zelf aanzet, en alleen op dit toestel.</small></span></div>
         </div>
-      </section>
+      </details>
       <footer class="mwcopy">${ico("copyright")}<span>${years} Meerstraat wines · Alle rechten voorbehouden</span></footer>`;
   }
   // The service worker's cache is named after the published build (mw-<commit>), so that is the version.
