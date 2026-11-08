@@ -75,28 +75,36 @@ function remindText(s){
   const days = d => Math.round((today - new Date(d + "T12:00:00")) / 864e5);
   const name = x => x.n + (x.v ? " " + x.v : "");
   const list = xs => xs.slice(0, 3).map(name).join(", ") + (xs.length > 3 ? ` en ${xs.length - 3} andere` : "");
+  // ids: the wines this reminder is about, so tapping it can open them
+  const ids = xs => xs.map(x => x.id).filter(Boolean);
   if(s){
     const od = s.openDays === undefined ? 3 : s.openDays; // 0 = no reminders for open bottles
     const open = od ? s.open.filter(o => days(o.d) >= od) : [];
-    if(open.length === 1) return {title: `${name(open[0])} staat al ${days(open[0].d)} dagen open`, body: "Drink hem op voor hij zijn frisheid verliest, of kook ermee."};
-    if(open.length > 1) return {title: `${open.length} flessen staan al een paar dagen open`, body: list(open)};
+    if(open.length === 1) return {title: `${name(open[0])} staat al ${days(open[0].d)} dagen open`, body: "Drink hem op voor hij zijn frisheid verliest, of kook ermee.", ids: ids(open)};
+    if(open.length > 1) return {title: `${open.length} flessen staan al een paar dagen open`, body: list(open), ids: ids(open)};
     const late = s.soon.filter(x => x.to < year), soon = s.soon.filter(x => x.to >= year && x.to <= year + 1);
-    if(late.length) return {title: late.length === 1 ? "Een fles is over zijn hoogtepunt" : `${late.length} flessen zijn over hun hoogtepunt`, body: list(late) + (soon.length ? `. Ook binnenkort: ${list(soon)}` : "")};
-    if(soon.length) return {title: soon.length === 1 ? "Een fles om binnenkort te drinken" : `${soon.length} wijnen om binnenkort te drinken`, body: list(soon)};
+    if(late.length) return {title: late.length === 1 ? "Een fles is over zijn hoogtepunt" : `${late.length} flessen zijn over hun hoogtepunt`, body: list(late) + (soon.length ? `. Ook binnenkort: ${list(soon)}` : ""), ids: ids([...late, ...soon])};
+    if(soon.length) return {title: soon.length === 1 ? "Een fles om binnenkort te drinken" : `${soon.length} wijnen om binnenkort te drinken`, body: list(soon), ids: ids(soon)};
   }
-  return {title: "Je wijnkelder", body: "Kijk even wat er klaar is om te drinken."};
+  return {title: "Je wijnkelder", body: "Kijk even wat er klaar is om te drinken.", ids: []};
 }
 const showReminder = () => remindState().then(s => {
   const t = remindText(s);
-  return self.registration.showNotification(t.title, {body: t.body, icon: "icons/icon-192.png", badge: "icons/icon-192.png", tag: "mw-drink", data: {url: "./"}});
+  // One wine: open that wine. Several: open "Klaar om te drinken", where they are all listed.
+  const go = t.ids.length === 1 ? {wine: t.ids[0]} : {go: "drinken"};
+  const url = "./?" + (go.wine ? "wine=" + encodeURIComponent(go.wine) : "go=drinken");
+  return self.registration.showNotification(t.title, {body: t.body, icon: "icons/icon-192.png", badge: "icons/icon-192.png", tag: "mw-drink", data: {url, go}});
 });
 self.addEventListener("push", e => { e.waitUntil(showReminder()); });
 // "Stuur een testmelding" in Settings: the same notification, right now.
 self.addEventListener("message", e => { if (e.data === "mw-test-remind") e.waitUntil(showReminder()); });
 self.addEventListener("notificationclick", e => {
   e.notification.close();
+  const d = e.notification.data || {};
   e.waitUntil(self.clients.matchAll({type: "window", includeUncontrolled: true}).then(cs => {
     const c = cs.find(x => new URL(x.url).origin === location.origin);
-    return c ? c.focus() : self.clients.openWindow(e.notification.data && e.notification.data.url || "./");
+    // App already open: bring it forward and tell it where to go. Otherwise open it at that place.
+    if (c) return c.focus().then(w => { (w || c).postMessage({mwGo: d.go || {go: "drinken"}}); });
+    return self.clients.openWindow(d.url || "./");
   }));
 });

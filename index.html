@@ -149,7 +149,8 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .crow .cst{font-size:.8rem;color:var(--gold);letter-spacing:.04em;white-space:nowrap}
 .crow .cst s{text-decoration:none;color:var(--line)}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);overflow:hidden;scroll-margin-top:64px}
-.card.flash{box-shadow:0 0 0 2px var(--accent)}
+.card.flash,.box.flash{box-shadow:0 0 0 2px var(--accent)}
+#drinkbox{scroll-margin-top:16px}
 .row{display:grid;grid-template-columns:72px 1fr;gap:16px;padding:16px}
 .thumb{width:72px;height:96px;border-radius:4px;object-fit:cover;background:var(--accent-soft)}
 .thumb.ph{display:grid;place-items:center;color:var(--accent);font:400 1.6rem var(--display)}
@@ -605,7 +606,9 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
   let tagFilter="", shareFor=null, shareMsg="", sharedId="", downloads=null; const APP_URL="https://claude.ai/artifact/PYMK2uNrCPb2GZpHEmpRrY";
   // Home-screen shortcuts (manifest.webmanifest) open the app with ?go=…; read it once and tidy the address.
   let goParam = null;
-  try{ const q = new URLSearchParams(location.search); goParam = q.get("go"); if(goParam){ q.delete("go"); history.replaceState(null, "", location.pathname + (q.toString() ? "?" + q : "") + location.hash); } }catch{}
+  let wineParam = null; // ?wine=<id>: open that wine once the cellar is loaded (from a reminder)
+  try{ const q = new URLSearchParams(location.search); goParam = q.get("go"); wineParam = q.get("wine");
+    if(goParam || wineParam){ q.delete("go"); q.delete("wine"); history.replaceState(null, "", location.pathname + (q.toString() ? "?" + q : "") + location.hash); } }catch{}
   let tab = goParam==="wens" || goParam==="stats" ? goParam : "kelder", typeFilter="", draft=null, scanCtl=null, editingId=null, pendingDelete=null, tastingFor=null, tastingScore=0, target="kelder";
   let pickCtl=null, lastPicks=null; const houseBusy=new Map();
   let mcp=null; const shopOpen=new Set(), shopRes=new Map(), tipRes=new Map();
@@ -734,6 +737,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
 
     const pool = tab==="kelder" ? kelder : wens;
     $("tonight").hidden = !(tab==="kelder" && kelder.length && sample);
+    if(goParam==="drinken" && !$("drinkbox").hidden){ goParam = null; setTimeout(() => { $("drinkbox").scrollIntoView({block:"start"}); $("drinkbox").classList.add("flash"); setTimeout(()=>$("drinkbox").classList.remove("flash"),1600); }, 0); }
     if(goParam==="vanavond" && !$("tonight").hidden){ goParam = null; setTimeout(() => { $("tonight").scrollIntoView({block:"center"}); $("meal").focus({preventScroll:true}); }, 0); }
     renderDrinkBox(tab==="kelder" ? kelder : []);
     renderFact();
@@ -1931,6 +1935,14 @@ ${data}`;
   }
   document.addEventListener("click", e => { const g = e.target.closest("[data-goto]"); if(g) goTo(g.dataset.goto); });
   window.mwGoTo = goTo;
+  // Tapping a reminder while the app is open: the service worker says where to go.
+  function goFromReminder(g){
+    if(!g) return;
+    $("sheet").hidden || closeSheet(); $("bc").hidden || closeBc();
+    if(g.wine && wines.some(w=>w.id===g.wine)) return goTo(g.wine);
+    tab = "kelder"; typeFilter = ""; goParam = "drinken"; render();
+  }
+  if("serviceWorker" in navigator) navigator.serviceWorker.addEventListener("message", e => { if(e.data && e.data.mwGo) goFromReminder(e.data.mwGo); });
   // for events.js: switch tabs, and read the wines of the open cellar
   window.mwSetTab = t => { tab = t; typeFilter = ""; tastingFor = null; render(); window.scrollTo({top:0}); };
   window.mwWines = () => wines;
@@ -2414,9 +2426,10 @@ Zet "recognized" op false als er geen wijnetiket op de foto staat.`;
         if(!snap.metadata.fromCache) serverSeen = true;
       }
       // Several updates can arrive at once (offline copy, then the server's confirmation): draw once per frame.
-      if(!snapDraw) snapDraw = requestAnimationFrame(() => { snapDraw = 0; render(); });
+      if(!snapDraw) snapDraw = requestAnimationFrame(() => { snapDraw = 0; render(); if(goParam==="drinken" && serverSeen) goParam = null; });
       window.mwRemind?.changed();
       if(!winesLoaded){ winesLoaded = true; setTimeout(processQueue, 1500); }
+      if(wineParam && wines.some(w=>w.id===wineParam)){ const id = wineParam; wineParam = null; requestAnimationFrame(() => requestAnimationFrame(() => goTo(id))); }
     }, () => { clearTimeout(timer); $("status").textContent = "Je wijnen konden niet geladen worden."; });
   })();
 })();

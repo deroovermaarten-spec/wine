@@ -43,8 +43,8 @@
     const k = wines.filter(w => w.status === "kelder"), p = prefs();
     return {
       at: Date.now(), openDays: p.open,
-      soon: p.cadence === "off" ? [] : k.filter(w => w.stock > 0 && w.to).map(w => ({n: w.name, v: w.vintage || "", to: w.to})).sort((a, b) => a.to - b.to).slice(0, 40),
-      open: k.filter(w => w.openedAt).map(w => ({n: w.name, v: w.vintage || "", d: w.openedAt}))
+      soon: p.cadence === "off" ? [] : k.filter(w => w.stock > 0 && w.to).map(w => ({id: w.id, n: w.name, v: w.vintage || "", to: w.to})).sort((a, b) => a.to - b.to).slice(0, 40),
+      open: k.filter(w => w.openedAt).map(w => ({id: w.id, n: w.name, v: w.vintage || "", d: w.openedAt}))
     };
   }
   // Fridays at the chosen hour: every week for the next five, or the first of each of the next four months.
