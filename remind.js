@@ -30,27 +30,43 @@
   }
 
   // What the notification needs, nothing more.
+  // Your choices, per phone (Settings → Herinneringen).
+  // open: days after opening a bottle (0 = no reminder); cadence: week | month | off; hour: time of day.
+  const DEF = {open: 3, cadence: "month", hour: 18};
+  function prefs(){
+    let p = {}; try{ p = JSON.parse(ls.get("mw_remind_prefs") || "{}") || {}; }catch{}
+    return {open: [0, 2, 3, 5].includes(p.open) ? p.open : DEF.open, cadence: ["week", "month", "off"].includes(p.cadence) ? p.cadence : DEF.cadence,
+      hour: [9, 12, 18, 20].includes(p.hour) ? p.hour : DEF.hour};
+  }
+
   function summary(wines){
-    const k = wines.filter(w => w.status === "kelder");
+    const k = wines.filter(w => w.status === "kelder"), p = prefs();
     return {
-      at: Date.now(),
-      soon: k.filter(w => w.stock > 0 && w.to).map(w => ({n: w.name, v: w.vintage || "", to: w.to})).sort((a, b) => a.to - b.to).slice(0, 40),
+      at: Date.now(), openDays: p.open,
+      soon: p.cadence === "off" ? [] : k.filter(w => w.stock > 0 && w.to).map(w => ({n: w.name, v: w.vintage || "", to: w.to})).sort((a, b) => a.to - b.to).slice(0, 40),
       open: k.filter(w => w.openedAt).map(w => ({n: w.name, v: w.vintage || "", d: w.openedAt}))
     };
   }
-  function firstFriday(offset){
-    const d = new Date(); d.setHours(18, 0, 0, 0); d.setDate(1); d.setMonth(d.getMonth() + offset);
-    while(d.getDay() !== 5) d.setDate(d.getDate() + 1);
-    return d;
+  // Fridays at the chosen hour: every week for the next five, or the first of each of the next four months.
+  function fridays(p){
+    const out = [], d = new Date(); d.setHours(p.hour, 0, 0, 0);
+    if(p.cadence === "week"){
+      while(d.getDay() !== 5) d.setDate(d.getDate() + 1);
+      for(let i = 0; i < 5; i++){ out.push(new Date(d)); d.setDate(d.getDate() + 7); }
+    }else if(p.cadence === "month"){
+      for(let m = 0; m < 4; m++){
+        const f = new Date(d); f.setDate(1); f.setMonth(d.getMonth() + m);
+        while(f.getDay() !== 5) f.setDate(f.getDate() + 1);
+        out.push(f);
+      }
+    }
+    return out;
   }
   // When to wake this phone up.
   function plan(s){
-    const now = Date.now(), when = [];
-    s.open.forEach(o => { const t = new Date(o.d + "T18:00:00"); t.setDate(t.getDate() + 3); if(+t > now) when.push(+t); });
-    for(let m = 0; m < 4; m++){
-      const d = firstFriday(m); if(+d <= now) continue;
-      if(s.soon.some(x => x.to <= d.getFullYear() + 1)) when.push(+d);
-    }
+    const now = Date.now(), when = [], p = prefs();
+    if(p.open) s.open.forEach(o => { const t = new Date(o.d + "T00:00:00"); t.setHours(p.hour); t.setDate(t.getDate() + p.open); if(+t > now) when.push(+t); });
+    fridays(p).forEach(d => { if(+d > now && s.soon.some(x => x.to <= d.getFullYear() + 1)) when.push(+d); });
     return [...new Set(when)].sort((a, b) => a - b).slice(0, 12);
   }
 
@@ -93,7 +109,7 @@
       const s = summary(window.mwWines ? window.mwWines() : []);
       await put("state", s);
       await tell(sub.endpoint, plan(s)); ls.set("mw_remind_sig", JSON.stringify(plan(s)));
-      msg = "Herinneringen staan aan.";
+      msg = "Herinneringen staan aan. Pas hieronder aan wanneer.";
     }catch(e){ ls.set("mw_remind", null); msg = failText(e); }
     finally{ busy = false; repaint(); }
   }
@@ -104,17 +120,58 @@
   }
 
   const on = () => ls.get("mw_remind") === "1";
-  const repaint = () => { window.mwRender && window.mwRender(); };
+  const repaint = () => { window.mwRender && window.mwRender(); window.mwCloud && window.mwCloud.redraw && window.mwCloud.redraw(); };
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+  const bell = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20a2 2 0 0 0 4 0"/></svg>`;
+  const IOS_HINT = "Zet de app op je beginscherm (Delen → Zet op beginscherm) en open hem van daaruit. Dan kan hij je meldingen sturen.";
 
   // A line at the bottom of "Klaar om te drinken".
   function html(){
-    const bell = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20a2 2 0 0 0 4 0"/></svg>`;
-    if(iosInBrowser()) return `<p class="hint remind">${bell} Wil je hier een melding van? Zet de app op je beginscherm (Delen → Zet op beginscherm) en open hem van daaruit.</p>`;
+    if(iosInBrowser()) return `<p class="hint remind">${bell} Wil je hier een melding van? ${IOS_HINT}</p>`;
     if(!supported()) return "";
-    const note = msg ? `<span class="hint">${msg}</span>` : "";
+    const note = msg ? `<span class="hint">${esc(msg)}</span>` : "";
     return on()
-      ? `<div class="remind"><span class="hint">${bell} Je krijgt een melding als een fles op moet.</span><button class="link" type="button" data-remind="off">Uitzetten</button>${msg && msg !== "Herinneringen staan aan." ? note : ""}</div>`
+      ? `<div class="remind"><span class="hint">${bell} Je krijgt een melding als een fles op moet.</span><button class="link" type="button" data-remind="settings">Instellingen</button>${msg && !msg.startsWith("Herinneringen staan aan") && !msg.startsWith("Testmelding") ? note : ""}</div>`
       : `<div class="remind"><button class="btn ghost sm" type="button" data-remind="on" ${busy ? "disabled" : ""}>${bell} ${busy ? "Even geduld…" : "Stuur me een herinnering"}</button>${note}</div>`;
+  }
+
+  // The "Herinneringen" block in Settings. head = the sheet's own section heading.
+  function settingsHtml(head){
+    const p = prefs(), opt = (v, cur, label) => `<option value="${v}"${v === cur ? " selected" : ""}>${label}</option>`;
+    const sec = body => `<section class="mwsec">${head}${body}</section>`;
+    if(iosInBrowser()) return sec(`<p>${IOS_HINT}</p>`);
+    if(!supported()) return sec(`<p>Meldingen werken niet in deze browser. Open de app op je telefoon.</p>`);
+    const next = on() && window.mwWines ? plan(summary(window.mwWines()))[0] : 0;
+    const when = next ? new Date(next).toLocaleString("nl-BE", {weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"}) : "";
+    return sec(`<p>Een melding op deze telefoon, ook als de app dicht is. Elke telefoon heeft zijn eigen instelling.</p>
+      ${msg ? `<p class="${/lukte|staan uit|nog niet ingesteld|alleen als/.test(msg) ? "err" : ""}">${esc(msg)}</p>` : ""}
+      <div class="rmrow">${on()
+        ? `<span class="rmon">${bell} Aan op dit toestel</span><button class="btn ghost sm" type="button" data-remind="off">Uitzetten</button>`
+        : `<button class="btn sm" type="button" data-remind="on" ${busy ? "disabled" : ""}>${bell} ${busy ? "Even geduld…" : "Zet herinneringen aan"}</button>`}</div>
+      <label class="mwlab">Open fles: herinner me na
+        <select data-rp="open">${opt(2, p.open, "2 dagen")}${opt(3, p.open, "3 dagen")}${opt(5, p.open, "5 dagen")}${opt(0, p.open, "Niet")}</select></label>
+      <label class="mwlab">Flessen die binnenkort op moeten
+        <select data-rp="cadence">${opt("week", p.cadence, "Elke vrijdag")}${opt("month", p.cadence, "Eerste vrijdag van de maand")}${opt("off", p.cadence, "Niet")}</select></label>
+      <label class="mwlab">Tijdstip
+        <select data-rp="hour">${[9, 12, 18, 20].map(h => opt(h, p.hour, h + ":00")).join("")}</select></label>
+      ${on() ? `<p>${when ? `Volgende herinnering: <b>${esc(when)}</b>.` : "Nu staat er niets gepland: geen open flessen en niets dat binnenkort op moet."}</p>
+        <div><button class="btn ghost sm" type="button" data-remind="test">Stuur een testmelding</button></div>` : ""}`);
+  }
+
+  function setPref(k, v){
+    const p = {...prefs(), [k]: k === "cadence" ? v : +v};
+    ls.set("mw_remind_prefs", JSON.stringify(p)); msg = "";
+    if(on()) sync(true).then(repaint); else repaint();
+  }
+  // Shows what a reminder looks like right now, through the service worker (same code as a real one).
+  async function test(){
+    try{
+      if(window.mwWines) await put("state", summary(window.mwWines()));
+      const reg = await navigator.serviceWorker.ready;
+      (navigator.serviceWorker.controller || reg.active).postMessage("mw-test-remind");
+      msg = "Testmelding verstuurd. Zie je niets? Kijk of meldingen voor deze app aan staan.";
+    }catch{ msg = "De testmelding lukte niet."; }
+    repaint();
   }
 
   let t = 0;
@@ -122,8 +179,11 @@
 
   document.addEventListener("click", e => {
     const b = e.target.closest("[data-remind]"); if(!b) return;
-    b.dataset.remind === "on" ? enable() : disable();
+    const a = b.dataset.remind;
+    if(a === "on") enable(); else if(a === "off") disable(); else if(a === "test") test();
+    else if(a === "settings"){ const g = $("mwGear"); if(g) g.click(); }
   });
+  document.addEventListener("change", e => { const s = e.target.closest("[data-rp]"); if(s) setPref(s.dataset.rp, s.value); });
   // Opening the app refreshes the plan (dates move on, bottles get opened).
   // Once a day it is sent again anyway, in case the server lost it.
   addEventListener("load", () => setTimeout(() => {
@@ -131,5 +191,5 @@
     if(on()){ ls.set("mw_remind_day", day); sync(force); }
   }, 6000));
 
-  window.mwRemind = {html, changed, plan, summary};
+  window.mwRemind = {html, settingsHtml, changed, plan, summary, prefs};
 })();

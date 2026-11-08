@@ -44,6 +44,10 @@ In "Klaar om te drinken" staat **Stuur me een herinnering**. Je krijgt dan een m
 de app dicht is: drie dagen nadat je een fles opende, en de eerste vrijdag van de maand als er wijnen binnenkort
 of nu gedronken moeten worden. Op een iPhone werkt dit alleen in de app op je beginscherm (iOS 16.4 of nieuwer).
 
+In **Instellingen → Herinneringen** zet je ze aan of uit per telefoon, kies je na hoeveel dagen een open fles een
+melding geeft (2, 3, 5 of niet), hoe vaak je hoort welke flessen op moeten (elke vrijdag, de eerste vrijdag van de
+maand of niet) en hoe laat (9, 12, 18 of 20 u). Daar zie je ook de volgende geplande melding en kun je een testmelding sturen.
+
 De tussenserver weet alleen *wanneer* hij je telefoon moet wekken; de tekst van de melding maakt de telefoon zelf
 uit wat hij over je kelder weet. Eenmalig instellen in Cloudflare (bij de Worker van de slimme functies):
 

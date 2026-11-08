@@ -76,7 +76,8 @@ function remindText(s){
   const name = x => x.n + (x.v ? " " + x.v : "");
   const list = xs => xs.slice(0, 3).map(name).join(", ") + (xs.length > 3 ? ` en ${xs.length - 3} andere` : "");
   if(s){
-    const open = s.open.filter(o => days(o.d) >= 3);
+    const od = s.openDays === undefined ? 3 : s.openDays; // 0 = no reminders for open bottles
+    const open = od ? s.open.filter(o => days(o.d) >= od) : [];
     if(open.length === 1) return {title: `${name(open[0])} staat al ${days(open[0].d)} dagen open`, body: "Drink hem op voor hij zijn frisheid verliest, of kook ermee."};
     if(open.length > 1) return {title: `${open.length} flessen staan al een paar dagen open`, body: list(open)};
     const late = s.soon.filter(x => x.to < year), soon = s.soon.filter(x => x.to >= year && x.to <= year + 1);
@@ -85,12 +86,13 @@ function remindText(s){
   }
   return {title: "Je wijnkelder", body: "Kijk even wat er klaar is om te drinken."};
 }
-self.addEventListener("push", e => {
-  e.waitUntil(remindState().then(s => {
-    const t = remindText(s);
-    return self.registration.showNotification(t.title, {body: t.body, icon: "icons/icon-192.png", badge: "icons/icon-192.png", tag: "mw-drink", data: {url: "./"}});
-  }));
+const showReminder = () => remindState().then(s => {
+  const t = remindText(s);
+  return self.registration.showNotification(t.title, {body: t.body, icon: "icons/icon-192.png", badge: "icons/icon-192.png", tag: "mw-drink", data: {url: "./"}});
 });
+self.addEventListener("push", e => { e.waitUntil(showReminder()); });
+// "Stuur een testmelding" in Settings: the same notification, right now.
+self.addEventListener("message", e => { if (e.data === "mw-test-remind") e.waitUntil(showReminder()); });
 self.addEventListener("notificationclick", e => {
   e.notification.close();
   e.waitUntil(self.clients.matchAll({type: "window", includeUncontrolled: true}).then(cs => {

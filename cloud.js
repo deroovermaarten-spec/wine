@@ -45,6 +45,10 @@
 .mwlogin .ok{color:var(--ok);font-size:.88rem;margin:0}
 .mwchips{display:flex;flex-wrap:wrap;gap:6px}
 .mwlab{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:600}
+.mwsec select{font:inherit;font-size:.95rem;font-weight:400;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+.rmrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.rmon{display:inline-flex;gap:6px;align-items:center;font-weight:600;color:var(--ok)}
+.mwsec .btn svg{width:16px;height:16px}
 .mwacct{display:inline-flex;align-items:center;gap:6px;max-width:180px}
 .mwbell{position:relative;padding:7px 9px}
 .mwbell .dot{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--accent);color:#fff;font-size:.7rem;font-weight:700;line-height:18px;text-align:center}
@@ -133,6 +137,7 @@
     check: '<path d="m5 12 5 5 9-10"/>',
     close: '<path d="M6 6l12 12M18 6 6 18"/>',
     info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+    bell: '<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/>',
     heart: '<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/>',
     calendar: '<rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
     glass: '<path d="M7 3h10c0 6-2 9-5 9.5C9 12 7 9 7 3z"/><path d="M12 12.5V20M8.5 21h7"/>',
@@ -492,6 +497,7 @@
     $("mwBody").addEventListener("click", onSheetClick);
     $("mwBody").addEventListener("input", e => { const k = e.target.dataset.pf; if(k && prefDraft) prefDraft[k] = e.target.value; });
   }
+  cloud.redraw = () => { if($("mwSheet") && !$("mwSheet").hidden) drawSheet(); }; // for remind.js
   function drawSheet(){
     const c = cloud.cellar, me = cloud.me, owner = c.owner === me.uid;
     const members = Object.entries(c.members || {}).filter(([uid]) => (c.memberIds || []).includes(uid))
@@ -528,6 +534,8 @@
         <div><button class="btn sm" type="button" data-a="migrate">${ico("upload")}Zet ze in deze kelder</button></div></section>` : ""}
 
       ${prefsHtml()}
+
+      ${window.mwRemind ? window.mwRemind.settingsHtml(head("bell", "Herinneringen", `<small>dit toestel</small>`)) : ""}
 
       <div class="mwdanger">
         ${owner ? (cloud.cellars.length > 1 ? `<button type="button" data-a="delcellar">${ico("trash")}Verwijder deze kelder</button>` : "") : `<button type="button" data-a="leave">${ico("logout")}Verlaat deze kelder</button>`}
