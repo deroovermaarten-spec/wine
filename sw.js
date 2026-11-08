@@ -3,7 +3,7 @@
 // Locally it stays "__BUILD__": then app files always come from the network, so edits show up at once.
 const VERSION = "mw-__BUILD__";
 const DEV = VERSION.includes("__BUILD__");
-const SHELL = ["./", "index.html", "store.js", "firebase-config.js", "cloud.js", "events.js", "ai.js", "world.json", "manifest.webmanifest",
+const SHELL = ["./", "index.html", "store.js", "firebase-config.js", "cloud.js", "events.js", "ai.js", "remind.js", "world.json", "manifest.webmanifest",
   "icons/icon.svg", "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png"];
 
 // Libraries and fonts rarely change, so they live in their own cache that survives app updates.
@@ -55,4 +55,46 @@ self.addEventListener("fetch", e => {
   const net = () => fetch(DEV && bucket === VERSION ? new Request(req, {cache: "no-cache"}) : req).then(r => { if (r.ok || r.type === "opaque") { const c = r.clone(); caches.open(bucket).then(x => x.put(req, c)); } return r; });
   if (DEV && bucket === VERSION) { e.respondWith(net().catch(() => caches.match(req))); return; }
   e.respondWith(caches.match(req, {ignoreSearch: bucket === LIBS}).then(hit => hit || net()));
+});
+
+// ---------- drink reminders (see remind.js) ----------
+// The relay only wakes the phone; the text is made here from the summary the app left on the phone.
+function remindState(){
+  return new Promise(res => {
+    const r = indexedDB.open("mw-remind", 1);
+    r.onupgradeneeded = () => r.result.createObjectStore("kv");
+    r.onerror = () => res(null);
+    r.onsuccess = () => {
+      try{ const g = r.result.transaction("kv").objectStore("kv").get("state"); g.onsuccess = () => res(g.result || null); g.onerror = () => res(null); }
+      catch{ res(null); }
+    };
+  });
+}
+function remindText(s){
+  const year = new Date().getFullYear(), today = new Date();
+  const days = d => Math.round((today - new Date(d + "T12:00:00")) / 864e5);
+  const name = x => x.n + (x.v ? " " + x.v : "");
+  const list = xs => xs.slice(0, 3).map(name).join(", ") + (xs.length > 3 ? ` en ${xs.length - 3} andere` : "");
+  if(s){
+    const open = s.open.filter(o => days(o.d) >= 3);
+    if(open.length === 1) return {title: `${name(open[0])} staat al ${days(open[0].d)} dagen open`, body: "Drink hem op voor hij zijn frisheid verliest, of kook ermee."};
+    if(open.length > 1) return {title: `${open.length} flessen staan al een paar dagen open`, body: list(open)};
+    const late = s.soon.filter(x => x.to < year), soon = s.soon.filter(x => x.to >= year && x.to <= year + 1);
+    if(late.length) return {title: late.length === 1 ? "Een fles is over zijn hoogtepunt" : `${late.length} flessen zijn over hun hoogtepunt`, body: list(late) + (soon.length ? `. Ook binnenkort: ${list(soon)}` : "")};
+    if(soon.length) return {title: soon.length === 1 ? "Een fles om binnenkort te drinken" : `${soon.length} wijnen om binnenkort te drinken`, body: list(soon)};
+  }
+  return {title: "Je wijnkelder", body: "Kijk even wat er klaar is om te drinken."};
+}
+self.addEventListener("push", e => {
+  e.waitUntil(remindState().then(s => {
+    const t = remindText(s);
+    return self.registration.showNotification(t.title, {body: t.body, icon: "icons/icon-192.png", badge: "icons/icon-192.png", tag: "mw-drink", data: {url: "./"}});
+  }));
+});
+self.addEventListener("notificationclick", e => {
+  e.notification.close();
+  e.waitUntil(self.clients.matchAll({type: "window", includeUncontrolled: true}).then(cs => {
+    const c = cs.find(x => new URL(x.url).origin === location.origin);
+    return c ? c.focus() : self.clients.openWindow(e.notification.data && e.notification.data.url || "./");
+  }));
 });

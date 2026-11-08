@@ -38,6 +38,35 @@ Telefoons zien dan "Er is een nieuwe versie" en vernieuwen pas als je erop tikt.
 Bibliotheken en lettertypes (`vendor/`, `fonts/`) zitten in een aparte cache die updates overleeft;
 verhoog `LIBS` in `sw.js` alleen als je daar zelf een bestand vervangt.
 
+## Herinneringen (melding als een fles op moet)
+
+In "Klaar om te drinken" staat **Stuur me een herinnering**. Je krijgt dan een melding op je telefoon, ook als
+de app dicht is: drie dagen nadat je een fles opende, en de eerste vrijdag van de maand als er wijnen binnenkort
+of nu gedronken moeten worden. Op een iPhone werkt dit alleen in de app op je beginscherm (iOS 16.4 of nieuwer).
+
+De tussenserver weet alleen *wanneer* hij je telefoon moet wekken; de tekst van de melding maakt de telefoon zelf
+uit wat hij over je kelder weet. Eenmalig instellen in Cloudflare (bij de Worker van de slimme functies):
+
+1. Plak de nieuwe `worker/worker.js` in de Worker en klik Deploy.
+2. Storage & Databases → KV → Create namespace, bv. `meerstraat-push`.
+3. In de Worker: Settings → Bindings → Add → KV namespace. Variabelenaam `PUSH`, kies de namespace van stap 2.
+4. In de Worker: Settings → Triggers → Cron Triggers → Add: `0 * * * *` (elk uur).
+
+De sleutels voor meldingen (VAPID) maakt de Worker zelf bij het eerste gebruik en bewaart ze in `PUSH`.
+Zolang stap 2 tot 4 niet gedaan zijn, zegt de app "Herinneringen zijn nog niet ingesteld op de server".
+
+## Barcode
+
+De knop met streepjes naast "Scan een fles" leest de barcode van een fles die je al hebt: **+1 fles bijzetten**
+of **Fles openen**. De eerste keer koppel je de barcode aan een wijn (of scan je het etiket voor een nieuwe wijn);
+daarna vindt de app hem meteen. Op Android leest de telefoon de barcode zelf, op een iPhone leest Claude de cijfers.
+Lukt dat niet, dan typ je de cijfers onder de streepjes.
+
+## Jouw wijnjaar
+
+Bij Inzichten: hoeveel keer je dronk, je beste glas, per maand, kleur, landen, druiven en wat nieuw was.
+Het telt elke fles die je opent of met − afboekt (bijgehouden sinds november 2026) en je proefmomenten.
+
 ## Snelkoppelingen
 
 Lang drukken op het app-icoon (Android, en Chrome op de computer) toont "Vanavond", "Verlanglijst" en "Inzichten".
@@ -87,6 +116,7 @@ Bestaande wijnen op de telefoon zet je over met "Zet ze in deze kelder" in het k
 | `manifest.webmanifest`, `icons/` | Naam en icoon op het beginscherm |
 | `.github/workflows/pages.yml` | Publiceert de app op GitHub Pages bij elke push |
 | `cloud.js`, `firebase-config.js`, `vendor/firebase/` | Aanmelden en gedeelde kelders (Firebase) |
+| `remind.js` | Herinneringen: plant meldingen voor flessen die op moeten |
 | `events.js` | Events: samen een wijnlijst opstellen voor een etentje of proefavond |
 | `firestore.rules` | Beveiligingsregels om in Firebase te plakken |
 
