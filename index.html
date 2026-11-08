@@ -1938,9 +1938,15 @@ ${data}`;
   // Tapping a reminder while the app is open: the service worker says where to go.
   function goFromReminder(g){
     if(!g) return;
+    // Close whatever is open on top (settings, scan, barcode, compare, share), or the wine stays hidden behind it.
     $("sheet").hidden || closeSheet(); $("bc").hidden || closeBc();
+    if($("mwSheet") && !$("mwSheet").hidden) $("mwClose").click();
+    if($("mwBellPanel")) $("mwBellPanel").hidden = true;
+    if(!$("cmp").hidden) $("cmpClose").click();
+    if(!$("share").hidden) $("shareClose").click();
     if(g.wine && wines.some(w=>w.id===g.wine)) return goTo(g.wine);
     tab = "kelder"; typeFilter = ""; goParam = "drinken"; render();
+    if(goParam === "drinken"){ goParam = null; window.scrollTo({top:0}); } // nothing to drink right now: just the cellar
   }
   if("serviceWorker" in navigator) navigator.serviceWorker.addEventListener("message", e => { if(e.data && e.data.mwGo) goFromReminder(e.data.mwGo); });
   // for events.js: switch tabs, and read the wines of the open cellar

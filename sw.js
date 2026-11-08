@@ -104,7 +104,8 @@ self.addEventListener("notificationclick", e => {
   e.waitUntil(self.clients.matchAll({type: "window", includeUncontrolled: true}).then(cs => {
     const c = cs.find(x => new URL(x.url).origin === location.origin);
     // App already open: bring it forward and tell it where to go. Otherwise open it at that place.
-    if (c) return c.focus().then(w => { (w || c).postMessage({mwGo: d.go || {go: "drinken"}}); });
+    // Tell it first: on some phones focus() fails or returns nothing, and the message must still arrive.
+    if (c){ c.postMessage({mwGo: d.go || {go: "drinken"}}); return c.focus().catch(() => {}); }
     return self.clients.openWindow(d.url || "./");
   }));
 });
