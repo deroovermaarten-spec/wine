@@ -92,6 +92,8 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .pick span{font-size:.86rem;color:var(--muted)}
 .pick .rank{font:500 .8rem var(--mono);color:var(--accent)}
 .drinkrow{display:flex;flex-direction:column;gap:6px}
+.drinkmore{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 12px;padding:4px 0 2px;font-size:.86rem;color:var(--muted)}
+.drinkmore .link{font-weight:600;padding:4px 0}
 .remind{display:flex;gap:6px 12px;align-items:center;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:10px}
 .remind svg,p.remind svg{vertical-align:-2px}
 .remind .btn{display:inline-flex;gap:6px;align-items:center}
@@ -1204,6 +1206,26 @@ Antwoord met ALLEEN één JSON-object in deze vorm: ${HOUSE_FIELDS}`;
     window.scrollTo({top:0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"});
   });
 
+  // "Klaar om te drinken" shows 4 per list; the rest folds open, with a wink at how much is waiting.
+  const DRINK_SHOWN = 4, drinkOpen = {};
+  function drinkList(key, list, row){
+    if(list.length <= DRINK_SHOWN) return list.map(row).join("");
+    const open = !!drinkOpen[key], rest = list.length - DRINK_SHOWN;
+    const fles = rest === 1 ? "fles" : "flessen";
+    const wink = rest <= 3 ? `Nog ${rest} ${fles} ${rest === 1 ? "wacht" : "wachten"} op ${rest === 1 ? "zijn" : "hun"} beurt.`
+      : rest <= 6 ? `Nog ${rest} ${fles}. Er is nog wat drinkwerk!`
+      : `Nog ${rest} ${fles}! Er is nog véél drinkwerk. Tijd voor een etentje?`;
+    return (open ? list : list.slice(0, DRINK_SHOWN)).map(row).join("")
+      + `<div class="drinkmore">${open ? "" : `<span>🍷 ${wink}</span>`}<button class="link" type="button" data-drinkmore="${key}" aria-expanded="${open}">${open ? "Toon minder" : `Toon alle ${list.length}`}</button></div>`;
+  }
+  document.addEventListener("click", e => {
+    const b = e.target.closest("[data-drinkmore]"); if(!b) return;
+    const k = b.dataset.drinkmore; drinkOpen[k] = !drinkOpen[k];
+    renderDrinkBox(wines.filter(w => w.status === "kelder"));
+    // closing: keep the list header in view instead of jumping past it
+    if(!drinkOpen[k]){ const nb = document.querySelector(`[data-drinkmore="${k}"]`); nb && nb.scrollIntoView({block: "nearest"}); }
+  });
+
   function renderDrinkBox(kelder){
     const box = $("drinkbox");
     const inStock = kelder.filter(w=>w.stock>0);
@@ -1216,8 +1238,8 @@ Antwoord met ALLEEN één JSON-object in deze vorm: ${HOUSE_FIELDS}`;
     const days = d => Math.max(0, Math.round((new Date(TODAY) - new Date(d)) / 864e5));
     box.innerHTML = `<h2 class="sec">Klaar om te drinken</h2>
       ${opened.length?`<div class="eyebrow">Open flessen</div><div class="drinkrow">${opened.map(w=>{const n=days(w.openedAt);return `<button class="drink" type="button" data-goto="${w.id}"><span class="t"><b>${esc(w.name)}</b>${w.vintage?` <span class="vint">${esc(w.vintage)}</span>`:""}</span><span class="badge ${n>=3?"b-warn":"b-ok"}">${n===0?"vandaag geopend":n===1?"1 dag open":n+" dagen open"}</span></button>`;}).join("")}</div>`:""}
-      ${soon.length?`<div class="eyebrow">Drink binnenkort</div><div class="drinkrow">${soon.slice(0,4).map(row).join("")}</div>`:""}
-      ${ready.length?`<div class="eyebrow">Nu op dronk</div><div class="drinkrow">${ready.slice(0,4).map(row).join("")}</div>`:""}
+      ${soon.length?`<div class="eyebrow">Drink binnenkort</div><div class="drinkrow">${drinkList("soon", soon, row)}</div>`:""}
+      ${ready.length?`<div class="eyebrow">Nu op dronk</div><div class="drinkrow">${drinkList("ready", ready, row)}</div>`:""}
       ${window.mwRemind ? window.mwRemind.html() : ""}`;
   }
 
