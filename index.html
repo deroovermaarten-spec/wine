@@ -95,16 +95,6 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .remind{display:flex;gap:6px 12px;align-items:center;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:10px}
 .remind svg,p.remind svg{vertical-align:-2px}
 .remind .btn{display:inline-flex;gap:6px;align-items:center}
-.scanbar #bcBtn{padding:15px 16px}
-.bcw{display:grid;grid-template-columns:44px 1fr;gap:12px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
-.bcw .thumb{width:44px;height:58px}
-.bcw .thumb.ph{font-size:1.2rem}
-.bcw .t b{font:600 1.05rem/1.2 var(--display)}
-.bcw .btns{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.bcpick{display:flex;flex-direction:column;gap:6px;max-height:300px;overflow:auto}
-.bcpick button{display:flex;justify-content:space-between;gap:10px;text-align:left;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:10px;padding:9px 12px;font:inherit}
-.bccode{font:500 .85rem var(--mono);color:var(--muted)}
-.bcok{color:var(--ok);font-weight:600;font-size:.9rem}
 .wy{display:flex;flex-direction:column;gap:14px}
 .wy .money{grid-template-columns:repeat(3,1fr)}
 .wybest{flex-direction:column;align-items:flex-start;gap:2px}
@@ -152,7 +142,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .card.flash,.box.flash{box-shadow:0 0 0 2px var(--accent)}
 #drinkbox{scroll-margin-top:16px}
 /* a member of someone else's cellar who may only look */
-.readonly #scanBtn,.readonly #bcBtn,.readonly [data-imp],.readonly .stock button,.readonly [data-act="t-new"],.readonly [data-act="bought"],
+.readonly #scanBtn,.readonly [data-imp],.readonly .stock button,.readonly [data-act="t-new"],.readonly [data-act="bought"],
 .readonly [data-act="edit"],.readonly [data-act="del"],.readonly [data-act="share"],.readonly #sharedSave,.readonly .openchip:not(.on){display:none!important}
 .readonly [data-act="rate"],.readonly .openchip{pointer-events:none}
 .readonly .stock{border-color:transparent}
@@ -470,11 +460,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3.2"/></svg>
     <span>Scan<span class="lbl-long"> een fles</span></span>
   </button>
-  <button class="btn ghost" id="bcBtn" type="button" aria-label="Barcode scannen" title="Barcode scannen: fles bijzetten of openen">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6v12M7 6v12M10.5 6v12M13 6v12M16.5 6v12M20 6v12"/></svg>
-  </button>
   <input id="file" type="file" accept="image/*" capture="environment" hidden>
-  <input id="bcFile" type="file" accept="image/*" capture="environment" hidden>
   <input id="impFile" type="file" accept=".json,application/json" hidden>
 </div>
 
@@ -483,14 +469,6 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
     <h2 id="cmpTitle">Vergelijken</h2>
     <div class="cmpwrap" id="cmpBody"></div>
     <div class="actions"><button class="btn ghost" type="button" id="cmpClose">Sluiten</button></div>
-  </div>
-</div>
-
-<div class="sheet" id="bc" hidden>
-  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="bcTitle">
-    <h2 id="bcTitle">Barcode</h2>
-    <div id="bcBody" style="display:flex;flex-direction:column;gap:12px"></div>
-    <div class="actions"><button class="btn ghost" type="button" id="bcClose">Sluiten</button></div>
   </div>
 </div>
 
@@ -642,7 +620,6 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
     w.tastings = Array.isArray(w.tastings) ? w.tastings : [];
     w.openedAt = typeof w.openedAt==="string" ? w.openedAt : "";
     w.drunk = Array.isArray(w.drunk) ? w.drunk.filter(d=>typeof d==="string") : []; // one date per bottle you opened or took out
-    w.ean = typeof w.ean==="string" ? w.ean : "";
     w.tags = Array.isArray(w.tags) ? w.tags.map(String).filter(Boolean) : [];
     w.shareId = typeof w.shareId==="string" ? w.shareId : "";
     w.boughtQty = Math.max(0, parseInt(w.boughtQty)||0);
@@ -738,7 +715,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
     $("searchBtn").hidden = !canSearch; $("searchbar").hidden = !searchOpen;
     $("searchBtn").setAttribute("aria-expanded", searchOpen);
     $("v_list").classList.toggle("searching", !!$("q").value.trim());
-    $("scanBtn").hidden = $("bcBtn").hidden = tab==="ask"; // the floating buttons would cover the question box
+    $("scanBtn").hidden = tab==="ask"; // the floating button would cover the question box
     const ro = !canEdit(); document.body.classList.toggle("readonly", ro);
     $("roHint").hidden = !ro || !listTab;
     if(ro){ const c = window.mwCloud.cellar, on = (c.members?.[c.owner] || {}).name || "de eigenaar"; $("roHint").textContent = `Je bekijkt de kelder van ${on}. Alleen ${on} voegt wijnen toe of past ze aan.`; }
@@ -1932,7 +1909,7 @@ ${data}`;
     b.disabled = true;
     try{
       const stock = (w.status==="kelder" ? w.stock : 0) + 1;
-      await commit(col.doc(w.id).update({stock, status:"kelder", ...(pendingEan ? {ean:pendingEan} : {})}));
+      await commit(col.doc(w.id).update({stock, status:"kelder"}));
       const id = w.id; closeSheet(); goTo(id);
     }catch{ $("err").textContent="Bijtellen lukte niet. Probeer opnieuw."; $("err").hidden=false; b.disabled=false; }
   });
@@ -1949,8 +1926,8 @@ ${data}`;
   // Tapping a reminder while the app is open: the service worker says where to go.
   function goFromReminder(g){
     if(!g) return;
-    // Close whatever is open on top (settings, scan, barcode, compare, share), or the wine stays hidden behind it.
-    $("sheet").hidden || closeSheet(); $("bc").hidden || closeBc();
+    // Close whatever is open on top (settings, scan, compare, share), or the wine stays hidden behind it.
+    $("sheet").hidden || closeSheet();
     if($("mwSheet") && !$("mwSheet").hidden) $("mwClose").click();
     if($("mwBellPanel")) $("mwBellPanel").hidden = true;
     if(!$("cmp").hidden) $("cmpClose").click();
@@ -2162,104 +2139,7 @@ ${JSON.stringify(data)}`;
     $("thinking").querySelector(".status").textContent = "Claude herkent de wijn en schrijft een beschrijving.";
     $("thinking").hidden = !!editing; $("form").hidden = !editing; $("cancelOnly").hidden = !!editing; $("err").hidden=true; $("laterRow").hidden = true;
   }
-  // ---------- barcode: a bottle you already have, one more or one opened ----------
-  // The first time a barcode is linked to a wine (or saved with a new wine); after that one photo finds it.
-  // Reading: the phone's own barcode reader where there is one (Android/Chrome), otherwise Claude reads the digits.
-  let pendingEan = "", bc = {step:"", code:"", q:"", ok:""};
-  function validEan(c){
-    c = String(c||""); if(!/^\d+$/.test(c) || ![8,12,13].includes(c.length)) return false;
-    const ds = c.split("").map(Number), chk = ds.pop();
-    const s = ds.reverse().reduce((a,d,i) => a + d*(i%2 ? 1 : 3), 0);
-    return (10 - s%10) % 10 === chk;
-  }
-  const normEan = c => c.length===12 ? "0"+c : c; // UPC-A is EAN-13 with a leading 0
-  async function readBarcode(file){
-    try{
-      if("BarcodeDetector" in window){
-        const det = new BarcodeDetector({formats:["ean_13","ean_8","upc_a"]});
-        const found = (await det.detect(await createImageBitmap(file))).map(x=>x.rawValue).find(validEan);
-        if(found) return normEan(found);
-      }
-    }catch{}
-    if(sample && navigator.onLine){
-      try{
-        const r = await sample.json(`Op deze foto staat de barcode (EAN of UPC) van een wijnfles. Lees de cijfers die onder of naast de streepjes gedrukt staan. Antwoord met ALLEEN dit JSON-object: {"code":"alle cijfers achter elkaar zonder spaties, of leeg als je ze niet allemaal zeker kunt lezen"}`, {images:[file], modelTier:"quick", cache:false});
-        const c = String(r?.code||"").replace(/\D/g,"");
-        if(validEan(c)) return normEan(c);
-      }catch{}
-    }
-    return "";
-  }
-  function bcRow(w){
-    const isK = w.status==="kelder";
-    return `<div class="bcw">${thumb(w)}<div class="t"><b>${esc(w.name)}</b>${w.vintage?` <span class="vint">${esc(w.vintage)}</span>`:""}<br><span class="hint">${isK ? `${w.stock} fles${w.stock===1?"":"sen"} in huis${w.loc?` · ${esc(w.loc)}`:""}` : "Op je verlanglijst"}</span></div>
-      <div class="btns">${isK
-        ? `<button class="btn sm" type="button" data-bc="plus" data-id="${w.id}">+1 fles bijzetten</button>${w.stock>0 && !w.openedAt ? `<button class="btn ghost sm" type="button" data-bc="open" data-id="${w.id}">Fles openen</button>` : ""}`
-        : `<button class="btn sm" type="button" data-bc="bought" data-id="${w.id}">Gekocht: zet in kelder</button>`}
-        <button class="link" type="button" data-bc="view" data-id="${w.id}">Bekijk</button></div></div>`;
-  }
-  function drawBc(){
-    const b = $("bcBody"), code = bc.code;
-    const hits = code ? wines.filter(w=>w.ean===code).sort((a,b)=>(b.status==="kelder")-(a.status==="kelder") || String(b.vintage).localeCompare(String(a.vintage))) : [];
-    const ok = bc.ok ? `<p class="bcok">${esc(bc.ok)}</p>` : "";
-    if(bc.step==="reading"){ b.innerHTML = `<div class="thinking"><b>Barcode lezen…</b><div class="pour"><i></i></div></div>`; return; }
-    if(bc.step==="fail"){
-      b.innerHTML = `<p>Geen barcode gevonden op de foto. Probeer opnieuw van dichterbij en recht van voren, of typ de cijfers onder de streepjes.</p>
-        <form id="bcForm" style="display:flex;gap:8px"><input id="bcType" inputmode="numeric" placeholder="bv. 5410228123456" aria-label="Cijfers van de barcode" style="flex:1"><button class="btn sm" type="submit">Zoek</button></form>
-        <div><button class="btn ghost sm" type="button" data-bc="again">Nieuwe foto</button></div>`; return;
-    }
-    if(bc.step==="link" || !hits.length){
-      const q = bc.q.trim().toLowerCase();
-      const pool = wines.filter(w => !q || [w.name,w.producer,w.vintage,w.region].join(" ").toLowerCase().includes(q))
-        .sort((a,b)=>(b.status==="kelder")-(a.status==="kelder") || (b.createdAt||0)-(a.createdAt||0)).slice(0,20);
-      b.innerHTML = `${ok}<p>${hits.length ? "Bij welke andere wijn hoort deze barcode?" : "Deze barcode ken je app nog niet. Bij welke wijn hoort hij? Dat moet je maar één keer doen."} <span class="bccode">${esc(code)}</span></p>
-        <input id="bcQ" type="search" placeholder="Zoek je wijn…" aria-label="Zoek je wijn" value="${esc(bc.q)}">
-        <div class="bcpick">${pool.map(w=>`<button type="button" data-bc="link" data-id="${w.id}"><span><b>${esc(w.name)}</b>${w.vintage?` <span class="vint">${esc(w.vintage)}</span>`:""}</span><span class="hint">${w.status==="kelder"?w.stock+" fl.":"verlanglijst"}</span></button>`).join("") || `<p class="hint">Geen wijn gevonden.</p>`}</div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><button class="btn ghost sm" type="button" data-bc="new">Nieuwe wijn: scan het etiket</button>${hits.length?`<button class="link" type="button" data-bc="back">Terug</button>`:""}</div>`;
-      return;
-    }
-    b.innerHTML = `${ok}${hits.map(bcRow).join("")}
-      <p class="hint">${hits.length>1 ? "Deze barcode hoort bij meer dan één wijn (vaak dezelfde wijn, ander jaar). " : ""}Ander jaar of verkeerde wijn? <button class="link" type="button" data-bc="relink">Koppel aan een andere wijn</button></p>`;
-  }
-  function openBc(){ $("bc").hidden = false; drawBc(); }
-  function closeBc(){ $("bc").hidden = true; bc = {step:"", code:"", q:"", ok:""}; }
-  function bcFound(code){ bc.code = code; bc.step = "found"; bc.q = ""; bc.ok = ""; drawBc(); }
-  $("bcBtn").onclick = () => {
-    if(!canEdit()) return;
-    if(!col){ $("status").textContent="Opslaan is in deze weergave niet beschikbaar. Open de pagina terwijl je aangemeld bent."; return; }
-    $("bcFile").click();
-  };
-  $("bcFile").addEventListener("change", async () => {
-    const f = $("bcFile").files[0]; $("bcFile").value = ""; if(!f) return;
-    bc = {step:"reading", code:"", q:"", ok:""}; openBc();
-    const code = await readBarcode(f);
-    if($("bc").hidden) return;
-    if(code) bcFound(code); else { bc.step = "fail"; drawBc(); }
-  });
-  $("bcClose").onclick = closeBc;
-  $("bc").addEventListener("click", e => { if(e.target.id==="bc") closeBc(); });
-  $("bc").addEventListener("input", e => { if(e.target.id==="bcQ"){ bc.q = e.target.value; const pos = e.target.selectionStart; drawBc(); const q = $("bcQ"); q.focus(); q.setSelectionRange(pos,pos); } });
-  $("bc").addEventListener("submit", e => {
-    if(e.target.id!=="bcForm") return; e.preventDefault();
-    const c = $("bcType").value.replace(/\D/g,"");
-    if(validEan(c)) bcFound(normEan(c)); else { $("bcType").setCustomValidity("Deze cijfers vormen geen geldige barcode."); $("bcType").reportValidity(); $("bcType").setCustomValidity(""); }
-  });
-  $("bc").addEventListener("click", async e => {
-    const t = e.target.closest("[data-bc]"); if(!t) return;
-    const a = t.dataset.bc, w = wines.find(x=>x.id===t.dataset.id);
-    if(a==="again"){ $("bcFile").click(); return; }
-    if(a==="relink"){ bc.step = "link"; bc.ok = ""; drawBc(); return; }
-    if(a==="back"){ bc.step = "found"; drawBc(); return; }
-    if(a==="new"){ const code = bc.code; closeBc(); pendingEan = code; $("file").click(); return; }
-    if(!w) return;
-    if(a==="view"){ closeBc(); goTo(w.id); return; }
-    if(a==="link"){ w.ean = bc.code; bc.step = "found"; bc.ok = `Gekoppeld aan ${w.name}. Volgende keer vindt de app hem meteen.`; drawBc(); save(w.id, {ean:w.ean}); return; }
-    if(a==="plus"){ w.stock += 1; const p = {stock:w.stock}; bc.ok = `Bijgezet: nu ${w.stock} fles${w.stock===1?"":"sen"} ${w.name}.`; drawBc(); render(); save(w.id, p); return; }
-    if(a==="open"){ const p = stockPatch(w, -1); w.openedAt = TODAY; bc.ok = `Geopend: ${w.name}. Proost!`; drawBc(); render(); save(w.id, {...p, openedAt:TODAY}); return; }
-    if(a==="bought"){ w.status="kelder"; w.stock=Math.max(1,w.stock); w.bought=w.bought||TODAY; w.boughtQty=w.boughtQty||w.stock; bc.ok = `${w.name} staat nu in je kelder.`; drawBc(); render(); save(w.id,{status:"kelder",stock:w.stock,bought:w.bought,boughtQty:w.boughtQty}); return; }
-  });
-
-  function closeSheet(){ pendingEan = ""; $("dup").hidden = true; dupFor = null; scanCtl?.abort(); scanCtl=null; $("sheet").hidden=true; draft=null; editingId=null; $("file").value=""; }
+  function closeSheet(){ $("dup").hidden = true; dupFor = null; scanCtl?.abort(); scanCtl=null; $("sheet").hidden=true; draft=null; editingId=null; $("file").value=""; }
   $("cancel").onclick = closeSheet; $("cancel2").onclick = closeSheet;
 
   function fillForm(w){
@@ -2274,7 +2154,7 @@ ${JSON.stringify(data)}`;
     formScore=w.score||0; paintFormStars();
   }
 
-  $("scanBtn").onclick = () => { pendingEan = ""; if(!canEdit()) return; if(!col){ $("status").textContent="Opslaan is in deze weergave niet beschikbaar. Open de pagina terwijl je aangemeld bent."; return; } $("file").click(); };
+  $("scanBtn").onclick = () => { if(!canEdit()) return; if(!col){ $("status").textContent="Opslaan is in deze weergave niet beschikbaar. Open de pagina terwijl je aangemeld bent."; return; } $("file").click(); };
   $("file").addEventListener("change", async () => {
     const file = $("file").files[0]; if(!file) return;
     const photo = await thumbFrom(file);
@@ -2333,7 +2213,6 @@ Zet "recognized" op false als er geen wijnetiket op de foto staat.`;
   const saveErr = err => { $("err").textContent = err?.code==="quota_exceeded" ? "Je kelder zit vol. Verwijder eerst een paar wijnen." : "Bewaren lukte niet. Probeer opnieuw."; $("err").hidden=false; };
   function newWine(w){
     w.createdAt=Date.now(); if(draft?.house) w.house = draft.house;
-    if(pendingEan){ w.ean = pendingEan; pendingEan = ""; } // came here from an unknown barcode
     if(window.mwCloud?.me) w.addedBy = {uid: window.mwCloud.me.uid, name: window.mwCloud.me.name};
     w.tastings = (w.status==="kelder" && w.score) ? [{date:TODAY, score:w.score, note:""}] : [];
     const ref = col.doc(); return {ref, done: commit(ref.set(w))};

@@ -59,13 +59,6 @@ uit wat hij over je kelder weet. Eenmalig instellen in Cloudflare (bij de Worker
 De sleutels voor meldingen (VAPID) maakt de Worker zelf bij het eerste gebruik en bewaart ze in `PUSH`.
 Zolang stap 2 tot 4 niet gedaan zijn, zegt de app "Herinneringen zijn nog niet ingesteld op de server".
 
-## Barcode
-
-De knop met streepjes naast "Scan een fles" leest de barcode van een fles die je al hebt: **+1 fles bijzetten**
-of **Fles openen**. De eerste keer koppel je de barcode aan een wijn (of scan je het etiket voor een nieuwe wijn);
-daarna vindt de app hem meteen. Op Android leest de telefoon de barcode zelf, op een iPhone leest Claude de cijfers.
-Lukt dat niet, dan typ je de cijfers onder de streepjes.
-
 ## Jouw wijnjaar
 
 Bij Inzichten: hoeveel keer je dronk, je beste glas, per maand, kleur, landen, druiven en wat nieuw was.
