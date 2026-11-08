@@ -47,9 +47,11 @@ service cloud.firestore {
 
       allow delete: if signedIn() && me() == resource.data.owner;
 
-      // The wines: every member may read and edit them.
+      // The wines: every member may read them. Only the owner adds, changes or removes wines,
+      // unless the owner switched on "membersEdit" for this cellar (Settings → Deze kelder).
       match /wines/{wine} {
-        allow read, write: if isMember(c);
+        allow read: if isMember(c);
+        allow write: if isMember(c) && (cellar(c).owner == me() || cellar(c).get('membersEdit', false) == true);
       }
     }
 

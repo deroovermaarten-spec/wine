@@ -151,6 +151,13 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .card{background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);overflow:hidden;scroll-margin-top:64px}
 .card.flash,.box.flash{box-shadow:0 0 0 2px var(--accent)}
 #drinkbox{scroll-margin-top:16px}
+/* a member of someone else's cellar who may only look */
+.readonly #scanBtn,.readonly #bcBtn,.readonly [data-imp],.readonly .stock button,.readonly [data-act="t-new"],.readonly [data-act="bought"],
+.readonly [data-act="edit"],.readonly [data-act="del"],.readonly [data-act="share"],.readonly #sharedSave,.readonly .openchip:not(.on){display:none!important}
+.readonly [data-act="rate"],.readonly .openchip{pointer-events:none}
+.readonly .stock{border-color:transparent}
+.rohint[hidden]{display:none}
+.rohint{display:flex;gap:8px;align-items:center;padding:10px 14px;border:1px dashed var(--line);border-radius:10px}
 .row{display:grid;grid-template-columns:72px 1fr;gap:16px;padding:16px}
 .thumb{width:72px;height:96px;border-radius:4px;object-fit:cover;background:var(--accent-soft)}
 .thumb.ph{display:grid;place-items:center;color:var(--accent);font:400 1.6rem var(--display)}
@@ -403,6 +410,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
       <input id="q" type="search" placeholder="Zoek op naam, streek, druif…" aria-label="Zoeken" enterkeyhint="search">
       <button class="link" type="button" id="searchClose">Sluiten</button>
     </div>
+    <p class="hint rohint" id="roHint" hidden></p>
     <div class="box fact" id="factbox" hidden></div>
     <div class="box tonight" id="tonight" hidden>
       <h2 class="sec">Wat drink ik vanavond?</h2>
@@ -731,6 +739,9 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
     $("searchBtn").setAttribute("aria-expanded", searchOpen);
     $("v_list").classList.toggle("searching", !!$("q").value.trim());
     $("scanBtn").hidden = $("bcBtn").hidden = tab==="ask"; // the floating buttons would cover the question box
+    const ro = !canEdit(); document.body.classList.toggle("readonly", ro);
+    $("roHint").hidden = !ro || !listTab;
+    if(ro){ const c = window.mwCloud.cellar, on = (c.members?.[c.owner] || {}).name || "de eigenaar"; $("roHint").textContent = `Je bekijkt de kelder van ${on}. Alleen ${on} voegt wijnen toe of past ze aan.`; }
     if(tab==="events"){ updateCollapse(); return window.mwEvents?.render(); }
     if(tab==="ask"){ updateCollapse(); return renderChat(); }
     if(tab==="stats"){ updateCollapse(); return renderStats(); }
@@ -1564,7 +1575,7 @@ Sleutels (streek|land): ${JSON.stringify(keys.slice(0,60))}`;
     }catch(err){ if(err?.code!=="declined") msg.textContent = "Exporteren lukte niet."; }
   });
 
-  document.addEventListener("click", e => { if(e.target.closest("[data-imp]")) $("impFile")?.click(); });
+  document.addEventListener("click", e => { if(e.target.closest("[data-imp]") && canEdit()) $("impFile")?.click(); });
   document.addEventListener("change", async e => {
     if(e.target.id!=="impFile") return;
     const f = e.target.files[0]; e.target.value = ""; if(!f) return;
@@ -1988,7 +1999,18 @@ ${data}`;
     return p;
   }
 
+  // Who may change the wines of this cellar: the owner, or every member if the owner allows it.
+  // (Firestore rules enforce the same; this only keeps buttons away that would not work.)
+  function canEdit(){
+    const c = window.mwCloud?.cellar, me = window.mwCloud?.me;
+    if(!c || !me) return true; // on this device only, no shared cellar
+    return c.owner === me.uid || !!c.membersEdit;
+  }
+  window.mwCanEdit = canEdit;
+  const READONLY_ACTS = new Set(["minus","plus","opentoggle","rate","t-new","t-save","tstar","tg","tg-add","bought","edit","del","del-yes","share"]);
+
   async function save(id, patch, msg){
+    if(!canEdit()) return;
     try{ await col.doc(id).update(patch); }
     catch(err){ $("status").textContent = msg || "Bewaren lukte niet. Probeer opnieuw."; }
   }
@@ -1996,6 +2018,7 @@ ${data}`;
   $("list").addEventListener("click", async e => {
     const t = e.target.closest("[data-act]"); if(!t) return;
     const act = t.dataset.act, id = t.dataset.id, w = wines.find(x=>x.id===id);
+    if(READONLY_ACTS.has(act) && !canEdit()) return;
     if(act==="expand"){
       openIds.add(id); render();
     } else if(act==="toggle" && viewMode==="compact" && openIds.has(id)){
@@ -2202,6 +2225,7 @@ ${JSON.stringify(data)}`;
   function closeBc(){ $("bc").hidden = true; bc = {step:"", code:"", q:"", ok:""}; }
   function bcFound(code){ bc.code = code; bc.step = "found"; bc.q = ""; bc.ok = ""; drawBc(); }
   $("bcBtn").onclick = () => {
+    if(!canEdit()) return;
     if(!col){ $("status").textContent="Opslaan is in deze weergave niet beschikbaar. Open de pagina terwijl je aangemeld bent."; return; }
     $("bcFile").click();
   };
@@ -2250,7 +2274,7 @@ ${JSON.stringify(data)}`;
     formScore=w.score||0; paintFormStars();
   }
 
-  $("scanBtn").onclick = () => { pendingEan = ""; if(!col){ $("status").textContent="Opslaan is in deze weergave niet beschikbaar. Open de pagina terwijl je aangemeld bent."; return; } $("file").click(); };
+  $("scanBtn").onclick = () => { pendingEan = ""; if(!canEdit()) return; if(!col){ $("status").textContent="Opslaan is in deze weergave niet beschikbaar. Open de pagina terwijl je aangemeld bent."; return; } $("file").click(); };
   $("file").addEventListener("change", async () => {
     const file = $("file").files[0]; if(!file) return;
     const photo = await thumbFrom(file);

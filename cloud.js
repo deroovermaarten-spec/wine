@@ -46,6 +46,8 @@
 .mwchips{display:flex;flex-wrap:wrap;gap:6px}
 .mwlab{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:600}
 .mwsec select{font:inherit;font-size:.95rem;font-weight:400;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+.mwcheck{display:flex;gap:8px;align-items:center;font-size:.9rem;font-weight:600}
+.mwcheck input{width:18px;height:18px;accent-color:var(--accent)}
 .rmrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .rmon{display:inline-flex;gap:6px;align-items:center;font-weight:600;color:var(--ok)}
 .mwsec .btn svg{width:16px;height:16px}
@@ -273,6 +275,7 @@
       cloud.cellar = {id: s.id, ...s.data()};
       if(!(cloud.cellar.memberIds || []).includes(user.uid)){ store.set("mw_cellar_" + user.uid, null); location.reload(); return; }
       paintHeader(); if($("mwAcct") && typeof paintBell === "function") paintBell(); if(!$("mwSheet").hidden) drawSheet();
+      window.mwRender && window.mwRender(); // who may edit can change (owner's switch)
     }, () => {});
     paintHeader();
     if(pendingName) showWelcome();
@@ -512,8 +515,10 @@
         <button class="btn ghost sm" type="button" data-a="logout">${ico("logout")}Afmelden</button></div>
 
       <section class="mwsec">${head("cellar", "Deze kelder", owner ? "" : `<small>van ${esc(ownerName)}</small>`)}
-        ${owner ? `<div class="line"><input id="mwRename" value="${esc(c.name)}" aria-label="Naam van de kelder"><button class="btn ghost sm" type="button" data-a="rename">${ico("pencil")}Hernoem</button></div>`
-          : `<p>Je bent lid van <b>${esc(c.name)}</b>. Je ziet en bewerkt dezelfde wijnen als de anderen.</p>`}
+        ${owner ? `<div class="line"><input id="mwRename" value="${esc(c.name)}" aria-label="Naam van de kelder"><button class="btn ghost sm" type="button" data-a="rename">${ico("pencil")}Hernoem</button></div>
+            <label class="mwcheck"><input type="checkbox" data-a="membersEdit" ${c.membersEdit ? "checked" : ""}> Leden mogen wijnen toevoegen en aanpassen</label>
+            <p>${c.membersEdit ? "Iedereen in deze kelder kan wijnen scannen, flessen bijzetten of afboeken en proefnotities toevoegen." : "Alleen jij voegt wijnen toe of past ze aan. Leden kunnen alles bekijken."}</p>`
+          : `<p>Je bent lid van <b>${esc(c.name)}</b>. ${c.membersEdit ? "Je ziet en bewerkt dezelfde wijnen als de anderen." : `Je kunt alle wijnen bekijken; alleen ${esc(ownerName)} voegt wijnen toe of past ze aan.`}</p>`}
       </section>
 
       <section class="mwsec">${head("users", "Wie kan meekijken", `<small>${members.length} ${members.length === 1 ? "persoon" : "personen"}</small>`)}
@@ -530,7 +535,7 @@
         <div class="line"><input id="mwNew" placeholder="Naam nieuwe kelder, bv. Wijnclub" aria-label="Naam nieuwe kelder"><button class="btn ghost sm" type="button" data-a="new">${ico("plus")}Maak</button></div>
       </section>
 
-      ${localCount ? `<section class="mwsec">${head("phone", "Wijnen op dit toestel")}<p>Op dit toestel staan nog ${localCount} wijn${localCount === 1 ? "" : "en"} van voor je je aanmeldde. Zet ze in "${esc(c.name)}".</p>
+      ${localCount && (owner || c.membersEdit) ? `<section class="mwsec">${head("phone", "Wijnen op dit toestel")}<p>Op dit toestel staan nog ${localCount} wijn${localCount === 1 ? "" : "en"} van voor je je aanmeldde. Zet ze in "${esc(c.name)}".</p>
         <div><button class="btn sm" type="button" data-a="migrate">${ico("upload")}Zet ze in deze kelder</button></div></section>` : ""}
 
       ${prefsHtml()}
@@ -562,6 +567,7 @@
     try{
       if(a === "switch"){ if(b.dataset.id !== c.id){ store.set("mw_cellar_" + cloud.me.uid, b.dataset.id); location.reload(); } return; }
       if(a === "new"){ const n = $("mwNew").value.trim(); if(!n){ $("mwNew").focus(); return; } b.disabled = true; const first = !cloud.cellars.some(x => x.owner === cloud.me.uid); const id = await createCellar(n); store.set("mw_cellar_" + cloud.me.uid, id); store.set("mw_new", (first ? "1:" : "0:") + id); location.reload(); return; }
+      if(a === "membersEdit"){ if(c.owner === cloud.me.uid) await fs.doc("cellars/" + c.id).update({membersEdit: !!b.checked}); return; }
       if(a === "rename"){ const n = $("mwRename").value.trim(); if(n && n !== c.name){ await fs.doc("cellars/" + c.id).update({name: n}); cloud.cellars = cloud.cellars.map(x => x.id === c.id ? {...x, name: n} : x); } return; }
       if(a === "invite"){
         b.disabled = true;
