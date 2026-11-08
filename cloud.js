@@ -271,6 +271,9 @@
     const name = pendingName || user.displayName || (prof && prof.exists && prof.data().name) || (user.email || "").split("@")[0];
     cloud.me.name = name;
     cloud.prefs = normPrefs(prof && prof.exists ? prof.data().prefs : null);
+    // The fact of the day is kept on the profile too: the browser's own storage does not always survive reopening the app.
+    cloud.fact = (prof && prof.exists && prof.data().fact) || null;
+    cloud.saveFact = v => { cloud.fact = v; return fs.doc("users/" + user.uid).set({fact: v}, {merge: true}).catch(() => {}); };
     $("status").textContent = "Je kelders worden geladen…";
 
     let notice = "", joined = false;
