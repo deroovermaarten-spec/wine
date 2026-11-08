@@ -659,7 +659,21 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
     for(let i=1;i<=5;i++) h+=`<button type="button" data-s="${i}" class="${i<=n?"on":""}" ${ro?'tabindex="-1" aria-hidden="true"':`aria-label="${i} ster${i>1?"ren":""}"`}>★</button>`;
     return h+"</div>";
   }
-  const thumb = w => w.photo?`<img class="thumb" src="${w.photo}" alt="">`:`<div class="thumb ph">${esc((w.name||"?")[0])}</div>`;
+  // Photos are stored as data: URLs. Turn each into a short blob: URL once, so the list's HTML stays small
+  // and the browser reuses the decoded picture on every redraw instead of decoding it again.
+  const photoUrls = new Map();
+  function photoSrc(w){
+    const p = w.photo; if(!p || !w.id || !p.startsWith("data:")) return p;
+    const hit = photoUrls.get(w.id); if(hit && hit.p === p) return hit.u;
+    try{
+      const [head, b64] = p.split(","), bin = atob(b64), a = new Uint8Array(bin.length);
+      for(let i=0;i<bin.length;i++) a[i] = bin.charCodeAt(i);
+      const u = URL.createObjectURL(new Blob([a], {type: (head.match(/data:([^;]+)/)||[])[1] || "image/jpeg"}));
+      if(hit) URL.revokeObjectURL(hit.u);
+      photoUrls.set(w.id, {p, u}); return u;
+    }catch{ return p; }
+  }
+  const thumb = w => w.photo?`<img class="thumb" src="${esc(photoSrc(w))}" alt="" loading="lazy" decoding="async">`:`<div class="thumb ph">${esc((w.name||"?")[0])}</div>`;
 
   // ---------- render ----------
   function render(){
@@ -733,9 +747,33 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
     const kn = $("tf_note")?.value, kd = $("tf_date")?.value, focused = document.activeElement?.id;
     list.classList.toggle("compact", viewMode==="compact");
     document.querySelectorAll(".viewsw button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.view===viewMode));
-    list.innerHTML = rows.map(w => viewMode==="compact" && !openIds.has(w.id) ? compactHTML(w) : cardHTML(w)).join("");
+    // Show the list in pages: a big cellar would otherwise rebuild hundreds of cards on every tap.
+    // Same filters as last time (a star, a bottle less…) keep what was already shown, so nothing jumps.
+    const key = [tab, q, sort, country, grape, typeFilter, tagFilter, viewMode].join("|");
+    if(key !== listKey){ listKey = key; listShown = PAGE; }
+    rows.forEach((w,i) => { if(openIds.has(w.id) && i >= listShown) listShown = i + 1; }); // a wine you jump to must be there
+    listRows = rows;
+    list.innerHTML = rows.slice(0, listShown).map(rowHTML).join("") + moreHTML();
+    watchMore();
     updateCollapse();
     if($("tf_note")){ if(kn!==undefined) $("tf_note").value = kn; if(kd) $("tf_date").value = kd; if(focused==="tf_note"||focused==="tf_date") $(focused).focus(); }
+  }
+
+  const PAGE = 40;
+  let listRows = [], listShown = PAGE, listKey = "", moreObs = null;
+  const rowHTML = w => viewMode==="compact" && !openIds.has(w.id) ? compactHTML(w) : cardHTML(w);
+  const moreHTML = () => listRows.length > listShown ? `<button class="btn ghost sm" type="button" id="listMore" style="align-self:center;margin:6px 0">Toon meer (${listRows.length - listShown})</button>` : "";
+  function showMore(){
+    const b = $("listMore"); if(!b) return;
+    const from = listShown; listShown = Math.min(listRows.length, listShown + PAGE);
+    b.insertAdjacentHTML("beforebegin", listRows.slice(from, listShown).map(rowHTML).join(""));
+    b.remove(); $("list").insertAdjacentHTML("beforeend", moreHTML()); watchMore();
+  }
+  // Load the next page by itself when you scroll near the end; the button stays as a fallback.
+  function watchMore(){
+    if(!("IntersectionObserver" in window)) return;
+    moreObs = moreObs || new IntersectionObserver(es => { if(es.some(e => e.isIntersecting)) showMore(); }, {rootMargin: "600px 0px"});
+    moreObs.disconnect(); const b = $("listMore"); if(b) moreObs.observe(b);
   }
 
   function compactHTML(w){
@@ -1824,7 +1862,9 @@ ${data}`;
     if(viewMode==="compact") openIds.clear();
     render();
   });
-  $("q").addEventListener("input", render); $("sort").addEventListener("change", render); $("country").addEventListener("change", render); $("grape").addEventListener("change", render);
+  let qTimer = 0; $("q").addEventListener("input", () => { clearTimeout(qTimer); qTimer = setTimeout(render, 140); });
+  $("list").addEventListener("click", e => { if(e.target.closest("#listMore")) showMore(); });
+  $("sort").addEventListener("change", render); $("country").addEventListener("change", render); $("grape").addEventListener("change", render);
 
   async function save(id, patch, msg){
     try{ await col.doc(id).update(patch); }
@@ -2161,6 +2201,7 @@ Zet "recognized" op false als er geen wijnetiket op de foto staat.`;
     loadShared();
     if(!db || !uid){ $("status").textContent = "Meld je aan bij Claude om je wijnen te bewaren."; return; }
     const timer = setTimeout(()=>{ $("status").textContent="Je wijnen zijn nog niet bereikbaar. Even geduld…"; }, 10000);
+    let snapDraw = 0;
     col.onSnapshot(snap => {
       wines = snap.docs.map(x => norm({id:x.id, ...x.data()}));
       if(!factStarted && (snap.size || !snap.metadata.fromCache)){ factStarted = true; setTimeout(() => loadFact(false), 0); }
@@ -2171,7 +2212,8 @@ Zet "recognized" op false als er geen wijnetiket op de foto staat.`;
         if((!snap.metadata.fromCache && !serverSeen) || $("status").textContent.startsWith("Je wijnen zijn nog niet")) $("status").textContent="";
         if(!snap.metadata.fromCache) serverSeen = true;
       }
-      render();
+      // Several updates can arrive at once (offline copy, then the server's confirmation): draw once per frame.
+      if(!snapDraw) snapDraw = requestAnimationFrame(() => { snapDraw = 0; render(); });
       if(!winesLoaded){ winesLoaded = true; setTimeout(processQueue, 1500); }
     }, () => { clearTimeout(timer); $("status").textContent = "Je wijnen konden niet geladen worden."; });
   })();
