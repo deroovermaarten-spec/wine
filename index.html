@@ -425,7 +425,10 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
 .fhead .fsum{font-size:.84rem;color:var(--muted)}
 .fact .fhead .sec{font:italic 500 1.15rem/1.25 var(--display)}
 .box.folded{gap:0}
-.box.folded > :not(.fhead){display:none}
+.box.folded > :not(.fhead):not(.keep){display:none}
+.keep{display:flex;flex-direction:column;gap:10px}
+.box.folded .fhead + .keep{margin-top:10px}
+.box.folded .keep + .keep{margin-top:10px}
 /* swipe a wine in the cellar */
 .list{position:relative}
 .card.swiping{z-index:1;touch-action:pan-y}
@@ -1286,11 +1289,12 @@ Antwoord met ALLEEN één JSON-object in deze vorm: ${HOUSE_FIELDS}`;
     box.hidden=false;
     const row = w => { const d=drinkState(w); return `<button class="drink" type="button" data-goto="${w.id}"><span class="t"><b>${esc(w.name)}</b>${w.vintage?` <span class="vint">${esc(w.vintage)}</span>`:""}</span><span class="badge ${d.cls}">${d.label}</span></button>`; };
     const days = d => Math.max(0, Math.round((new Date(TODAY) - new Date(d)) / 864e5));
-    const sum = [opened.length ? `${opened.length} open` : "", soon.length ? `${soon.length} binnenkort` : "", ready.length ? `${ready.length} op dronk` : ""].filter(Boolean).join(" · ");
+    // folded, open bottles and "drink soon" stay in sight; only "Nu op dronk" (and the reminders) fold away
+    const sum = ready.length ? `${ready.length} ${ready.length===1?"fles":"flessen"} op dronk` : "";
     box.classList.toggle("folded", fold.drink);
     box.innerHTML = `<button class="fhead" type="button" data-fold="drink" aria-expanded="${!fold.drink}"><span class="ft"><span class="sec">Klaar om te drinken</span><span class="fsum">${sum}</span></span><span class="chev" aria-hidden="true">▾</span></button>
-      ${opened.length?`<div class="eyebrow">Open flessen</div><div class="drinkrow">${opened.map(w=>{const n=days(w.openedAt);return `<button class="drink" type="button" data-goto="${w.id}"><span class="t"><b>${esc(w.name)}</b>${w.vintage?` <span class="vint">${esc(w.vintage)}</span>`:""}</span><span class="badge ${n>=3?"b-warn":"b-ok"}">${n===0?"vandaag geopend":n===1?"1 dag open":n+" dagen open"}</span></button>`;}).join("")}</div>`:""}
-      ${soon.length?`<div class="eyebrow">Drink binnenkort</div><div class="drinkrow">${drinkList("soon", soon, row)}</div>`:""}
+      ${opened.length?`<div class="keep"><div class="eyebrow">Open flessen</div><div class="drinkrow">${opened.map(w=>{const n=days(w.openedAt);return `<button class="drink" type="button" data-goto="${w.id}"><span class="t"><b>${esc(w.name)}</b>${w.vintage?` <span class="vint">${esc(w.vintage)}</span>`:""}</span><span class="badge ${n>=3?"b-warn":"b-ok"}">${n===0?"vandaag geopend":n===1?"1 dag open":n+" dagen open"}</span></button>`;}).join("")}</div></div>`:""}
+      ${soon.length?`<div class="keep"><div class="eyebrow">Drink binnenkort</div><div class="drinkrow">${drinkList("soon", soon, row)}</div></div>`:""}
       ${ready.length?`<div class="eyebrow">Nu op dronk</div><div class="drinkrow">${drinkList("ready", ready, row)}</div>`:""}
       ${window.mwRemind ? window.mwRemind.html() : ""}`;
   }
