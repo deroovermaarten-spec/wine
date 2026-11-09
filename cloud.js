@@ -137,6 +137,7 @@
 .mwfacts small{color:var(--muted);font-size:.82rem}
 .mwcopy{display:flex;align-items:center;justify-content:center;gap:6px;color:var(--muted);font-size:.76rem;padding:4px 0 8px;text-align:center}
 .mwcopy .mwi{width:14px;height:14px}
+.mwout{width:100%;margin-top:4px}
 .mwglass{width:56px;height:84px;display:block;margin:0 auto;overflow:visible}
 .mwglass .gl{fill:none;stroke:var(--ink);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;opacity:.75}
 .mwglass .mwwine,.mwglass .mwstream{fill:#9b1c2c}
@@ -565,8 +566,7 @@
     $("mwBody").innerHTML = `
       ${sheetMsg ? `<p class="err">${esc(sheetMsg)}</p>` : ""}
       <div class="mwme"><span class="mwav">${initial(me.name)}</span>
-        <span class="who"><b>${esc(me.name)}</b><small>${esc(me.email)}</small></span>
-        <button class="btn ghost sm" type="button" data-a="logout">${ico("logout")}Afmelden</button></div>
+        <span class="who"><b>${esc(me.name)}</b><small>${esc(me.email)}</small></span></div>
 
       <div class="mwtabs" role="tablist" aria-label="Onderdelen van de instellingen">${TABS.map(([id, ic, label, dot]) =>
         `<button type="button" role="tab" id="mwTab-${id}" data-a="tab" data-id="${id}" aria-selected="${id === tab}">${ico(ic)}<span>${label}</span>${dot ? `<span class="dot" aria-label="(nieuw)"></span>` : ""}</button>`).join("")}</div>
@@ -609,7 +609,10 @@
       ${tab === "app" ? `
       ${skinHtml()}
 
-      ${aboutHtml()}` : ""}`;
+      ${aboutHtml()}` : ""}
+
+      <button class="btn ghost mwout" type="button" data-a="logout">${ico("logout")}Afmelden</button>
+      ${tab === "app" ? copyHtml() : ""}`;
     showVersion();
     if($("mwNew")) $("mwNew").value = keepNew;
     if($("mwRename") && keepName !== undefined && focus === "mwRename") $("mwRename").value = keepName;
@@ -628,7 +631,6 @@
   const FIRST_YEAR = 2026;
   let aboutOpen = false;
   function aboutHtml(){
-    const y = new Date().getFullYear(), years = y > FIRST_YEAR ? `${FIRST_YEAR}–${y}` : String(FIRST_YEAR);
     // Folded by default; stays open while Settings is open (the sheet redraws often).
     return `<details class="mwsec mwabout" id="mwAbout"${aboutOpen ? " open" : ""}>
         <summary class="mwapp"><img src="icons/icon.svg" alt="" width="44" height="44"><span><b>MD projects</b><small>Over de app</small></span>
@@ -640,8 +642,11 @@
           <div>${ico("spark")}<span><b>Slimme functies</b><small>Vragen, etiketten lezen en suggesties gebruiken Claude van Anthropic, via een eigen beveiligde server.</small></span></div>
           <div>${ico("bell")}<span><b>Meldingen</b><small>Alleen als je ze zelf aanzet, en alleen op dit toestel.</small></span></div>
         </div>
-      </details>
-      <footer class="mwcopy">${ico("copyright")}<span>${years} MD projects · Alle rechten voorbehouden</span></footer>`;
+      </details>`;
+  }
+  function copyHtml(){
+    const y = new Date().getFullYear(), years = y > FIRST_YEAR ? `${FIRST_YEAR}–${y}` : String(FIRST_YEAR);
+    return `<footer class="mwcopy">${ico("copyright")}<span>${years} MD projects · Alle rechten voorbehouden</span></footer>`;
   }
   // The service worker's cache is named after the published build (mw-<commit>), so that is the version.
   function showVersion(){
