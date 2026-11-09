@@ -392,6 +392,49 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
   .wrap{padding-bottom:170px}
 }
 @media (max-width:600px) and (prefers-reduced-motion:reduce){.tabs .ti{transition:none}}
+/* phones: "Scan" is a round button at the bottom right, just above the tab bar; it shrinks to the camera while you scroll down */
+@media (max-width:600px){
+  .scanbar{justify-content:flex-start}
+  #scanBtn{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(70px + env(safe-area-inset-bottom,0px));z-index:6;padding:15px 20px;gap:8px;transition:padding .2s}
+  #scanBtn .lbl-long{display:none}
+  #scanBtn.mini{padding:15px}
+  #scanBtn.mini .lbl,.scanbar:has(#cmpCancel:not([hidden])) #scanBtn .lbl{display:none}
+  .wrap{padding-bottom:150px}
+}
+/* wine card: the less used actions sit behind ⋯ */
+.card{position:relative}
+.cmore{position:absolute;top:8px;right:8px;z-index:2;width:36px;height:36px;border:0;border-radius:50%;background:none;color:var(--muted);display:grid;place-items:center;font-size:1.3rem;line-height:1;letter-spacing:1px}
+.cmore:hover,.cmore[aria-expanded="true"]{background:var(--accent-soft);color:var(--accent)}
+.card .meta{padding-right:26px}
+.cmenu{display:flex;flex-wrap:wrap;gap:8px;padding:0 16px 14px}
+.cmenu .danger{color:var(--accent)}
+.card.picked{box-shadow:0 0 0 2px var(--gold)}
+/* undo bar */
+.undo{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:9;transform:translate(-50%,16px);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;
+  display:flex;align-items:center;gap:14px;max-width:calc(100% - 32px);box-sizing:border-box;padding:10px 10px 10px 16px;border-radius:12px;background:var(--ink);color:var(--bg);font-size:.9rem;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.undo.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.undo span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.undo button{flex:none;border:0;background:none;color:var(--gold);font:inherit;font-weight:700;padding:6px 8px}
+@media (max-width:600px){.undo{bottom:calc(136px + env(safe-area-inset-bottom,0px))}}
+@media (prefers-reduced-motion:reduce){.undo,#scanBtn{transition:none}}
+/* the boxes at the top of the cellar fold to one line */
+.fhead{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;padding:0;margin:0;color:inherit;font:inherit;text-align:left}
+.fhead .ft{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.fhead .chev{flex:none;color:var(--muted);transition:transform .2s}
+.fhead[aria-expanded="true"] .chev{transform:rotate(180deg)}
+.fhead .fsum{font-size:.84rem;color:var(--muted)}
+.fact .fhead .sec{font:italic 500 1.15rem/1.25 var(--display)}
+.box.folded{gap:0}
+.box.folded > :not(.fhead){display:none}
+/* swipe a wine in the cellar */
+.list{position:relative}
+.card.swiping{z-index:1;touch-action:pan-y}
+.swipeback{position:absolute;left:0;right:0;z-index:0;display:flex;align-items:center;padding:0 22px;border-radius:8px;font-weight:700;font-size:.9rem;color:var(--muted);background:var(--bg)}
+.swipeback.l{justify-content:flex-end}
+.swipeback.on.l{background:var(--warn-soft);color:var(--warn)}
+.swipeback.on.r{background:var(--ok-soft);color:var(--ok)}
+.swipehint{display:flex;gap:10px;align-items:center;justify-content:space-between;margin:0}
+.swipehint[hidden]{display:none}
 </style>
 
 <div class="wrap">
@@ -435,6 +478,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
       <div id="picks" class="picks"></div>
     </div>
     <div class="box" id="drinkbox" hidden></div>
+    <div class="chips" id="chips" hidden></div>
     <div class="tools" id="tools" hidden>
       <select id="sort" aria-label="Sorteren">
         <option value="score">Hoogste score</option>
@@ -450,7 +494,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
         <button type="button" data-view="compact" aria-label="Compacte lijst" title="Compacte lijst"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg></button>
       </div>
     </div>
-    <div class="chips" id="chips" hidden></div>
+    <p class="hint swipehint" id="swipeHint" hidden><span>Tip: veeg een wijn naar links om een fles af te boeken, naar rechts om er een open te zetten.</span><button class="link" type="button" id="swipeHintOk">Begrepen</button></p>
     <div class="list" id="list"></div>
   </section>
 
@@ -482,7 +526,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
   </button>
   <button class="btn" id="scanBtn" type="button">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3.2"/></svg>
-    <span>Scan<span class="lbl-long"> een fles</span></span>
+    <span class="lbl">Scan<span class="lbl-long"> een fles</span></span>
   </button>
   <input id="file" type="file" accept="image/*" capture="environment" hidden>
   <input id="impFile" type="file" accept=".json,application/json" hidden>
@@ -651,9 +695,11 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
   let wineParam = null; // ?wine=<id>: open that wine once the cellar is loaded (from a reminder)
   try{ const q = new URLSearchParams(location.search); goParam = q.get("go"); wineParam = q.get("wine");
     if(goParam || wineParam){ q.delete("go"); q.delete("wine"); history.replaceState(null, "", location.pathname + (q.toString() ? "?" + q : "") + location.hash); } }catch{}
-  let tab = goParam==="wens" || goParam==="stats" ? goParam : "kelder", typeFilter="", draft=null, scanCtl=null, editingId=null, pendingDelete=null, tastingFor=null, tastingScore=0, target="kelder";
+  let tab = goParam==="wens" || goParam==="stats" ? goParam : "kelder", typeFilter="", draft=null, scanCtl=null, editingId=null, tastingFor=null, tastingScore=0, target="kelder";
   let pickCtl=null, lastPicks=null; const houseBusy=new Map();
   let mcp=null;
+  let menuFor=null; // the wine whose ⋯ actions are open
+  const fold = {fact:true, drink:true}; try{ Object.assign(fold, JSON.parse(localStorage.getItem("mw_fold") || "{}")); }catch{}
 
   const libs = {};
   function loadLib(name, url, test){
@@ -724,6 +770,9 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
     if(r) return r.length>1 ? (+r[0] + +r[1])/2 : +r[0];
     return 0;
   }
+  const isReady = w => w.status==="kelder" && w.stock>0 && (drinkState(w)?.k ?? 3) <= 2; // on form, drink soon or past its best
+  const TOUCH = matchMedia("(pointer:coarse)").matches;
+  const seenHint = () => { try{ return !!localStorage.getItem("mw_swipehint"); }catch{ return true; } };
   function drinkState(w){
     if(!w.from && !w.to) return null;
     if(w.from && w.from > YEAR) return {cls:"b-young", label:`Te jong · vanaf ${w.from}`, k:3};
@@ -782,6 +831,8 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
     $("tonight").hidden = !(tab==="kelder" && kelder.length && sample);
     if(goParam==="drinken" && !$("drinkbox").hidden){ goParam = null; setTimeout(() => { $("drinkbox").scrollIntoView({block:"start"}); $("drinkbox").classList.add("flash"); setTimeout(()=>$("drinkbox").classList.remove("flash"),1600); }, 0); }
     if(goParam==="vanavond" && !$("tonight").hidden){ goParam = null; setTimeout(() => { $("tonight").scrollIntoView({block:"center"}); $("meal").focus({preventScroll:true}); }, 0); }
+    if(goParam==="drinken") fold.drink = false;
+    $("swipeHint").hidden = !(tab==="kelder" && canEdit() && TOUCH && !seenHint() && kelder.some(w=>w.stock>0));
     renderDrinkBox(tab==="kelder" ? kelder : []);
     renderFact();
     renderPicks();
@@ -791,6 +842,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
     const types = [...new Set(pool.map(w=>w.color).filter(c=>COLORS[c]))];
     $("chips").innerHTML = `<button class="chip" data-type="" aria-pressed="${!typeFilter}">Alles</button>` +
       types.map(t=>`<button class="chip" data-type="${t}" aria-pressed="${typeFilter===t}"><span class="dot ${t}"></span>${COLORS[t]}</button>`).join("") +
+      (tab==="kelder" && kelder.some(isReady) ? `<button class="chip" data-type="__ready" aria-pressed="${typeFilter==="__ready"}">Klaar om te drinken</button>` : "") +
       (tab==="kelder" ? `<button class="chip" data-type="__stock" aria-pressed="${typeFilter==="__stock"}">Op voorraad</button>` : "") +
       (window.mwPrefs?.has() ? `<button class="chip" data-type="__me" aria-pressed="${typeFilter==="__me"}">♥ Mijn smaak</button>` : "");
     const allTags = [...new Set(pool.flatMap(w=>w.tags))].sort((a,b)=>a.localeCompare(b,"nl"));
@@ -810,11 +862,11 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
     let rows = pool.filter(w =>
       (!q || [w.name,w.producer,w.region,w.country,w.grape,w.vintage,w.loc,w.shop,...w.tags].join(" ").toLowerCase().includes(q)) &&
       (!tagFilter || w.tags.includes(tagFilter)) &&
-      (!typeFilter || (typeFilter==="__stock" ? w.stock>0 : typeFilter==="__me" ? tasteScore(w) > 0 : w.color===typeFilter)) &&
+      (!typeFilter || (typeFilter==="__stock" ? w.stock>0 : typeFilter==="__ready" ? isReady(w) : typeFilter==="__me" ? tasteScore(w) > 0 : w.color===typeFilter)) &&
       (!country || w.country===country) &&
       (!grape || grapesOf(w).includes(grape)));
     const ds = w => { const d=drinkState(w); return d? d.k*10000 + (w.to||9999) : 99999; };
-    rows.sort((a,b)=> (typeFilter==="__me" ? tasteScore(b)-tasteScore(a) : 0) || (sort==="score" ? (b.score||0)-(a.score||0) || (b.createdAt||0)-(a.createdAt||0)
+    rows.sort((a,b)=> (typeFilter==="__me" ? tasteScore(b)-tasteScore(a) : typeFilter==="__ready" ? ds(a)-ds(b) : 0) || (sort==="score" ? (b.score||0)-(a.score||0) || (b.createdAt||0)-(a.createdAt||0)
       : sort==="price" ? (priceNum(a)||999)-(priceNum(b)||999) || (a.tier||9)-(b.tier||9)
       : sort==="drink" ? ds(a)-ds(b)
       : sort==="recent" ? (b.createdAt||0)-(a.createdAt||0) : String(a.name).localeCompare(String(b.name),"nl")));
@@ -884,16 +936,20 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
       ["Aroma's & smaak",w.taste],["Past bij",w.food],["Schenken op",w.temp],["Decanteren",w.decant],["Glas",w.glass],["Drinkvenster",windowText(w)],
       ["Plaats in kelder", isK ? w.loc : ""],["Gekocht",[w.shop, w.bought?fmtDate(w.bought):"", w.boughtQty?w.boughtQty+" fl.":""].filter(Boolean).join(" · ")]].filter(f=>f[1]);
     const ts = [...w.tastings].sort((a,b)=>String(b.date).localeCompare(String(a.date)));
-    const del = pendingDelete===w.id
-      ? `<span class="confirm">Verwijderen? <button class="btn ghost sm" data-act="del-yes" data-id="${w.id}" type="button">Ja</button><button class="link" data-act="del-no" type="button">Nee</button></span>`
-      : `<button class="link" data-act="cmp" data-id="${w.id}" type="button">${compareIds.includes(w.id)?"Gekozen om te vergelijken":"Vergelijk"}</button>${isK && window.mwEvents?.ready ? `<button class="link" data-act="toevent" data-id="${w.id}" type="button">Naar event</button>` : ""}<button class="link" data-act="share" data-id="${w.id}" type="button">Delen</button><button class="link" data-act="edit" data-id="${w.id}" type="button">Bewerken</button><button class="link" data-act="del" data-id="${w.id}" type="button">Verwijderen</button>`;
+    const menu = menuFor===w.id ? `<div class="cmenu" role="group" aria-label="Meer voor ${esc(w.name)}">
+        <button class="btn ghost sm" data-act="edit" data-id="${w.id}" type="button">Bewerken</button>
+        <button class="btn ghost sm" data-act="share" data-id="${w.id}" type="button">Delen of tippen</button>
+        <button class="btn ghost sm" data-act="cmp" data-id="${w.id}" type="button">${compareIds.includes(w.id)?"Niet vergelijken":"Vergelijk"}</button>
+        ${isK && window.mwEvents?.ready ? `<button class="btn ghost sm" data-act="toevent" data-id="${w.id}" type="button">Naar event</button>` : ""}
+        <button class="btn ghost sm danger" data-act="del" data-id="${w.id}" type="button">Verwijderen</button></div>` : "";
     const tform = tastingFor===w.id ? `<div class="tform">
         <div class="r"><input type="date" id="tf_date" value="${TODAY}" aria-label="Datum"><div data-act="tstar">${starsHTML(tastingScore,false)}</div></div>
         ${guideHTML(w)}
         <textarea id="tf_note" rows="2" placeholder="Hoe smaakte hij deze keer?" aria-label="Notitie"></textarea>
         <div class="cardfoot"><button class="link" type="button" data-act="t-cancel">Annuleren</button><button class="btn sm" type="button" data-act="t-save" data-id="${w.id}">Bewaar proefmoment</button></div>
       </div>` : "";
-    return `<article class="card${open?" open":""}" id="c_${w.id}" data-id="${w.id}">
+    return `<article class="card${open?" open":""}${compareIds.includes(w.id)?" picked":""}" id="c_${w.id}" data-id="${w.id}">
+      <button class="cmore" type="button" data-act="menu" data-id="${w.id}" aria-expanded="${menuFor===w.id}" aria-label="Meer acties" title="Meer">⋯</button>
       <div class="row">
         ${thumb(w)}
         <div class="meta">
@@ -922,6 +978,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
           </div>
         </div>
       </div>
+      ${menu}
       <button class="toggle" type="button" data-act="toggle" data-id="${w.id}" aria-expanded="${open}">
         <span>${open?"Beschrijving inklappen":"Lees de beschrijving"}</span><span class="chev" aria-hidden="true">▾</span>
       </button>
@@ -941,7 +998,6 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
         <div class="cardfoot">
           ${tastingFor!==w.id ? `<button class="btn ghost sm" type="button" data-act="t-new" data-id="${w.id}">Proefmoment</button>`:""}
         </div>
-        <div class="cardfoot">${del}</div>
       </div></div></div>
     </article>`;
   }
@@ -1230,7 +1286,9 @@ Antwoord met ALLEEN één JSON-object in deze vorm: ${HOUSE_FIELDS}`;
     box.hidden=false;
     const row = w => { const d=drinkState(w); return `<button class="drink" type="button" data-goto="${w.id}"><span class="t"><b>${esc(w.name)}</b>${w.vintage?` <span class="vint">${esc(w.vintage)}</span>`:""}</span><span class="badge ${d.cls}">${d.label}</span></button>`; };
     const days = d => Math.max(0, Math.round((new Date(TODAY) - new Date(d)) / 864e5));
-    box.innerHTML = `<h2 class="sec">Klaar om te drinken</h2>
+    const sum = [opened.length ? `${opened.length} open` : "", soon.length ? `${soon.length} binnenkort` : "", ready.length ? `${ready.length} op dronk` : ""].filter(Boolean).join(" · ");
+    box.classList.toggle("folded", fold.drink);
+    box.innerHTML = `<button class="fhead" type="button" data-fold="drink" aria-expanded="${!fold.drink}"><span class="ft"><span class="sec">Klaar om te drinken</span><span class="fsum">${sum}</span></span><span class="chev" aria-hidden="true">▾</span></button>
       ${opened.length?`<div class="eyebrow">Open flessen</div><div class="drinkrow">${opened.map(w=>{const n=days(w.openedAt);return `<button class="drink" type="button" data-goto="${w.id}"><span class="t"><b>${esc(w.name)}</b>${w.vintage?` <span class="vint">${esc(w.vintage)}</span>`:""}</span><span class="badge ${n>=3?"b-warn":"b-ok"}">${n===0?"vandaag geopend":n===1?"1 dag open":n+" dagen open"}</span></button>`;}).join("")}</div>`:""}
       ${soon.length?`<div class="eyebrow">Drink binnenkort</div><div class="drinkrow">${drinkList("soon", soon, row)}</div>`:""}
       ${ready.length?`<div class="eyebrow">Nu op dronk</div><div class="drinkrow">${drinkList("ready", ready, row)}</div>`:""}
@@ -1700,11 +1758,13 @@ Laat een lege regel tussen de gerechten. Geen inleiding, geen afsluiter.`;
     const box = $("factbox");
     if(tab!=="kelder" || (!fact && !factBusy && !factErr)){ box.hidden = true; return; }
     box.hidden = false;
+    if(!fact) box.classList.remove("folded");
     if(factBusy && !fact){ box.innerHTML = `<span class="eyebrow">Lo sapevi? · Weetje van de dag</span><p class="hint">Weetje wordt ingeschonken…</p>`; return; }
     if(!fact){ box.innerHTML = `<span class="eyebrow">Lo sapevi? · Weetje van de dag</span><p class="hint">${esc(factErr)}</p><div><button class="btn ghost sm" type="button" data-fact="again">Probeer opnieuw</button></div>`; return; }
     const linked = factWines(fact);
-    box.innerHTML = `<span class="eyebrow">Lo sapevi? · ${esc(fact.thema || "Weetje van de dag")}</span>
-      <h3>${esc(fact.titel)}</h3><p>${esc(fact.weetje)}</p>
+    box.classList.toggle("folded", fold.fact);
+    box.innerHTML = `<button class="fhead" type="button" data-fold="fact" aria-expanded="${!fold.fact}"><span class="ft"><span class="eyebrow">Lo sapevi? · ${esc(fact.thema || "Weetje van de dag")}</span>
+      <span class="sec">${esc(fact.titel)}</span></span><span class="chev" aria-hidden="true">▾</span></button><p>${esc(fact.weetje)}</p>
       ${linked.length ? `<div class="drinkrow"><span class="eyebrow">Proef het zelf</span>${linked.map(w=>`<button class="drink" type="button" data-goto="${w.id}"><span class="t"><b>${esc(w.name)}</b>${w.vintage?` <span class="vint">${esc(w.vintage)}</span>`:""}</span><span class="badge ${w.status==="kelder"&&w.stock?"b-ok":"b-young"}">${w.status==="kelder"? (w.stock?w.stock+" fl. in huis":"op") : "verlanglijst"}</span></button>`).join("")}</div>`
         : `<p class="hint">Geen wijn in je kelder die hierbij past. Een mooie reden om iets nieuws te proberen.</p>`}
       <div class="foot"><span class="hint">${fact.extra ? "Extra weetje" : (fact.day ? new Date(fact.day) : new Date()).toLocaleDateString("nl-BE",{weekday:"long",day:"numeric",month:"long"})}</span>
@@ -2006,7 +2066,7 @@ ${data}`;
     return c.owner === me.uid || !!c.membersEdit;
   }
   window.mwCanEdit = canEdit;
-  const READONLY_ACTS = new Set(["minus","plus","opentoggle","rate","t-new","t-save","tstar","tg","tg-add","bought","edit","del","del-yes","share"]);
+  const READONLY_ACTS = new Set(["minus","plus","opentoggle","rate","t-new","t-save","tstar","tg","tg-add","bought","edit","del"]);
 
   async function save(id, patch, msg){
     if(!canEdit()) return;
@@ -2018,6 +2078,8 @@ ${data}`;
     const t = e.target.closest("[data-act]"); if(!t) return;
     const act = t.dataset.act, id = t.dataset.id, w = wines.find(x=>x.id===id);
     if(READONLY_ACTS.has(act) && !canEdit()) return;
+    if(act==="menu"){ menuFor = menuFor===id ? null : id; render(); return; }
+    if(menuFor){ menuFor = null; if(act==="edit" || act==="share" || act==="toevent") render(); }
     if(act==="expand"){
       openIds.add(id); render();
     } else if(act==="toggle" && viewMode==="compact" && openIds.has(id)){
@@ -2039,10 +2101,13 @@ ${data}`;
       const n=+s.dataset.s; tastingScore = tastingScore===n?n-1:n;
       t.innerHTML = starsHTML(tastingScore,false);
     } else if(act==="plus"||act==="minus"){
-      if(!w) return; render(); save(id, stockPatch(w, act==="plus"?1:-1));
+      if(!w) return;
+      const had = w.stock, p = stockPatch(w, act==="plus"?1:-1); render(); save(id, p);
+      if(act==="minus" && w.stock < had) undo(`Fles afgeboekt: ${w.name}`, () => { const q = stockPatch(w, 1); render(); return save(id, q); });
     } else if(act==="opentoggle"){
       if(!w) return;
-      if(!w.openedAt){ const p = stockPatch(w, -1); w.openedAt = TODAY; tastingFor=id; resetDraft(); tastingScore=w.score||0; openIds.add(id); render(); save(id,{...p, openedAt:w.openedAt}); }
+      if(!w.openedAt){ const p = stockPatch(w, -1); w.openedAt = TODAY; tastingFor=id; resetDraft(); tastingScore=w.score||0; openIds.add(id); render(); save(id,{...p, openedAt:w.openedAt});
+        undo(`Fles geopend: ${w.name}`, () => { const q = stockPatch(w, 1); w.openedAt = ""; if(tastingFor===id) tastingFor = null; render(); return save(id, {...q, openedAt:""}); }); }
       else { w.openedAt = ""; render(); save(id,{openedAt:""}); }
     } else if(act==="t-new"){ tastingFor=id; tastingScore=w?.score||0; resetDraft(); render(); $("tf_note")?.focus(); }
     else if(act==="tg"){
@@ -2081,11 +2146,94 @@ ${data}`;
       else if(st.rijp==="over hoogtepunt" && left && (!w.to || w.to >= YEAR)) $("status").textContent = `Je vond ${w.name} over zijn hoogtepunt. Drink de ${w.stock===1?"laatste fles":w.stock+" andere flessen"} best snel.`;
     } else if(act==="bought"){
       if(!w) return; w.status="kelder"; w.stock=Math.max(1,w.stock); w.bought=w.bought||TODAY; w.boughtQty=w.boughtQty||w.stock; render(); save(id,{status:"kelder",stock:w.stock,bought:w.bought,boughtQty:w.boughtQty});
-    } else if(act==="del"){ pendingDelete=id; render(); }
-    else if(act==="del-no"){ pendingDelete=null; render(); }
-    else if(act==="del-yes"){ pendingDelete=null; try{ await col.doc(id).delete(); }catch{ $("status").textContent="Verwijderen lukte niet."; } }
+    } else if(act==="del"){
+      if(!w) return;
+      const keep = {...w}; delete keep.id;
+      try{ await col.doc(id).delete(); undo(`Verwijderd: ${w.name}`, () => col.doc(id).set(keep)); }
+      catch{ $("status").textContent="Verwijderen lukte niet."; }
+    }
     else if(act==="edit"){ if(!w) return; editingId=id; draft={...w}; openSheet(w.photo,true); fillForm(w); }
   });
+
+  // tap anywhere else: the ⋯ actions close
+  document.addEventListener("click", e => { if(menuFor && !e.target.closest(".cmenu,.cmore")){ menuFor = null; render(); } });
+
+  // "Ongedaan maken": a short bar after deleting a wine or taking out a bottle
+  let undoTimer = 0;
+  function undo(msg, fn){
+    let el = $("undo");
+    if(!el){ el = document.createElement("div"); el.id = "undo"; el.className = "undo"; el.setAttribute("role", "status"); document.body.appendChild(el); }
+    const hide = () => { el.classList.remove("show"); };
+    clearTimeout(undoTimer);
+    el.innerHTML = `<span>${esc(msg)}</span><button type="button">Ongedaan maken</button>`;
+    el.querySelector("button").onclick = async () => { hide(); try{ await fn(); }catch{ $("status").textContent = "Ongedaan maken lukte niet."; } };
+    requestAnimationFrame(() => el.classList.add("show"));
+    undoTimer = setTimeout(hide, 6000);
+  }
+
+  // fold or unfold "Weetje van de dag" and "Klaar om te drinken"
+  document.addEventListener("click", e => {
+    const f = e.target.closest("[data-fold]"); if(!f) return;
+    const k = f.dataset.fold; fold[k] = !fold[k];
+    try{ localStorage.setItem("mw_fold", JSON.stringify(fold)); }catch{}
+    render();
+  });
+
+  // swipe a wine in the cellar: left = one bottle less, right = open a bottle (or: the open bottle is finished)
+  (() => {
+    const list = $("list"), FAR = 90;
+    let card = null, w = null, sx = 0, sy = 0, dx = 0, mode = 0, back = null; // mode: 0 undecided, 1 swiping, -1 scrolling
+    list.addEventListener("touchstart", e => {
+      card = null;
+      if(e.touches.length !== 1 || tab !== "kelder" || !canEdit()) return;
+      const c = e.target.closest(".card"); if(!c || e.target.closest("input,textarea,select,.stars,.stock,.cmenu,.cmore,.tform")) return;
+      w = wines.find(x => x.id === c.dataset.id && x.status === "kelder"); if(!w) return;
+      card = c; sx = e.touches[0].clientX; sy = e.touches[0].clientY; dx = 0; mode = 0;
+    }, {passive: true});
+    list.addEventListener("touchmove", e => {
+      if(!card) return;
+      const x = e.touches[0].clientX - sx, y = e.touches[0].clientY - sy;
+      if(mode === 0){
+        if(Math.abs(x) < 10 && Math.abs(y) < 10) return;
+        mode = Math.abs(x) > Math.abs(y) * 1.5 ? 1 : -1;
+        if(mode === 1){
+          card.classList.add("swiping");
+          back = document.createElement("div"); back.style.top = card.offsetTop + "px"; back.style.height = card.offsetHeight + "px";
+          list.appendChild(back);
+        }
+      }
+      if(mode !== 1) return;
+      e.preventDefault();
+      dx = Math.max(-150, Math.min(150, x)); card.style.transform = `translateX(${dx}px)`;
+      const left = dx < 0;
+      back.className = "swipeback " + (left ? "l" : "r") + (Math.abs(dx) >= FAR && can(left) ? " on" : "");
+      back.textContent = left ? (w.stock ? "−1 fles" : "Geen flessen meer") : (w.openedAt ? "Fles is op" : w.stock ? "Fles open" : "Geen flessen meer");
+    }, {passive: false});
+    const can = left => left ? w.stock > 0 : (w.openedAt || w.stock > 0);
+    function end(){
+      if(!card) return;
+      const c = c0(), b = back, go = mode === 1 && Math.abs(dx) >= FAR && can(dx < 0), a = dx < 0 ? "minus" : "opentoggle", id = w.id;
+      card = null; back = null; mode = 0;
+      if(!c.classList.contains("swiping")) return;
+      c.style.transition = "transform .2s"; c.style.transform = "";
+      setTimeout(() => { c.style.transition = ""; c.classList.remove("swiping"); b?.remove(); if(go) run(a, id); }, 200);
+    }
+    const c0 = () => card;
+    list.addEventListener("touchend", end); list.addEventListener("touchcancel", () => { dx = 0; end(); });
+    // the same path as tapping the button on the card
+    function run(a, id){ const b = document.createElement("button"); b.dataset.act = a; b.dataset.id = id; b.hidden = true; list.appendChild(b); b.click(); b.remove(); }
+  })();
+  $("swipeHintOk").onclick = () => { try{ localStorage.setItem("mw_swipehint", "1"); }catch{} $("swipeHint").hidden = true; };
+
+  // the round "Scan" button on phones shrinks to the camera while scrolling down
+  (() => {
+    let lastY = scrollY;
+    addEventListener("scroll", () => {
+      const y = scrollY, b = $("scanBtn");
+      if(y > lastY + 8 && y > 160) b.classList.add("mini"); else if(y < lastY - 8 || y < 160) b.classList.remove("mini");
+      if(Math.abs(y - lastY) > 8) lastY = y;
+    }, {passive: true});
+  })();
 
   function addOwnAroma(){
     const inp = $("tg_own"); const v = (inp?.value || "").trim().toLowerCase().replace(/\s+/g," ").slice(0,40); if(!v) return;
