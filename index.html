@@ -321,16 +321,6 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .pair .out p{margin:0 0 6px}.pair .out ul{margin:2px 0 8px;padding-left:18px}.pair .out b{font-family:var(--display);font-size:1.02rem}
 .sharedhead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .links a{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;font-size:.84rem;font-weight:600;text-decoration:none}
-.cityrow{display:flex;gap:8px;flex-wrap:wrap}
-.cityrow input{flex:1 1 160px;min-width:0;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:8px 14px}
-.shops{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
-.shops li{padding:9px 0;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:2px;font-size:.88rem;min-width:0}
-.shops li:last-child{border-bottom:0}
-.shops b{font-weight:600}
-.shops .addr{color:var(--muted)}
-.shops .ct{display:flex;gap:12px;flex-wrap:wrap;font-size:.82rem}
-.shops a{color:var(--accent);overflow-wrap:anywhere}
-.shops .tel{font:500 .8rem var(--mono);user-select:all}
 .tastings ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
 .tastings li{display:grid;grid-template-columns:84px auto 1fr;gap:10px;align-items:baseline;padding:6px 0;border-bottom:1px solid var(--line);font-size:.88rem}
 .tastings li:last-child{border-bottom:0}
@@ -663,8 +653,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
     if(goParam || wineParam){ q.delete("go"); q.delete("wine"); history.replaceState(null, "", location.pathname + (q.toString() ? "?" + q : "") + location.hash); } }catch{}
   let tab = goParam==="wens" || goParam==="stats" ? goParam : "kelder", typeFilter="", draft=null, scanCtl=null, editingId=null, pendingDelete=null, tastingFor=null, tastingScore=0, target="kelder";
   let pickCtl=null, lastPicks=null; const houseBusy=new Map();
-  let mcp=null; const shopOpen=new Set(), shopRes=new Map(), tipRes=new Map();
-  let city = ""; try{ city = localStorage.getItem("wk_city") || ""; }catch{}
+  let mcp=null;
 
   const libs = {};
   function loadLib(name, url, test){
@@ -942,7 +931,6 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
         ${w.note?`<p class="note">${esc(w.note)}</p>`:""}
         ${serveHTML(w)}
         ${houseHTML(w)}
-        ${shopHTML(w)}
         ${pairHTML(w)}
         <div class="tastings">
           <div class="eyebrow">Proefmomenten${ts.length?` · ${ts.length}`:""}</div>
@@ -984,13 +972,8 @@ Antwoord met ALLEEN dit JSON-object: {"temp": "bv. 16–18 °C", "decant": "éé
     const h = w.house || {};
     const who = w.producer || w.name; if(!who) return "";
     const place = [h.location, w.region, w.country].filter(Boolean).join(", ");
-    const q = encodeURIComponent([who, place].filter(Boolean).join(", "));
-    const iq = encodeURIComponent([who, "wijndomein", w.region || w.country].filter(Boolean).join(" "));
     const L = [
-      ["Op de kaart", `https://www.google.com/maps/search/?api=1&query=${q}`],
-      ["Foto's van het domein", `https://www.google.com/search?tbm=isch&q=${iq}`],
-      ["Omgeving & streek", `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([w.region, w.country].filter(Boolean).join(", ") || place)}`],
-      ["Website", `https://www.google.com/search?q=${encodeURIComponent(who + " wijn officiële website")}`]];
+      ["Omgeving & streek", `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([w.region, w.country].filter(Boolean).join(", ") || place)}`]];
     return `<div class="links">${L.map(l=>`<a href="${l[1]}" target="_blank" rel="noopener">${l[0]} ↗</a>`).join("")}</div>`;
   }
   function houseHTML(w){
@@ -1011,61 +994,6 @@ Antwoord met ALLEEN dit JSON-object: {"temp": "bv. 16–18 °C", "decant": "éé
       ${busy==="err" ? `<p class="hint">Info ophalen lukte niet. Probeer opnieuw.</p>`:""}
       <div><button class="btn ghost sm" type="button" data-act="house" data-id="${w.id}" ${busy===true?"disabled":""}>${busy===true?"Info wordt verzameld…":`Meer over ${who}`}</button></div>${houseLinks(w)}</section>`;
   }
-  function shopHTML(w){
-    const q = [w.producer, w.name, w.vintage].filter(Boolean).join(" ");
-    if(!shopOpen.has(w.id)) return `<div><button class="btn ghost sm" type="button" data-act="shop" data-id="${w.id}">Waar te koop?</button></div>`;
-    const enc = encodeURIComponent(q);
-    const links = [
-      ["Wine-Searcher", `https://www.wine-searcher.com/find/${q.split(/\s+/).map(encodeURIComponent).join("+")}/1/belgium`],
-      ["Vivino", `https://www.vivino.com/search/wines?q=${enc}`],
-      ["Google Shopping", `https://www.google.com/search?tbm=shop&gl=be&q=${enc}`],
-      ["Website wijnhuis", `https://www.google.com/search?q=${encodeURIComponent((w.producer||w.name)+" wijn officiële website")}`]];
-    const tip = tipRes.get(w.id), sres = shopRes.get(w.id);
-    let tipBlock = "";
-    if(sample){
-      if(!tip) tipBlock = `<div><button class="btn ghost sm" type="button" data-act="shoptip" data-id="${w.id}">Vraag Claude naar importeur en winkels</button></div>`;
-      else if(tip.busy) tipBlock = `<p class="hint">Claude denkt na…</p>`;
-      else if(tip.err) tipBlock = `<p class="hint">${esc(tip.err)}</p><div><button class="btn ghost sm" type="button" data-act="shoptip" data-id="${w.id}">Opnieuw</button></div>`;
-      else tipBlock = `<p>${esc(tip.text)}</p><p class="src">Uit de kennis van Claude, niet live gecontroleerd. Bel of kijk online of de wijn nog in het gamma zit.</p>`;
-    }
-    let near = "";
-    if(mcp){
-      let list = "";
-      if(sres?.busy) list = `<p class="hint">Wijnhandels zoeken…</p>`;
-      else if(sres?.err) list = `<p class="hint">${esc(sres.err)}</p>`;
-      else if(sres?.shops) list = sres.shops.length ? `<ul class="shops">${sres.shops.map(x=>`<li><b>${esc(x.name)}</b><span class="addr">${esc(x.addr)}</span><span class="ct">${x.phone?`<span class="tel">${esc(x.phone)}</span>`:""}${x.url?`<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.url.replace(/^https?:\/\/(www\.)?/,"").replace(/\/$/,""))}</a>`:""}</span></li>`).join("")}</ul><p class="src">Dit zijn wijnhandels in de buurt. Of ze deze fles hebben, vraag je best even na.</p>` : `<p class="hint">Geen wijnhandels gevonden bij "${esc(sres.city)}".</p>`;
-      near = `<div class="eyebrow">Wijnhandels in de buurt</div>
-        <form class="cityrow" data-shopform="${w.id}"><input id="city_${w.id}" value="${esc(city)}" placeholder="Gemeente of postcode" aria-label="Gemeente"><button class="btn sm" type="submit">Zoek</button></form>${list}`;
-    }
-    return `<section class="house"><div class="eyebrow">Waar te koop</div><h4>${esc(w.name)}</h4>
-      <div class="links">${links.map(l=>`<a href="${l[1]}" target="_blank" rel="noopener">${l[0]} ↗</a>`).join("")}</div>
-      ${tipBlock}${near}
-      <div><button class="link" type="button" data-act="shopclose" data-id="${w.id}">Sluiten</button></div></section>`;
-  }
-
-  async function fetchTip(w){
-    tipRes.set(w.id,{busy:true}); render();
-    const prompt = `Je bent een wijnkenner in België. Waar kan iemand in België (of anders online in Europa) deze wijn waarschijnlijk kopen? Wijn: ${w.name}${w.vintage?" "+w.vintage:""}, producent: ${w.producer||"onbekend"}, streek: ${[w.region,w.country].filter(Boolean).join(", ")||"onbekend"}.
-Noem de Belgische importeur als je die met zekerheid kent, en het soort winkels of ketens waar zo'n wijn meestal ligt. Verzin geen namen: zeg het eerlijk als je het niet weet. Schrijf in het Nederlands, maximaal 4 zinnen, gewone tekst zonder opmaak.`;
-    try{ const r = await sample(prompt); tipRes.set(w.id,{text:r.text.trim()}); }
-    catch(e){ if(e?.code==="cancelled") return; tipRes.set(w.id,{err: e?.code==="rate_limited" ? "Claude is even niet beschikbaar (gebruikslimiet of te veel aanvragen). Probeer later opnieuw." : e?.code==="not_granted" ? "Claude is niet beschikbaar voor jouw account." : "Dat lukte niet. Probeer opnieuw."}); }
-    render();
-  }
-
-  async function fetchShops(w, c){
-    city = c; try{ localStorage.setItem("wk_city", c); }catch{}
-    shopRes.set(w.id,{busy:true}); render();
-    try{
-      const res = await mcp.callTool("TomTom Maps","tomtom-fuzzy-search",{query:"wijnhandel "+c, countries:["BE","NL"], idxSet:"POI", limit:8, language:"nl-BE"});
-      const feats = res?.payload?.features || [];
-      const shops = feats.map(f=>{ const p=f.properties||{}; return {name:p.poi?.name||"", addr:p.address?.freeformAddress||"", phone:p.poi?.phone||"", url: /^https?:\/\//.test(p.poi?.url||"") ? p.poi.url : (p.poi?.url ? "https://"+p.poi.url : "")}; }).filter(x=>x.name);
-      shopRes.set(w.id,{shops, city:c});
-    }catch(e){
-      shopRes.set(w.id,{err: e?.code==="server_not_connected" ? "De kaartdienst is niet gekoppeld aan je account." : e?.code==="not_granted"||e?.code==="denied" ? "Je gaf geen toestemming om de kaartdienst te gebruiken." : "Zoeken lukte niet. Probeer opnieuw."});
-    }
-    render();
-  }
-
   // ---------- sharing ----------
   function publicCopy(w){
     const o = {}; ["name","producer","vintage","region","country","grape","color","desc","taste","food","temp","decant","glass","from","to","tier","price","score","photo"].forEach(k=>{ if(w[k]) o[k]=w[k]; });
@@ -2135,9 +2063,6 @@ ${data}`;
       if(compareIds.length>=2){ openCompare(); } else { render(); updateCmpBar(); }
     }
     else if(act==="share"){ if(w) openShare(w); }
-    else if(act==="shop"){ shopOpen.add(id); render(); }
-    else if(act==="shopclose"){ shopOpen.delete(id); render(); }
-    else if(act==="shoptip"){ if(w) fetchTip(w); }
     else if(act==="house"){ if(w && houseBusy.get(id)!==true) fetchHouse(w); }
     else if(act==="t-cancel"){ tastingFor=null; render(); }
     else if(act==="t-save"){
@@ -2167,14 +2092,6 @@ ${data}`;
     tDraft.aromas.add(v); render(); $("tg_own")?.focus();
   }
   $("list").addEventListener("keydown", e => { if(e.target.id==="tg_own" && e.key==="Enter"){ e.preventDefault(); addOwnAroma(); } });
-
-  $("list").addEventListener("submit", e => {
-    const f = e.target.closest("[data-shopform]"); if(!f) return;
-    e.preventDefault();
-    const id = f.dataset.shopform, w = wines.find(x=>x.id===id);
-    const c = $("city_"+id).value.trim(); if(w && c && mcp) fetchShops(w, c);
-  });
-  $("list").addEventListener("input", e => { if(e.target.id?.startsWith("city_")) city = e.target.value; });
 
   // ---------- tonight ----------
   $("tform").addEventListener("submit", async e => {
