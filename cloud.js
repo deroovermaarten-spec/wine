@@ -76,13 +76,18 @@
 .mwtop{display:flex;justify-content:space-between;align-items:center;gap:10px;position:sticky;top:-20px;margin:-20px 0 0;padding:20px 0 6px;background:var(--surface);z-index:1}
 .mwx{border:0;background:var(--bg);color:var(--ink);width:38px;height:38px;border-radius:50%;display:grid;place-items:center;flex:none}
 .mwsec{display:flex;flex-direction:column;gap:10px;padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
-.mwskins{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
-.mwskin{display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px;min-width:0}
+.mwskins{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px}
+.mwtabs{display:flex;gap:4px;padding:4px;border-radius:12px;background:var(--bg);border:1px solid var(--line)}
+.mwtabs button{flex:1;min-width:0;display:flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:9px;background:none;color:var(--muted);font:inherit;font-size:.88rem;font-weight:600;padding:8px 6px}
+.mwtabs button .mwi{width:16px;height:16px}
+.mwtabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.mwtabs .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex:none}
+.mwskin{display:flex;flex-direction:column;align-items:flex-start;gap:5px;text-align:left;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px;min-width:0}
 .mwskin[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
-.mwskin .sw{display:flex;width:100%;height:30px;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
+.mwskin .sw{display:flex;width:100%;height:24px;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
 .mwskin .sw i{flex:1}.mwskin .sw i:first-child{flex:2}
 .mwskin b{font-size:.92rem;display:flex;align-items:center;gap:5px}.mwskin b .mwi{width:15px;height:15px;color:var(--accent)}
-.mwskin small{color:var(--muted);font-size:.76rem;line-height:1.3}
+.mwskin small{color:var(--muted);font-size:.72rem;line-height:1.25}
 .mwhead{display:flex;align-items:center;gap:10px}
 .mwhead h3{margin:0;font-size:1rem;flex:1;min-width:0}
 .mwhead small{color:var(--muted);font-size:.8rem;font-weight:600}
@@ -388,6 +393,7 @@
   const hasPrefs = p => p && (p.colors.length || p.grapes.length || p.regions.length || p.avoid.length || p.note);
   window.mwPrefs = {get: () => cloud.prefs || null, has: () => !!hasPrefs(cloud.prefs)};
   let prefDraft = null;
+  let sheetTab = "kelder"; // Instellingen: kelder | mij | app (remembered while the app is open)
   // Sfeer: the southern skins from index.html (window.mwSkin), per device.
   function skinHtml(){
     const S = window.mwSkin; if(!S) return "";
@@ -553,12 +559,19 @@
     if(localCount === null) countLocal();
     const keepNew = $("mwNew")?.value || "", keepName = $("mwRename")?.value, focus = document.activeElement?.id;
     const ownerName = (c.members?.[c.owner] || {}).name || "de eigenaar";
+    const migrate = !!(localCount && (owner || c.membersEdit));
+    const TABS = [["kelder", "cellar", "Kelder", migrate], ["mij", "heart", "Voor mij", false], ["app", "spark", "App", false]];
+    const tab = TABS.some(t => t[0] === sheetTab) ? sheetTab : "kelder";
     $("mwBody").innerHTML = `
       ${sheetMsg ? `<p class="err">${esc(sheetMsg)}</p>` : ""}
       <div class="mwme"><span class="mwav">${initial(me.name)}</span>
         <span class="who"><b>${esc(me.name)}</b><small>${esc(me.email)}</small></span>
         <button class="btn ghost sm" type="button" data-a="logout">${ico("logout")}Afmelden</button></div>
 
+      <div class="mwtabs" role="tablist" aria-label="Onderdelen van de instellingen">${TABS.map(([id, ic, label, dot]) =>
+        `<button type="button" role="tab" id="mwTab-${id}" data-a="tab" data-id="${id}" aria-selected="${id === tab}">${ico(ic)}<span>${label}</span>${dot ? `<span class="dot" aria-label="(nieuw)"></span>` : ""}</button>`).join("")}</div>
+
+      ${tab === "kelder" ? `
       <section class="mwsec">${head("cellar", "Deze kelder", owner ? "" : `<small>van ${esc(ownerName)}</small>`)}
         ${owner ? `<div class="line"><input id="mwRename" value="${esc(c.name)}" aria-label="Naam van de kelder"><button class="btn ghost sm" type="button" data-a="rename">${ico("pencil")}Hernoem</button></div>
             <label class="mwcheck"><input type="checkbox" data-a="membersEdit" ${c.membersEdit ? "checked" : ""}> Leden mogen wijnen toevoegen en aanpassen</label>
@@ -580,21 +593,23 @@
         <div class="line"><input id="mwNew" placeholder="Naam nieuwe kelder, bv. Wijnclub" aria-label="Naam nieuwe kelder"><button class="btn ghost sm" type="button" data-a="new">${ico("plus")}Maak</button></div>
       </section>
 
-      ${localCount && (owner || c.membersEdit) ? `<section class="mwsec">${head("phone", "Wijnen op dit toestel")}<p>Op dit toestel staan nog ${localCount} wijn${localCount === 1 ? "" : "en"} van voor je je aanmeldde. Zet ze in "${esc(c.name)}".</p>
+      ${migrate ? `<section class="mwsec">${head("phone", "Wijnen op dit toestel")}<p>Op dit toestel staan nog ${localCount} wijn${localCount === 1 ? "" : "en"} van voor je je aanmeldde. Zet ze in "${esc(c.name)}".</p>
         <div><button class="btn sm" type="button" data-a="migrate">${ico("upload")}Zet ze in deze kelder</button></div></section>` : ""}
-
-      ${prefsHtml()}
-
-      ${skinHtml()}
-
-      ${window.mwRemind ? window.mwRemind.settingsHtml(head("bell", "Herinneringen", `<small>dit toestel</small>`)) : ""}
 
       <div class="mwdanger">
         ${owner ? (cloud.cellars.length > 1 ? `<button type="button" data-a="delcellar">${ico("trash")}Verwijder deze kelder</button>` : "") : `<button type="button" data-a="leave">${ico("logout")}Verlaat deze kelder</button>`}
         <details class="mwtech"><summary>${ico("info")}Technische gegevens</summary><p>Gebruikers-id: <span style="user-select:all">${esc(me.uid)}</span></p></details>
-      </div>
+      </div>` : ""}
 
-      ${aboutHtml()}`;
+      ${tab === "mij" ? `
+      ${prefsHtml()}
+
+      ${window.mwRemind ? window.mwRemind.settingsHtml(head("bell", "Herinneringen", `<small>dit toestel</small>`)) : ""}` : ""}
+
+      ${tab === "app" ? `
+      ${skinHtml()}
+
+      ${aboutHtml()}` : ""}`;
     showVersion();
     if($("mwNew")) $("mwNew").value = keepNew;
     if($("mwRename") && keepName !== undefined && focus === "mwRename") $("mwRename").value = keepName;
@@ -655,6 +670,7 @@
     const a = b.dataset.a, c = cloud.cellar, F = firebase.firestore.FieldValue;
     sheetMsg = "";
     try{
+      if(a === "tab"){ sheetTab = b.dataset.id; drawSheet(); $("mwTab-" + sheetTab)?.focus(); return; }
       if(a === "skin"){ window.mwSkin?.set(b.dataset.id || ""); drawSheet(); return; }
       if(a === "switch"){ if(b.dataset.id !== c.id){ store.set("mw_cellar_" + cloud.me.uid, b.dataset.id); location.reload(); } return; }
       if(a === "new"){ const n = $("mwNew").value.trim(); if(!n){ $("mwNew").focus(); return; } b.disabled = true; const first = !cloud.cellars.some(x => x.owner === cloud.me.uid); const id = await createCellar(n); store.set("mw_cellar_" + cloud.me.uid, id); store.set("mw_new", (first ? "1:" : "0:") + id); location.reload(); return; }
