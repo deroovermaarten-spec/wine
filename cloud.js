@@ -76,6 +76,13 @@
 .mwtop{display:flex;justify-content:space-between;align-items:center;gap:10px;position:sticky;top:-20px;margin:-20px 0 0;padding:20px 0 6px;background:var(--surface);z-index:1}
 .mwx{border:0;background:var(--bg);color:var(--ink);width:38px;height:38px;border-radius:50%;display:grid;place-items:center;flex:none}
 .mwsec{display:flex;flex-direction:column;gap:10px;padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+.mwskins{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.mwskin{display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px;min-width:0}
+.mwskin[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.mwskin .sw{display:flex;width:100%;height:30px;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
+.mwskin .sw i{flex:1}.mwskin .sw i:first-child{flex:2}
+.mwskin b{font-size:.92rem;display:flex;align-items:center;gap:5px}.mwskin b .mwi{width:15px;height:15px;color:var(--accent)}
+.mwskin small{color:var(--muted);font-size:.76rem;line-height:1.3}
 .mwhead{display:flex;align-items:center;gap:10px}
 .mwhead h3{margin:0;font-size:1rem;flex:1;min-width:0}
 .mwhead small{color:var(--muted);font-size:.8rem;font-weight:600}
@@ -381,6 +388,17 @@
   const hasPrefs = p => p && (p.colors.length || p.grapes.length || p.regions.length || p.avoid.length || p.note);
   window.mwPrefs = {get: () => cloud.prefs || null, has: () => !!hasPrefs(cloud.prefs)};
   let prefDraft = null;
+  // Sfeer: the southern skins from index.html (window.mwSkin), per device.
+  function skinHtml(){
+    const S = window.mwSkin; if(!S) return "";
+    const cur = S.get();
+    return `<section class="mwsec">${head("spark", "Sfeer", `<small>dit toestel</small>`)}
+      <p>Kies een zuiderse kleur voor de app. Dag- en nachtmodus blijven werken.</p>
+      <div class="mwskins">${S.list.map(k => `<button type="button" class="mwskin" data-a="skin" data-id="${k.id}" aria-pressed="${k.id === cur}">
+        <span class="sw" aria-hidden="true">${k.c.map(c => `<i style="background:${c}"></i>`).join("")}</span>
+        <b>${k.id === cur ? ico("check") : ""}${esc(k.name)}</b><small>${esc(k.where)}</small></button>`).join("")}</div>
+    </section>`;
+  }
   function prefsHtml(){
     const d = prefDraft || (prefDraft = {...cloud.prefs, grapesTxt: cloud.prefs.grapes.join(", "), regionsTxt: cloud.prefs.regions.join(", "), avoidTxt: cloud.prefs.avoid.join(", ")});
     const sugg = (window.mwSuggest && window.mwSuggest()) || [];
@@ -567,6 +585,8 @@
 
       ${prefsHtml()}
 
+      ${skinHtml()}
+
       ${window.mwRemind ? window.mwRemind.settingsHtml(head("bell", "Herinneringen", `<small>dit toestel</small>`)) : ""}
 
       <div class="mwdanger">
@@ -635,6 +655,7 @@
     const a = b.dataset.a, c = cloud.cellar, F = firebase.firestore.FieldValue;
     sheetMsg = "";
     try{
+      if(a === "skin"){ window.mwSkin?.set(b.dataset.id || ""); drawSheet(); return; }
       if(a === "switch"){ if(b.dataset.id !== c.id){ store.set("mw_cellar_" + cloud.me.uid, b.dataset.id); location.reload(); } return; }
       if(a === "new"){ const n = $("mwNew").value.trim(); if(!n){ $("mwNew").focus(); return; } b.disabled = true; const first = !cloud.cellars.some(x => x.owner === cloud.me.uid); const id = await createCellar(n); store.set("mw_cellar_" + cloud.me.uid, id); store.set("mw_new", (first ? "1:" : "0:") + id); location.reload(); return; }
       if(a === "membersEdit"){ if(c.owner === cloud.me.uid) await fs.doc("cellars/" + c.id).update({membersEdit: !!b.checked}); return; }
