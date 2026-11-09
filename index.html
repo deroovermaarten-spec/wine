@@ -81,6 +81,11 @@ header .brand{display:flex;flex-direction:column;gap:6px}
 .bottle.clink{animation:clink .6s ease-in-out}
 @keyframes clink{0%,100%{transform:rotate(-12deg)}25%{transform:rotate(8deg)}50%{transform:rotate(-20deg)}75%{transform:rotate(-6deg)}}
 @media (prefers-reduced-motion:reduce){.bottle.clink{animation:none}}
+/* the bottle floats at the top while you scroll down; tap it to clink and go back up */
+.floatbottle{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);left:max(12px,env(safe-area-inset-left,0px),calc(50% - 390px));z-index:11;width:46px;height:46px;border-radius:50%;padding:0;border:1px solid var(--line);background:var(--surface);box-shadow:0 6px 16px -8px rgba(60,35,20,.45);display:grid;place-items:center;opacity:0;transform:translateY(-14px) scale(.85);pointer-events:none;transition:opacity .25s,transform .25s;-webkit-tap-highlight-color:transparent}
+.floatbottle.show{opacity:1;transform:none;pointer-events:auto}
+.floatbottle .bottle{width:15px;height:36px;cursor:pointer}
+@media (prefers-reduced-motion:reduce){.floatbottle{transition:none}}
 h1{font:600 2.5rem/1 var(--display);margin:0;letter-spacing:-.01em;text-wrap:balance}
 h1 em{font-style:italic;font-weight:500;color:var(--accent)}
 h2.sec{font:italic 500 1.3rem var(--display);margin:0}
@@ -625,6 +630,21 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
   const bottle = document.querySelector(".bottle");
   bottle.addEventListener("click", () => { bottle.classList.remove("clink"); void bottle.getBoundingClientRect(); bottle.classList.add("clink"); });
   bottle.addEventListener("animationend", () => bottle.classList.remove("clink"));
+  // A copy of the bottle floats at the top once the header is out of view; tapping it clinks and scrolls back up.
+  (() => {
+    const fb = document.createElement("button");
+    fb.type = "button"; fb.className = "floatbottle"; fb.setAttribute("aria-label", "Naar boven"); fb.title = "Naar boven"; fb.tabIndex = -1;
+    const b2 = bottle.cloneNode(true); b2.classList.remove("clink"); fb.appendChild(b2); document.body.appendChild(fb);
+    b2.addEventListener("animationend", () => b2.classList.remove("clink"));
+    fb.addEventListener("click", () => {
+      b2.classList.remove("clink"); void b2.getBoundingClientRect(); b2.classList.add("clink");
+      scrollTo({top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"});
+    });
+    new IntersectionObserver(([e]) => {
+      const on = !e.isIntersecting && e.boundingClientRect.top < 0;
+      fb.classList.toggle("show", on); fb.tabIndex = on ? 0 : -1;
+    }).observe(bottle);
+  })();
   const get =() => { try{ const t = localStorage.getItem("mw_theme"); return t === "light" || t === "dark" ? t : "auto"; }catch{ return "auto"; } };
   // The phone's status bar follows the page colour, so it matches the chosen skin too.
   // In "auto" only the meta of the current mode gets the skin colour; the other keeps its default until the mode flips.
