@@ -64,6 +64,21 @@ service cloud.firestore {
       allow delete: if signedIn() && resource.data.by == me();
     }
 
+    // Tips: recommend a wine to someone, with a short message. The sender writes it; only the sender
+    // and the receiver can read it; the receiver's app puts the wine on their wish list and removes the tip.
+    match /tips/{t} {
+      allow create: if signedIn()
+        && request.resource.data.from.uid == me()
+        && request.resource.data.to is string
+        && request.resource.data.to != me()
+        && exists(/databases/$(database)/documents/users/$(request.resource.data.to))
+        && request.resource.data.message is string
+        && request.resource.data.message.size() <= 500
+        && request.resource.data.keys().hasOnly(['from', 'to', 'toName', 'message', 'wine', 'createdAt']);
+      allow read: if signedIn() && (resource.data.to == me() || resource.data.from.uid == me());
+      allow delete: if signedIn() && (resource.data.to == me() || resource.data.from.uid == me());
+    }
+
     // Events: a get-together you organise. The owner adds people; every member brings wines.
     // Each wine is a copy taken from someone's cellar, so all members can read it
     // without getting access to that cellar.

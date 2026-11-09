@@ -283,6 +283,9 @@
     const prof = pendingName ? null : await fs.doc("users/" + user.uid).get().catch(() => null);
     const name = pendingName || user.displayName || (prof && prof.exists && prof.data().name) || (user.email || "").split("@")[0];
     cloud.me.name = name;
+    // name and e-mail on the profile, so others can find you to send a tip (tips.js); older accounts lack them
+    const pd = prof && prof.exists ? prof.data() : {};
+    if(!pendingName && cloud.me.email && (pd.email !== cloud.me.email.toLowerCase() || !pd.name)) fs.doc("users/" + user.uid).set({name: pd.name || name, email: cloud.me.email.toLowerCase()}, {merge: true}).catch(() => {});
     cloud.prefs = normPrefs(prof && prof.exists ? prof.data().prefs : null);
     // The fact of the day is kept on the profile too: the browser's own storage does not always survive reopening the app.
     cloud.fact = (prof && prof.exists && prof.data().fact) || null;

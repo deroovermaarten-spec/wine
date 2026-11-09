@@ -177,7 +177,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 #drinkbox{scroll-margin-top:16px}
 /* a member of someone else's cellar who may only look */
 .readonly #scanBtn,.readonly [data-imp],.readonly .stock button,.readonly [data-act="t-new"],.readonly [data-act="bought"],
-.readonly [data-act="edit"],.readonly [data-act="del"],.readonly [data-act="share"],.readonly #sharedSave,.readonly .openchip:not(.on){display:none!important}
+.readonly [data-act="edit"],.readonly [data-act="del"],.readonly #sharedSave,.readonly .openchip:not(.on){display:none!important}
 .readonly [data-act="rate"],.readonly .openchip{pointer-events:none}
 .readonly .stock{border-color:transparent}
 .rohint[hidden]{display:none}
@@ -642,6 +642,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
 <script src="ai.js"></script>
 <script src="cloud.js"></script>
 <script src="events.js"></script>
+<script src="tips.js"></script>
 <script src="remind.js"></script>
 <script>
 (() => {
@@ -916,6 +917,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
             ${w.tier?`<span class="tier" title="Prijsklasse">${"€".repeat(w.tier)}<s>${"€".repeat(4-w.tier)}</s></span>`:""}
           </div>
           ${w.tags.length?`<div class="tags">${w.tags.map(t=>`<button class="tag" type="button" data-act="tagf" data-tag="${esc(t)}" aria-pressed="${tagFilter===t}">#${esc(t)}</button>`).join("")}</div>`:""}
+          ${w.tip ? `<p class="tipnote">${w.tip.message ? `“${esc(w.tip.message)}”` : "Een tip"}<small>${esc(w.tip.from || "")}${w.tip.at ? " · " + fmtDate(new Date(w.tip.at).toISOString().slice(0,10)) : ""}</small></p>` : ""}
           ${isK && w.loc ? `<span class="loc"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>${esc(w.loc)}</span>`:""}
           ${d && isK ? `<div><span class="badge ${d.cls}">${d.label}</span></div>`:""}
           ${w.pending ? `<div><span class="badge b-young" title="Claude vult deze wijn aan zodra het toestel waarmee je scande online is.">Wacht op herkenning</span></div>`
@@ -1101,6 +1103,7 @@ Noem de Belgische importeur als je die met zekerheid kent, en het soort winkels 
         : `<p>Maak een link naar deze wijn. Je eigen notities, tags en wat je betaalde worden niet gedeeld.</p><div><button class="btn ghost sm" type="button" data-sh="link">Maak deellink</button></div>`}
       </div>`;
     if(window.claude?.local) $("shareBody").querySelectorAll(".sharebox")[2]?.remove();
+    window.mwTips?.mount($("shareBody"), publicCopy(w)); // "Tip een vriend" (tips.js), on top
   }
   $("shareBody").addEventListener("click", async e => {
     const b = e.target.closest("[data-sh]"); if(!b) return;
