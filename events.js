@@ -17,6 +17,8 @@
   let events = [], loaded = false, current = null, evWines = [], unsubWines = null, winesFor = null;
   let msg = "", inviteLink = "", editing = false, creating = false, picking = false, pickQ = "", confirmDel = false;
   const openW = new Set();
+  // Cards or a compact list, like in the cellar; remembered on this device
+  let evView = "cards"; try{ if(localStorage.getItem("mw_evview") === "compact") evView = "compact"; }catch{}
 
   const COLORS = {mousserend: "Mousserend", wit: "Wit", rose: "Rosé", rood: "Rood", dessert: "Dessert"};
   const ORDER = ["mousserend", "wit", "rose", "rood", "dessert"]; // the usual order to serve them in
@@ -50,8 +52,24 @@
 .evback{align-self:flex-start;border:0;background:none;color:var(--muted);font:inherit;font-size:.88rem;font-weight:600;display:inline-flex;align-items:center;gap:4px;padding:4px 0}
 .evback .mwi{width:16px;height:16px}
 .evsum{font-size:.86rem;color:var(--muted);margin:0}
-.evby{font-size:.8rem;color:var(--muted)}
+.evby{font-size:.8rem;color:var(--muted);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .evby b{color:var(--ink);font-weight:600}
+.evav{width:20px;height:20px;border-radius:50%;display:inline-grid;place-items:center;background:var(--accent-soft);color:var(--accent);font:700 .68rem var(--body);flex:none}
+.evav.me{background:var(--accent);color:var(--onaccent)}
+.evlisthead{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.evlisthead .hint{flex:1 1 200px;margin:0}
+.evwho{display:flex;flex-wrap:wrap;gap:6px}
+.evwho span{display:inline-flex;align-items:center;gap:6px;font-size:.84rem;padding:3px 10px 3px 3px;border:1px solid var(--line);border-radius:999px;background:var(--surface)}
+.evwho small{color:var(--muted);font-variant-numeric:tabular-nums}
+.evcol{display:flex;flex-direction:column;gap:12px}
+.evcol.compact{gap:0;background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);overflow:hidden}
+.evcol.compact .card{border-radius:0;border:0;border-bottom:1px solid var(--line);box-shadow:none}
+.evcol.compact .card:last-child{border-bottom:0}
+.evcol.compact .card.open{box-shadow:inset 3px 0 0 var(--accent)}
+.evcol .crow .cq{white-space:nowrap}
+.evcol .crow .cb{display:flex;align-items:center;gap:5px;font-size:.78rem;color:var(--ink);font-weight:600;min-width:0;margin-top:3px}
+.evcol .crow .cb .evav{width:17px;height:17px;font-size:.6rem}
+.evcol .crow .cb > span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .evpick{display:flex;flex-direction:column;gap:8px}
 .evpick .opt{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
 .evpick .opt:last-child{border-bottom:0}
@@ -186,8 +204,23 @@
         : `${up.length ? `<div class="evlist">${up.map(itemHtml).join("")}</div>` : `<p class="hint">Geen komende events.</p>`}
            ${past.length ? `<div class="evgroup">Voorbij</div><div class="evlist">${past.map(itemHtml).join("")}</div>` : ""}`}`;
   }
+  const bringer = w => w.addedBy?.uid === me.uid ? "Jij" : (w.addedBy?.name || "?");
+  const avatar = w => `<span class="evav${w.addedBy?.uid === me.uid ? " me" : ""}" aria-hidden="true">${ui.esc(ui.initial(w.addedBy?.name || "?"))}</span>`;
+  function compactHtml(w){
+    const qty = w.qty || 1, sub = [COLORS[w.color], w.region].filter(Boolean).join(" · ");
+    return `<article class="card"><button class="crow" type="button" data-e="toggle" data-w="${w.id}" aria-expanded="false" aria-label="${ui.esc(w.name || "Wijn")}, meegebracht door ${ui.esc(bringer(w))}. Toon details">
+        ${w.photo ? `<img class="thumb" src="${ui.esc(w.photo)}" alt="">` : `<div class="thumb ph">${ui.esc((w.name || "?")[0])}</div>`}
+        <div style="min-width:0">
+          <div class="cn">${w.vintage ? `<span class="vint">${ui.esc(w.vintage)}</span>` : ""}${ui.esc(w.name || "Wijn")}</div>
+          <div class="cs"><span class="dot ${ui.esc(w.color)}"></span><span>${ui.esc(sub || "Wijn")}</span></div>
+          <div class="cb">${avatar(w)}<span>${ui.esc(bringer(w))} brengt mee</span></div>
+        </div>
+        <div class="cr"><span class="cq">${qty} fl.</span></div>
+      </button></article>`;
+  }
   function wineHtml(w, e){
     const open = openW.has(w.id), own = w.addedBy?.uid === me.uid, qty = w.qty || 1;
+    if(evView === "compact" && !open) return compactHtml(w);
     const win = w.drinkFrom && w.drinkTo ? `${w.drinkFrom}–${w.drinkTo}` : w.drinkFrom ? "vanaf " + w.drinkFrom : w.drinkTo ? "tot " + w.drinkTo : "";
     const facts = [["Druif", w.grape], ["Streek", [w.region, w.country].filter(Boolean).join(", ")], ["Aroma's & smaak", w.taste], ["Past bij", w.food],
       ["Schenken op", w.temp], ["Decanteren", w.decant], ["Glas", w.glass], ["Drinkvenster", win]].filter(f => f[1]);
@@ -199,7 +232,7 @@
           <h3 class="name">${ui.esc(w.name || "Wijn")}</h3>
           <div class="sub">${w.vintage ? `<span class="vint">${ui.esc(w.vintage)}</span>` : ""}
             <span class="pill"><span class="dot ${ui.esc(w.color)}"></span>${COLORS[w.color] || "Wijn"}</span>${w.region ? `<span>${ui.esc(w.region)}</span>` : ""}</div>
-          <div class="evby">${own ? "<b>Jij</b> brengt" : `<b>${ui.esc(w.addedBy?.name || "?")}</b> brengt`} ${own ? "" : qty + " fles" + (qty === 1 ? "" : "sen")}${w.src?.cellarName ? ` · uit "${ui.esc(w.src.cellarName)}"` : ""}</div>
+          <div class="evby">${avatar(w)}<span>${own ? "<b>Jij</b> brengt" : `<b>${ui.esc(w.addedBy?.name || "?")}</b> brengt`} ${own ? "" : qty + " fles" + (qty === 1 ? "" : "sen")}</span>${w.src?.cellarName ? ` · uit "${ui.esc(w.src.cellarName)}"` : ""}</div>
           ${own ? `<div class="line2"><div class="stock" role="group" aria-label="Aantal flessen">
               <button type="button" data-e="minus" data-w="${w.id}" aria-label="Eén fles minder">−</button><span>${qty} fles${qty === 1 ? "" : "sen"}</span>
               <button type="button" data-e="plus" data-w="${w.id}" aria-label="Eén fles meer">+</button></div></div>` : ""}
@@ -227,6 +260,12 @@
             <button class="btn ${n ? "ghost " : ""}sm" type="button" data-e="addwine" data-w="${w.id}">${n ? `+1 (${n})` : "Voeg toe"}</button></div>`; }).join("")}
       ${(cloud.cellars || []).length > 1 ? `<p>Wijn uit een andere kelder? Wissel bovenaan van kelder en kom terug naar dit event.</p>` : ""}</section>`;
   }
+  // who brings how many bottles: [[uid, name, bottles]], yourself first
+  function whoBrings(){
+    const m = new Map();
+    evWines.forEach(w => { const u = w.addedBy?.uid || "?", x = m.get(u) || [u, w.addedBy?.name || "?", 0]; x[2] += w.qty || 1; m.set(u, x); });
+    return [...m.values()].sort((a, b) => (b[0] === me.uid) - (a[0] === me.uid) || String(a[1]).localeCompare(String(b[1]), "nl"));
+  }
   function detailHtml(e){
     const owner = mine(e), bottles = evWines.reduce((s, w) => s + (w.qty || 1), 0);
     const members = Object.entries(e.members || {}).filter(([uid]) => (e.memberIds || []).includes(uid))
@@ -250,11 +289,15 @@
       </div>
 
       <div class="box">${ui.head("glass", "Wijnlijst", `<small>${bottles ? bottles + " fles" + (bottles === 1 ? "" : "sen") : "nog leeg"}</small>`)}
-        <p class="hint">${evWines.length ? "In de volgorde waarin je ze meestal schenkt: bubbels, wit, rosé, rood, dessert." : "Nog geen wijnen. Voeg er een toe uit je kelder; de andere gasten zien hem meteen."}</p>
+        <div class="evlisthead"><p class="hint">${evWines.length ? "In de volgorde waarin je ze meestal schenkt: bubbels, wit, rosé, rood, dessert." : "Nog geen wijnen. Voeg er een toe uit je kelder; de andere gasten zien hem meteen."}</p>
+          ${evWines.length > 1 ? `<div class="viewsw" role="group" aria-label="Weergave">
+            <button type="button" data-e="view" data-v="cards" aria-pressed="${evView === "cards"}" aria-label="Kaarten" title="Kaarten"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="4" width="16" height="7" rx="1.5"/><rect x="4" y="13" width="16" height="7" rx="1.5"/></svg></button>
+            <button type="button" data-e="view" data-v="compact" aria-pressed="${evView === "compact"}" aria-label="Compacte lijst" title="Compacte lijst"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg></button></div>` : ""}</div>
+        ${whoBrings().length ? `<div class="evwho" aria-label="Wie brengt wat mee">${whoBrings().map(([uid, n, q]) => `<span><span class="evav${uid === me.uid ? " me" : ""}" aria-hidden="true">${ui.esc(ui.initial(n))}</span>${uid === me.uid ? "Jij" : ui.esc(n)} <small>${q} fl.</small></span>`).join("")}</div>` : ""}
         ${picking ? "" : `<div><button class="btn sm" type="button" data-e="pick">${ui.ico("plus")}Voeg wijn uit je kelder toe</button></div>`}
       </div>
       ${picking ? pickerHtml(e) : ""}
-      ${groups.length ? `<div class="evwines">${groups.map(([c, ws]) => `<div class="evgroup"><span class="dot ${c}"></span>${COLORS[c] || "Overige"}</div>${ws.map(w => wineHtml(w, e)).join("")}`).join("")}</div>` : ""}
+      ${groups.length ? `<div class="evwines">${groups.map(([c, ws]) => `<div class="evgroup"><span class="dot ${c}"></span>${COLORS[c] || "Overige"}</div><div class="evcol${evView === "compact" ? " compact" : ""}">${ws.map(w => wineHtml(w, e)).join("")}</div>`).join("")}</div>` : ""}
 
       <section class="mwsec">${ui.head("users", "Gasten", `<small>${members.length}</small>`)}
         <div>${members.map(([uid, m]) => `<div class="mwrow"><span class="mwav">${ui.initial(m.name || m.email)}</span><span class="who"><b>${ui.esc(m.name || "?")}${uid === me.uid ? " (jij)" : ""}</b>${m.role === "owner" ? `<span class="mwrole">organisator</span>` : ""}</span>
@@ -287,6 +330,7 @@
       if(a === "pick"){ picking = true; paint(); $("evPickQ")?.focus(); return; }
       if(a === "pickclose"){ picking = false; pickQ = ""; paint(); return; }
       if(a === "toggle"){ openW.has(wid) ? openW.delete(wid) : openW.add(wid); paint(); return; }
+      if(a === "view"){ evView = b.dataset.v === "compact" ? "compact" : "cards"; try{ localStorage.setItem("mw_evview", evView); }catch{} if(evView === "compact") openW.clear(); paint(); return; }
       if(a === "addwine"){
         const src = (window.mwWines ? window.mwWines() : []).find(x => x.id === wid); if(!src || !e) return;
         b.disabled = true; await addWine(e.id, src); msg = ""; return;
