@@ -596,7 +596,7 @@
     const y = new Date().getFullYear(), years = y > FIRST_YEAR ? `${FIRST_YEAR}–${y}` : String(FIRST_YEAR);
     // Folded by default; stays open while Settings is open (the sheet redraws often).
     return `<details class="mwsec mwabout" id="mwAbout"${aboutOpen ? " open" : ""}>
-        <summary class="mwapp"><img src="icons/icon.svg" alt="" width="44" height="44"><span><b>Meerstraat wines</b><small>Over de app</small></span>
+        <summary class="mwapp"><img src="icons/icon.svg" alt="" width="44" height="44"><span><b>MD projects</b><small>Over de app</small></span>
           <svg class="mwi mwchev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>
         <p class="mwtag">Je wijnkelder, gedeeld met wie je wilt.</p>
         <div class="mwfacts">
@@ -606,7 +606,7 @@
           <div>${ico("bell")}<span><b>Meldingen</b><small>Alleen als je ze zelf aanzet, en alleen op dit toestel.</small></span></div>
         </div>
       </details>
-      <footer class="mwcopy">${ico("copyright")}<span>${years} Meerstraat wines · Alle rechten voorbehouden</span></footer>`;
+      <footer class="mwcopy">${ico("copyright")}<span>${years} MD projects · Alle rechten voorbehouden</span></footer>`;
   }
   // The service worker's cache is named after the published build (mw-<commit>), so that is the version.
   function showVersion(){
