@@ -1820,11 +1820,12 @@ Laat een lege regel tussen de gerechten. Geen inleiding, geen afsluiter.`;
   // The day is the local date: a new weetje after midnight here, not after midnight UTC.
   const factCellar = () => window.mwCloud?.cellar?.id || "local";
   const FACT_DAY = new Date().toLocaleDateString("sv");
+  // One slot per cellar (on the device and on the profile), so switching cellars does not ask Claude again.
   function cachedFact(){
     const ok = c => c && c.fact && c.fact.titel && (!c.cellar || !window.mwCloud?.cellar || c.cellar===factCellar());
-    let a = null; try{ a = JSON.parse(localStorage.getItem("wk_fact_last")||"null"); }catch{}
-    const b = window.mwCloud?.fact;
-    const list = [a, b].filter(ok).sort((x,y) => String(y.day).localeCompare(String(x.day)));
+    const ls = k => { try{ return JSON.parse(localStorage.getItem(k)||"null"); }catch{ return null; } };
+    const m = window.mwCloud;
+    const list = [ls("wk_fact_" + factCellar()), ls("wk_fact_last"), m?.facts?.[factCellar()], m?.fact].filter(ok).sort((x,y) => String(y.day).localeCompare(String(x.day)));
     return list[0] || null;
   }
   function showCachedFact(){ const c = cachedFact(); if(c && !fact){ fact = {...c.fact, day:c.day}; renderFact(); } return c; }
@@ -1845,7 +1846,7 @@ Laat een lege regel tussen de gerechten. Geen inleiding, geen afsluiter.`;
     factBusy = true; factErr = ""; renderFact();
     try{
       const f = await askFact(THEMES[dayNum % THEMES.length], false);
-      if(f){ fact = {...f, day:FACT_DAY}; seenTitles.push(f.titel); const keep = {cellar:factCellar(), day:FACT_DAY, fact:f}; try{ localStorage.setItem("wk_fact_last", JSON.stringify(keep)); }catch{} window.mwCloud?.saveFact?.(keep); }
+      if(f){ fact = {...f, day:FACT_DAY}; seenTitles.push(f.titel); const keep = {cellar:factCellar(), day:FACT_DAY, fact:f}; try{ localStorage.setItem("wk_fact_last", JSON.stringify(keep)); localStorage.setItem("wk_fact_" + keep.cellar, JSON.stringify(keep)); }catch{} window.mwCloud?.saveFact?.(keep); }
       else if(!fact) factErr = "Het weetje van vandaag kon niet geladen worden.";
     }catch(e){
       if(!fact) factErr = e?.code==="rate_limited" ? "Claude is even niet beschikbaar. Het weetje volgt later." : e?.code==="not_granted" ? "" : "Het weetje van vandaag kon niet geladen worden.";
