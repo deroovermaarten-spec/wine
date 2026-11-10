@@ -70,11 +70,12 @@ body{background:var(--bg);background-image:var(--deco,none);background-repeat:no
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
   display:flex;flex-direction:column;gap:18px}
 /* header: one fixed layout on every screen, so nothing jumps while the app loads or when the cellar is empty
-   row 1: cellar picker (left) and the buttons (right, always in the same order, settings at the far right)
-   row 2: the title; row 3: how many bottles (its line is kept even while empty) */
-header{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"acct btns" "brand brand" "count count";align-items:center;column-gap:12px;row-gap:12px;padding-bottom:12px;border-bottom:3px double var(--line)}
+   row 1: the title; row 2: cellar picker (left) and the buttons (right, always in the same order, settings at the far right)
+   row 3: how many bottles (its line is kept even while empty) and the next event (events.js) */
+header{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"brand brand" "acct btns" "count next";align-items:center;column-gap:12px;row-gap:12px;padding-bottom:12px;border-bottom:3px double var(--line)}
 header .brandrow{grid-area:brand}
 header .count{grid-area:count;min-height:1.2em;line-height:1.2}
+header #evNext{grid-area:next;justify-self:end;margin-left:0;max-width:min(240px,60vw)}
 #hdrBtns{grid-area:btns;justify-self:end;min-height:38px;display:flex;gap:8px;align-items:center}
 header .mwacct{grid-area:acct;justify-self:start;max-width:100%}
 #searchBtn{order:1}#mwBell{order:2}#themeBtn{order:3}#mwGear{order:4}
