@@ -151,7 +151,21 @@
   transition:opacity .4s}
 .mwcheer b{font:400 1.2rem var(--display)}
 .mwcheer span{font-size:.86rem;color:var(--muted)}
-.mwcheer.out{opacity:0}`;
+.mwcheer.out{opacity:0}
+.mwclink{width:150px;height:112px;display:block;margin:0 auto;overflow:visible}
+.mwclink .gl{fill:none;stroke:var(--ink);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;opacity:.8}
+.mwclink .wn{fill:#9b1c2c}
+.mwclink .sh{fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;opacity:.45}
+.mwclink .gL,.mwclink .gR{transform-box:view-box}
+.mwclink .gL{transform-origin:46px 104px;animation:mwclinkL 1.5s .15s cubic-bezier(.5,0,.3,1) both}
+.mwclink .gR{transform-origin:104px 104px;animation:mwclinkR 1.5s .15s cubic-bezier(.5,0,.3,1) both}
+@keyframes mwclinkL{0%{transform:translateX(-18px) rotate(-10deg)}55%{transform:translateX(3px) rotate(9deg)}68%{transform:translateX(-2px) rotate(4deg)}100%{transform:translateX(0) rotate(6deg)}}
+@keyframes mwclinkR{0%{transform:translateX(18px) rotate(10deg)}55%{transform:translateX(-3px) rotate(-9deg)}68%{transform:translateX(2px) rotate(-4deg)}100%{transform:translateX(0) rotate(-6deg)}}
+.mwclink .spark{stroke:var(--gold);stroke-width:2.5;stroke-linecap:round;transform-box:view-box;transform-origin:75px 16px;opacity:0;animation:mwspark .7s .95s ease-out both}
+@keyframes mwspark{0%{opacity:0;transform:scale(.3)}30%{opacity:1}100%{opacity:0;transform:scale(1.35)}}
+.mwcheer .mwschol{display:block;font:italic 600 2.1rem/1 var(--display);color:var(--accent);margin-top:-4px;opacity:0;animation:mwschol .6s 1s cubic-bezier(.3,1.6,.5,1) both}
+@keyframes mwschol{0%{opacity:0;transform:scale(.4) rotate(-8deg)}100%{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.mwclink .gL,.mwclink .gR,.mwclink .spark,.mwschol{animation:none}.mwcheer .mwschol{opacity:1}.mwclink .gL{transform:rotate(6deg)}.mwclink .gR{transform:rotate(-6deg)}}`;
   const ICONS = {
     user: '<circle cx="12" cy="8" r="3.6"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/>',
     users: '<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.6"/><path d="M15.5 14.2c3 .2 5.5 2.6 5.5 5.8"/>',
@@ -324,7 +338,7 @@
     else if(joined) cheer("Welkom in de kelder!", `Je bent nu lid van "${cloud.cellar.name}". Schollekes!`);
     else if(store.get("mw_new")){
       const [first, id] = store.get("mw_new").split(":"); store.set("mw_new", null);
-      if(id === cloud.cellar.id) cheer(first === "1" ? "Je eerste kelder!" : "Nieuwe kelder!", `"${cloud.cellar.name}" staat klaar. Schollekes!`);
+      if(id === cloud.cellar.id) cheer(first === "1" ? "Je eerste kelder!" : "Nieuwe kelder!", `"${cloud.cellar.name}" staat klaar om te vullen.`, true);
     }
 
     const winesCol = fs.collection("cellars/" + cloud.cellar.id + "/wines");
@@ -355,12 +369,28 @@
       <g clip-path="url(#${id})"><rect class="mwwine" x="0" y="8" width="64" height="40"/></g>
       <path class="gl" d="M14 8h36c0 22-6 34-18 36C20 42 14 30 14 8zM32 44v36M20 84h24"/></svg>`;
   }
-  function cheer(title, text){
+  // ---------- a new cellar: two glasses of red that clink, with a "Schol!" ----------
+  function clinkSvg(){
+    const id = "mwClk" + (++glassN);
+    // one glass, its foot centred at (cx, 104)
+    const glass = (cx, cls) => `<g class="${cls}">
+        <g clip-path="url(#${id}${cls})"><rect class="wn" x="${cx - 20}" y="30" width="40" height="30"/></g>
+        <path class="sh" d="M${cx - 11} 22q-1 12 3 22"/>
+        <path class="gl" d="M${cx - 17} 12h34c0 26-6 40-17 42C${cx - 11} 52 ${cx - 17} 38 ${cx - 17} 12zM${cx} 54v46M${cx - 12} 104h24"/>
+      </g>`;
+    const bowl = cx => `<path d="M${cx - 17} 12h34c0 26-6 40-17 42C${cx - 11} 52 ${cx - 17} 38 ${cx - 17} 12z"/>`;
+    return `<svg class="mwclink" viewBox="0 0 150 112" aria-hidden="true">
+      <defs><clipPath id="${id}gL">${bowl(46)}</clipPath><clipPath id="${id}gR">${bowl(104)}</clipPath></defs>
+      ${glass(46, "gL")}${glass(104, "gR")}
+      <g class="spark"><path d="M75 2v-8M64 6l-6-5M86 6l6-5M60 15h-8M90 15h8"/></g></svg>`;
+  }
+  function cheer(title, text, clink){
     const el = document.createElement("div"); el.className = "mwcheer"; el.setAttribute("role", "status");
-    el.innerHTML = `${glassSvg()}<b>${esc(title)}</b><span>${esc(text)}</span>`;
+    el.innerHTML = clink ? `${clinkSvg()}<span class="mwschol">Schol!</span><b>${esc(title)}</b><span>${esc(text)}</span>`
+      : `${glassSvg()}<b>${esc(title)}</b><span>${esc(text)}</span>`;
     document.body.appendChild(el);
     const bye = () => { el.classList.add("out"); setTimeout(() => el.remove(), 400); };
-    el.onclick = bye; setTimeout(bye, 3600);
+    el.onclick = bye; setTimeout(bye, clink ? 4800 : 3600);
   }
 
   // ---------- welcome: shown once, right after someone creates their account ----------
