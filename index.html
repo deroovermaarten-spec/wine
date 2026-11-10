@@ -71,6 +71,8 @@ body{background:var(--bg);background-image:var(--deco,none);background-repeat:no
   display:flex;flex-direction:column;gap:18px}
 header{display:flex;align-items:end;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-bottom:12px;border-bottom:3px double var(--line)}
 header .brand{display:flex;flex-direction:column;gap:6px}
+/* phones: a fixed header, with or without bottles: settings buttons on the right, the cellar picker on its own line on the left */
+@media (max-width:600px){#hdrBtns{margin-left:auto}header::after{content:"";flex-basis:100%;order:4}header .mwacct{order:5}}
 .brandrow{display:flex;align-items:end;gap:12px}
 .bottle{width:30px;height:72px;flex:none;transform:rotate(-12deg);transform-origin:50% 90%;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .bottle .glass{fill:var(--surface);stroke:var(--ink);stroke-width:2.5;stroke-linejoin:round}
