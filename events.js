@@ -22,7 +22,7 @@
 
   const COLORS = {mousserend: "Mousserend", wit: "Wit", rose: "Rosé", rood: "Rood", dessert: "Dessert"};
   const ORDER = ["mousserend", "wit", "rose", "rood", "dessert"]; // the usual order to serve them in
-  const TODAY = () => new Date().toISOString().slice(0, 10);
+  const TODAY = () => new Date().toLocaleDateString("sv"); // local day (Brussels), not UTC
   const fmtDay = d => { try{ return new Date(d + "T12:00:00").toLocaleDateString("nl-BE", {weekday: "long", day: "numeric", month: "long", year: "numeric"}); }catch{ return d; } };
   const isPast = e => e.date && e.date < TODAY();
   const ev = () => events.find(e => e.id === current) || null;

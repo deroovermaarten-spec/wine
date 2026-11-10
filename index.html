@@ -704,8 +704,11 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
 <script>
 (() => {
   const $ = id => document.getElementById(id);
-  const YEAR = new Date().getFullYear();
-  const TODAY = new Date().toISOString().slice(0,10);
+  // Today in the phone's own time zone (Brussels), not UTC: a bottle opened at 00:30 counts for the new day.
+  // Recomputed when the app comes back to the screen, so an app left open overnight moves on to the new day.
+  const localDay = (d = new Date()) => d.toLocaleDateString("sv");
+  let YEAR = new Date().getFullYear();
+  let TODAY = localDay();
   const TIERS = {1:"Budget",2:"Middenklasse",3:"Premium",4:"Topwijn"};
   const COLORS = {rood:"Rood",wit:"Wit",rose:"Rosé",mousserend:"Mousserend",dessert:"Dessert"};
   let db=null, sample=null, col=null, wines=[], openIds=new Set();
@@ -985,7 +988,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
             ${w.tier?`<span class="tier" title="Prijsklasse">${"€".repeat(w.tier)}<s>${"€".repeat(4-w.tier)}</s></span>`:""}
           </div>
           ${w.tags.length?`<div class="tags">${w.tags.map(t=>`<button class="tag" type="button" data-act="tagf" data-tag="${esc(t)}" aria-pressed="${tagFilter===t}">#${esc(t)}</button>`).join("")}</div>`:""}
-          ${w.tip ? `<p class="tipnote">${w.tip.message ? `“${esc(w.tip.message)}”` : "Een tip"}<small>${esc(w.tip.from || "")}${w.tip.at ? " · " + fmtDate(new Date(w.tip.at).toISOString().slice(0,10)) : ""}</small></p>` : ""}
+          ${w.tip ? `<p class="tipnote">${w.tip.message ? `“${esc(w.tip.message)}”` : "Een tip"}<small>${esc(w.tip.from || "")}${w.tip.at ? " · " + fmtDate(localDay(new Date(w.tip.at))) : ""}</small></p>` : ""}
           ${isK && w.loc ? `<span class="loc"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>${esc(w.loc)}</span>`:""}
           ${d && isK ? `<div><span class="badge ${d.cls}">${d.label}</span></div>`:""}
           ${w.pending ? `<div><span class="badge b-young" title="Claude vult deze wijn aan zodra het toestel waarmee je scande online is.">Wacht op herkenning</span></div>`
@@ -1625,7 +1628,7 @@ Sleutels (streek|land): ${JSON.stringify(keys.slice(0,60))}`;
       "Zelf betaald": w.paid||"", "Gekocht bij": w.shop||"", "Aankoopdatum": w.bought||"", "Aantal gekocht": w.boughtQty||"",
       "Tags": w.tags.join(", "), "Aroma's & smaak": w.taste||"", "Past bij": w.food||"", "Schenktemperatuur": w.temp||"", "Decanteren": w.decant||"", "Glas": w.glass||"",
       "Beschrijving": w.desc||"", "Eigen notitie": w.note||"", "Proefmomenten": w.tastings.map(t=>[`${t.date} ${t.score||"-"}/5`, t.note, t.color, (t.aromas||[]).join(", "), Object.entries(t.struct||{}).map(([k,v])=>k+" "+v).join(", ")].filter(Boolean).join(" · ")).join(" | "),
-      "Toegevoegd": w.createdAt ? new Date(w.createdAt).toISOString().slice(0,10) : "" }));
+      "Toegevoegd": w.createdAt ? localDay(new Date(w.createdAt)) : "" }));
   }
   $("v_stats").addEventListener("click", async e => {
     const b = e.target.closest("[data-exp]"); if(!b) return;
@@ -1777,7 +1780,7 @@ Laat een lege regel tussen de gerechten. Geen inleiding, geen afsluiter.`;
   // ---------- fact of the day ----------
   const THEMES = ["een druivenras","een wijnstreek","hoe wijn gemaakt wordt","wijn serveren en bewaren","wijngeschiedenis","Italiaanse wijn","wijn en eten","etiketten en wijnwetten","proeven en aroma's","mousserende of zoete wijn","klimaat, bodem en terroir","een bekende wijnmaker of wijnhuis","glazen, kurken en flessen","een minder bekende wijnstreek"];
   let fact = null, factBusy = false, factStarted = false, factErr = "", nextFact = null, nextP = null, seenTitles = [];
-  const dayNum = Math.floor((Date.now() - new Date(YEAR,0,0)) / 864e5);
+  let dayNum = Math.floor((Date.now() - new Date(YEAR,0,0)) / 864e5);
   function renderFact(){
     const box = $("factbox");
     if(tab!=="kelder" || (!fact && !factBusy && !factErr)){ box.hidden = true; return; }
@@ -1819,7 +1822,19 @@ Laat een lege regel tussen de gerechten. Geen inleiding, geen afsluiter.`;
   // Also kept on the profile (mwCloud.fact), so it survives when the phone clears the browser storage.
   // The day is the local date: a new weetje after midnight here, not after midnight UTC.
   const factCellar = () => window.mwCloud?.cellar?.id || "local";
-  const FACT_DAY = new Date().toLocaleDateString("sv");
+  let FACT_DAY = TODAY;
+  // A new day while the app was open (or asleep in the background): new dates everywhere and a new weetje.
+  function newDay(){
+    if(localDay() === TODAY) return;
+    TODAY = FACT_DAY = localDay(); YEAR = new Date().getFullYear();
+    dayNum = Math.floor((Date.now() - new Date(YEAR,0,0)) / 864e5);
+    nextFact = null; nextP = null;
+    render();
+    if(factStarted) loadFact(false);
+  }
+  document.addEventListener("visibilitychange", () => { if(document.visibilityState === "visible") newDay(); });
+  addEventListener("pageshow", newDay); addEventListener("focus", newDay);
+  setInterval(newDay, 60e3);
   // One slot per cellar (on the device and on the profile), so switching cellars does not ask Claude again.
   function cachedFact(){
     const ok = c => c && c.fact && c.fact.titel && (!c.cellar || !window.mwCloud?.cellar || c.cellar===factCellar());
@@ -1920,7 +1935,7 @@ Wijnen (JSON): ${JSON.stringify(cellar)}`;
       tags: w.tags.length ? w.tags : null, smaak: w.taste, pastBij: w.food, schenktemp: w.temp, decanteren: w.decant, glas: w.glass, notitie: w.note,
       beschrijving: cut(w.desc, 280), wijnhuis: w.house && !w.house.unknown ? cut([w.house.about, w.house.location].filter(Boolean).join(" "), 220) : null,
       proefmomenten: w.tastings.length ? w.tastings.map(t=>({datum:t.date, score:t.score||null, notitie:t.note||null, kleur:t.color||null, aromas:t.aromas||null, structuur:t.struct||null})) : null,
-      toegevoegd: w.createdAt ? new Date(w.createdAt).toISOString().slice(0,10) : null };
+      toegevoegd: w.createdAt ? localDay(new Date(w.createdAt)) : null };
       if(lean){ delete o.beschrijving; delete o.wijnhuis; delete o.smaak; delete o.pastBij; delete o.schenktemp; delete o.decanteren; delete o.glas; }
       Object.keys(o).forEach(k => (o[k]===null || o[k]==="" || o[k]===undefined) && delete o[k]); return o; });
   }

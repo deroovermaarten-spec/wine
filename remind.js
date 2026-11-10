@@ -187,7 +187,7 @@
   // Opening the app refreshes the plan (dates move on, bottles get opened).
   // Once a day it is sent again anyway, in case the server lost it.
   addEventListener("load", () => setTimeout(() => {
-    const day = new Date().toISOString().slice(0, 10), force = ls.get("mw_remind_day") !== day;
+    const day = new Date().toLocaleDateString("sv"), force = ls.get("mw_remind_day") !== day;
     if(on()){ ls.set("mw_remind_day", day); sync(force); }
   }, 6000));
 
