@@ -751,6 +751,10 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
   const shortDate = d => { try{ return new Date(d+"T12:00:00").toLocaleDateString("nl-BE",{day:"numeric",month:"short"}); }catch{ return d; } };
   const fmtDate = d => { try{ return new Date(d+"T12:00:00").toLocaleDateString("nl-BE",{day:"numeric",month:"short",year:"numeric"}); }catch{ return d; } };
 
+  // The relay allows each smart feature a number of times per person per day (worker/worker.js, TASKS).
+  const limitMsg = e => e?.limit==="task_limit" ? "Je hebt dit vandaag al vaak gevraagd. Morgen kan het weer."
+    : e?.limit==="daily_limit" ? "Je hebt de slimme functies vandaag al vaak gebruikt. Morgen kan het weer." : "";
+
   // ---------- scores: everyone in a shared cellar keeps their own ----------
   // Stored as scores.<uid> on the wine. The old field `score` stays the owner's score, so older wines keep theirs.
   // In memory w.score is always *your* score, so the rest of the app reads it as before.
@@ -1092,7 +1096,7 @@ Wijn: ${w.name}${w.vintage?" "+w.vintage:""}${age!==null?` (${age} jaar oud)`:""
 Houd rekening met de leeftijd: jonge krachtige wijnen hebben lucht nodig, oude wijnen vooral voorzichtig schenken vanwege depot en kort decanteren.
 Antwoord met ALLEEN dit JSON-object: {"temp": "bv. 16–18 °C", "decant": "één korte zin: hoe lang decanteren of openen vooraf, of 'Niet nodig', en eventueel depot", "glass": "glastype, bv. 'Bourgogneglas (ballon)'"}`;
     try{
-      const r = await sample.json(prompt);
+      const r = await sample.json(prompt, {task:"serve"});
       const patch = {}; const s = v => String(v||"").trim().slice(0,160);
       if(s(r.decant)) patch.decant = s(r.decant); if(s(r.glass)) patch.glass = s(r.glass); if(!w.temp && s(r.temp)) patch.temp = s(r.temp);
       serveBusy.delete(w.id); Object.assign(w, patch); render(); if(Object.keys(patch).length) save(w.id, patch);
@@ -1293,7 +1297,7 @@ Wijn: ${w.name}${w.vintage?" "+w.vintage:""}. Producent: ${w.producer||"onbekend
 Verzin niets: laat een veld leeg ('') als je het niet zeker weet. Ken je dit wijnhuis helemaal niet, antwoord dan {"unknown":true}.
 Antwoord met ALLEEN één JSON-object in deze vorm: ${HOUSE_FIELDS}`;
     try{
-      const r = await sample.json(prompt);
+      const r = await sample.json(prompt, {task:"house"});
       const house = r && r.unknown ? {unknown:true} : cleanHouse(r);
       houseBusy.delete(w.id); w.house = house; render();
       await save(w.id,{house});
@@ -1533,7 +1537,7 @@ Antwoord met ALLEEN één JSON-object in deze vorm: ${HOUSE_FIELDS}`;
     const prompt = `Geef de geografische coördinaten (ongeveer het centrum) van deze wijnstreken of appellaties. Antwoord met ALLEEN één JSON-object waarin elke sleutel exact overgenomen is en de waarde [breedtegraad, lengtegraad] is, bv. {"Chablis AOC|Frankrijk":[47.81,3.80]}. Weet je een streek niet, laat ze dan weg.
 Sleutels (streek|land): ${JSON.stringify(keys.slice(0,60))}`;
     try{
-      const r = await sample.json(prompt, {modelTier:"quick"});
+      const r = await sample.json(prompt, {task:"geo"});
       let added = 0;
       for(const k of keys){ const v = r && r[k]; if(Array.isArray(v) && v.length===2 && isFinite(v[0]) && isFinite(v[1]) && Math.abs(v[0])<=90 && Math.abs(v[1])<=180){ geo[k] = [+v[0], +v[1]]; added++; } else geo[k] = geo[k] || 0; }
       try{ localStorage.setItem("wk_geo", JSON.stringify(geo)); }catch{}
@@ -1817,11 +1821,11 @@ Eén zin waarom het past bij deze wijn.
 - Tijd: bv. 30 min
 Laat een lege regel tussen de gerechten. Geen inleiding, geen afsluiter.`;
     try{
-      const res = await sample(prompt, {cache:false, signal:ctl.signal, onText:({text})=>{ r.text = text; const el = $("c_"+w.id)?.querySelector(".pair .out"); if(el) el.innerHTML = mdLite(text); }});
+      const res = await sample(prompt, {cache:false, task:"pairing", signal:ctl.signal, onText:({text})=>{ r.text = text; const el = $("c_"+w.id)?.querySelector(".pair .out"); if(el) el.innerHTML = mdLite(text); }});
       pairRes.delete(w.id); w.pairing = {text:res.text.trim(), at:TODAY}; render(); save(w.id, {pairing:w.pairing});
     }catch(e){
       if(e?.code==="cancelled"){ pairRes.delete(w.id); }
-      else pairRes.set(w.id, {err: e?.code==="rate_limited" ? "Claude is even niet beschikbaar (gebruikslimiet of te veel aanvragen). Probeer later opnieuw." : e?.code==="not_granted" ? "Claude is niet beschikbaar voor jouw account." : "Dat lukte niet. Probeer opnieuw."});
+      else pairRes.set(w.id, {err: limitMsg(e) || (e?.code==="rate_limited" ? "Claude is even niet beschikbaar (gebruikslimiet of te veel aanvragen). Probeer later opnieuw." : e?.code==="not_granted" ? "Claude is niet beschikbaar voor jouw account." : "Dat lukte niet. Probeer opnieuw.")});
       render();
     }
     pairCtl.delete(w.id);
@@ -1914,7 +1918,7 @@ Laat een lege regel tussen de gerechten. Geen inleiding, geen afsluiter.`;
       if(f){ fact = {...f, day:FACT_DAY}; seenTitles.push(f.titel); const keep = {cellar:factCellar(), day:FACT_DAY, fact:f}; try{ localStorage.setItem("wk_fact_last", JSON.stringify(keep)); localStorage.setItem("wk_fact_" + keep.cellar, JSON.stringify(keep)); }catch{} window.mwCloud?.saveFact?.(keep); }
       else if(!fact) factErr = "Het weetje van vandaag kon niet geladen worden.";
     }catch(e){
-      if(!fact) factErr = e?.code==="rate_limited" ? "Claude is even niet beschikbaar. Het weetje volgt later." : e?.code==="not_granted" ? "" : "Het weetje van vandaag kon niet geladen worden.";
+      if(!fact) factErr = limitMsg(e) || (e?.code==="rate_limited" ? "Claude is even niet beschikbaar. Het weetje volgt later." : e?.code==="not_granted" ? "" : "Het weetje van vandaag kon niet geladen worden.");
     }
     factBusy = false; renderFact();
   }
@@ -1926,7 +1930,7 @@ Mag aansluiten bij wat hij al in huis heeft (druiven/streken: ${mine.join(", ") 
 Antwoord met ALLEEN dit JSON-object: {"thema":"korte themanaam, 1-3 woorden","titel":"pakkende titel, max 8 woorden","weetje":"2 tot 3 zinnen","ids":["id's (max 3) van wijnen uit de lijst hieronder die hij kan openen om dit weetje zelf te proeven: dezelfde druif, streek, producent of stijl; lege lijst als er echt niets past"]}
 Kies het thema bij voorkeur zo dat minstens één wijn uit de lijst erbij past, maar wissel af en verbreed zijn kennis.
 Wijnen (JSON): ${JSON.stringify(cellar)}`;
-    const r = await sample.json(prompt, more ? {cache:false, modelTier:"quick"} : {cache:{gcTime:86400000}});
+    const r = await sample.json(prompt, more ? {cache:false, task:"factMore"} : {cache:{gcTime:86400000}, task:"fact"});
     return r && r.titel && r.weetje ? {thema:String(r.thema||""), titel:String(r.titel), weetje:String(r.weetje), ids:Array.isArray(r.ids)?r.ids.map(String).slice(0,3):[], extra:!!more} : null;
   }
   $("factbox").addEventListener("click", e => { const b = e.target.closest("[data-fact]"); if(b && !factBusy) loadFact(b.dataset.fact==="more"); });
@@ -2007,13 +2011,13 @@ Gegevens (JSON):
 ${data}`;
     const hist = chat.filter(m=>!m.pending && !m.err && m.content).slice(-12).map(m=>({role:m.role, content:m.content}));
     try{
-      const r = await sample(hist, {system, cache:false, signal:askCtl.signal, onText:({text})=>{ reply.content = text; renderChat(); scrollChat(); }});
+      const r = await sample(hist, {system, cache:false, task:"ask", signal:askCtl.signal, onText:({text})=>{ reply.content = text; renderChat(); scrollChat(); }});
       reply.content = r.text; if(r.truncated) reply.content += "\n\n(Antwoord afgebroken. Stel een kleinere vraag.)";
       const mk = reply.content.match(askMark);
       if(mk) reply.ids = [...new Set(mk[1].split(/[\s,]+/).filter(Boolean))].slice(0,5);
     }catch(e){
       if(e?.code==="cancelled"){ reply.content = (e.text||"") + (e.text?"\n\n(Gestopt)":"Gestopt."); }
-      else { reply.err = true; reply.content = (e.text ? e.text+"\n\n" : "") + ({not_granted:"Claude is niet beschikbaar voor jouw account.", rate_limited:"Claude is even niet beschikbaar (gebruikslimiet of te veel aanvragen). Probeer later opnieuw.", prompt_too_large:"Je kelder is te groot om in één keer mee te sturen."}[e?.code] || "Er ging iets mis. Probeer opnieuw."); }
+      else { reply.err = true; reply.content = (e.text ? e.text+"\n\n" : "") + (limitMsg(e) || {not_granted:"Claude is niet beschikbaar voor jouw account.", rate_limited:"Claude is even niet beschikbaar (gebruikslimiet of te veel aanvragen). Probeer later opnieuw.", prompt_too_large:"Je kelder is te groot om in één keer mee te sturen."}[e?.code] || "Er ging iets mis. Probeer opnieuw."); }
     }
     reply.pending = false; askCtl = null; renderChat(); scrollChat();
   }
@@ -2359,12 +2363,12 @@ Antwoord met ALLEEN dit JSON-object: {"picks":[{"id":"exacte id uit de lijst","w
 Kelder:
 ${JSON.stringify(data)}`;
     try{
-      const r = await sample.json(prompt, {signal:pickCtl.signal, modelTier:"quick"});
+      const r = await sample.json(prompt, {signal:pickCtl.signal, task:"pick"});
       const picks = (r?.picks||[]).filter(p=>cand.some(w=>w.id===String(p.id))).slice(0,3).map(p=>({id:String(p.id),why:String(p.why||"")}));
       lastPicks = picks.length ? {picks, tip:String(r?.tip||"")} : {msg:"Claude vond geen passende fles in je kelder voor dit gerecht."};
     }catch(err){
       if(err?.code==="cancelled") return;
-      lastPicks = {msg: err?.code==="not_granted" ? "Claude is niet beschikbaar voor jouw account." : err?.code==="rate_limited" ? "Claude is even niet beschikbaar: je hebt je gebruikslimiet bereikt of er liepen kort na elkaar te veel aanvragen. Probeer het over een tijdje opnieuw." : "Kiezen lukte niet. Probeer opnieuw."};
+      lastPicks = {msg: limitMsg(err) || (err?.code==="not_granted" ? "Claude is niet beschikbaar voor jouw account." : err?.code==="rate_limited" ? "Claude is even niet beschikbaar: je hebt je gebruikslimiet bereikt of er liepen kort na elkaar te veel aanvragen. Probeer het over een tijdje opnieuw." : "Kiezen lukte niet. Probeer opnieuw.")};
     }finally{ $("pickBtn").disabled=false; }
     renderPicks();
   });
@@ -2431,7 +2435,7 @@ ${JSON.stringify(data)}`;
     if(!navigator.onLine) return showManual("Je bent offline, dus Claude kan het etiket nu niet lezen." + LATER, true);
     scanCtl = new AbortController();
     try{
-      const r = await sample.json(scanPrompt(), {images:[file], signal:scanCtl.signal});
+      const r = await sample.json(scanPrompt(), {images:[file], signal:scanCtl.signal, task:"scan"});
       if(!draft) return;
       if(!r || r.recognized===false){ showManual("Geen wijnetiket herkend. Probeer een scherpere foto van het etiket, of vul de gegevens zelf in."); return; }
       Object.assign(draft, cleanScan(r), {photo});
@@ -2439,7 +2443,7 @@ ${JSON.stringify(data)}`;
     }catch(e){
       if(e?.code==="cancelled" || !draft) return;
       if(e?.code==="failed" && (e.message==="offline" || e.message==="network")) return showManual("Er is geen verbinding met Claude." + LATER, true);
-      if(e?.code==="rate_limited") return showManual("Claude is even te druk." + LATER, true);
+      if(e?.code==="rate_limited") return showManual((limitMsg(e) || "Claude is even te druk.") + LATER, true);
       const m = {not_granted:"Claude is niet beschikbaar voor jouw account. Vul de gegevens zelf in.",
         image_rejected:"Deze foto kon niet gelezen worden. Probeer een andere foto.",
         images_unavailable:"Foto's herkennen werkt niet in deze weergave. Vul de gegevens zelf in."}[e?.code] || "Herkennen lukte niet. Vul de gegevens zelf in of probeer opnieuw.";
@@ -2557,7 +2561,7 @@ Zet "recognized" op false als er geen wijnetiket op de foto staat.`;
         if(!w.pending){ await queue.del(it.id); left--; continue; }
         $("status").textContent = `Claude leest ${left===1 ? "een etiket" : left + " etiketten"} die je offline scande…`;
         let r;
-        try{ r = await sample.json(scanPrompt(), {images:[it.blob]}); }
+        try{ r = await sample.json(scanPrompt(), {images:[it.blob], task:"scan"}); }
         catch(e){
           if(e?.code==="image_rejected"){ await save(w.id, {pending:false, pendingErr:"De foto kon niet gelezen worden. Vul de gegevens zelf in."}); await queue.del(it.id); left--; continue; }
           // offline again, busy or not allowed: try again later

@@ -75,6 +75,14 @@ via een kleine tussenserver (`worker/worker.js`, Cloudflare Workers, gratis). Da
 krijgen hem nooit te zien. Alleen aangemelde leden van een kelder van de eigenaar (`OWNER_UID`) mogen hem gebruiken,
 met een daglimiet per persoon. Zolang `window.MW_AI_URL` in `firebase-config.js` leeg is, staan de functies uit.
 
+De tussenserver laat alleen de vaste functies van de app door (`TASKS` bovenaan `worker/worker.js`). Per functie
+kiest hij het model, de maximale lengte van het antwoord en hoe vaak iemand ze per dag mag gebruiken. Het etiket,
+de Vraag-tab en het wijnhuis gebruiken Opus; schenkadvies, gerechten en het weetje Sonnet; "nog een weetje",
+"Wat drink ik vanavond?" en de kaart Haiku. Bovenop die limieten geldt `DAILY_LIMIT` (standaard 150) per persoon.
+De tellers staan in de KV-opslag `PUSH` (zie Herinneringen), zodat ze echt gelden. Zonder `PUSH` telt de Worker
+alleen in zijn geheugen, en dat is geen harde grens.
+Pas je `worker/worker.js` aan, plak hem dan opnieuw in Cloudflare en klik Deploy.
+
 1. console.anthropic.com: tegoed kopen (Billing), een maandlimiet zetten (Limits) en een API-sleutel maken.
 2. dash.cloudflare.com: Workers & Pages → Create → Worker, plak `worker/worker.js`, Deploy.
 3. In de Worker: Settings → Variables and Secrets: `ANTHROPIC_API_KEY` (Secret), `OWNER_UID` (je Gebruikers-id uit het kelder-menu), `FIREBASE_PROJECT` = `meerstraat-wines`.

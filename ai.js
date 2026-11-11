@@ -7,9 +7,10 @@
  * (worker/worker.js on Cloudflare) that holds the API key and lets only members of
  * the owner's cellars through. The phone sends its Firebase sign-in token, never a key.
  *
- *   sample(promptOrMessages, {images, signal, onText, modelTier}) -> {text, truncated}
+ *   sample(promptOrMessages, {task, images, signal, onText, system}) -> {text, truncated}
  *   sample.json(prompt, opts) -> parsed JSON
  * Errors carry .code: cancelled | rate_limited | not_granted | image_rejected | prompt_too_large | failed
+ * rate_limited also covers the relay's daily limits; then .limit is "daily_limit" or "task_limit".
  */
 (() => {
   const err = (code, msg, extra) => Object.assign(new Error(msg || code), {code}, extra || {});
@@ -44,7 +45,8 @@
     async function run(input, opts = {}){
       if(opts.signal && opts.signal.aborted) throw err("cancelled");
       const stream = !!opts.onText;
-      const payload = {tier: opts.modelTier === "quick" ? "quick" : "default", max_tokens: 8000, stream, messages: await buildMessages(input, opts.images)};
+      // task: which feature asks (scan, ask, pick…). The relay picks the model and limits per feature.
+      const payload = {task: opts.task || "legacy", stream, messages: await buildMessages(input, opts.images)};
       if(typeof opts.system === "string") payload.system = opts.system;
       let res;
       try{
@@ -58,7 +60,7 @@
         let info = {}; try{ info = (await res.json()).error || {}; }catch{}
         const m = String(info.message || info.code || "");
         if(res.status === 401 || res.status === 403) throw err("not_granted", m);
-        if(res.status === 429 || res.status === 529 || info.type === "overloaded_error") throw err("rate_limited", m);
+        if(res.status === 429 || res.status === 529 || info.type === "overloaded_error") throw err("rate_limited", m, {limit: /^(daily|task)_limit$/.test(info.code || "") ? info.code : ""});
         if(res.status === 413 || (res.status === 400 && /too long|too large|exceed/i.test(m))) throw err("prompt_too_large", m);
         if(res.status === 400 && /image/i.test(m)) throw err("image_rejected", m);
         throw err("failed", m || ("HTTP " + res.status));
