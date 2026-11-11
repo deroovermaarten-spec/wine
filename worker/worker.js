@@ -9,7 +9,11 @@
  *   ANTHROPIC_API_KEY   secret   the key from console.anthropic.com
  *   OWNER_UID           text     the owner's Firebase user id (shown in the app's cellar menu)
  *   FIREBASE_PROJECT    text     meerstraat-wines
- *   DAILY_LIMIT         text     optional, max requests per person per day (default 150)
+ *   DAILY_LIMIT         text     optional, max requests per person per day, all features together (default 150)
+ *
+ * The daily counts are kept in the PUSH KV namespace below (one small record per person per day),
+ * so they hold across Cloudflare's copies of the worker and its restarts. Without PUSH they are
+ * only counted in memory, which is not a hard limit.
  *
  * Drink reminders (optional, see README "Herinneringen"):
  *   PUSH                KV namespace binding (Settings → Bindings), holds who to wake up when
@@ -17,12 +21,33 @@
  * The push keys (VAPID) are made by the worker itself on first use and kept in PUSH.
  */
 const ORIGINS = ["https://deroovermaarten-spec.github.io", "http://localhost:8765", "http://localhost:8000"];
-const MODELS = {default: "claude-opus-5-5", quick: "claude-haiku-5-5"};
+const MODELS = {default: "claude-opus-5-5", mid: "claude-sonnet-5-5", quick: "claude-haiku-5-5"};
+
+// The app's features. Each one has its own model, output cap and daily limit per person; anything
+// else is refused, so the key cannot be used as a general Claude. Only the label scan may send photos,
+// and only the Vraag tab its own instructions (system).
+//   model      which of MODELS        effort   how hard it thinks
+//   max        max_tokens             perDay   requests per person per day
+//   images     photos allowed         system   may send a system prompt
+//   size       max request size in KB (the app adds cellar data to some prompts)
+const TASKS = {
+  scan:    {model: "default", effort: "medium", max: 8000, perDay: 40, images: 1, size: 2500}, // read a label photo
+  ask:     {model: "default", effort: "medium", max: 8000, perDay: 40, system: true, size: 400}, // Vraag tab
+  house:   {model: "default", effort: "medium", max: 6000, perDay: 30, size: 20},  // about the winery
+  serve:   {model: "mid",     effort: "medium", max: 4000, perDay: 40, size: 20},  // temperature, decanting, glass
+  pairing: {model: "mid",     effort: "medium", max: 6000, perDay: 20, size: 20},  // dishes with this wine
+  fact:    {model: "mid",     effort: "medium", max: 4000, perDay: 10, size: 60},  // tip of the day
+  factMore:{model: "quick",   effort: "low",    max: 3000, perDay: 15, size: 60},  // "nog een weetje"
+  pick:    {model: "quick",   effort: "low",    max: 4000, perDay: 30, size: 120}, // wat drink ik vanavond
+  geo:     {model: "quick",   effort: "low",    max: 4000, perDay: 10, size: 20},  // map coordinates for Inzichten
+  // An app version from before tasks existed: allowed for a while, but strict.
+  legacy:  {model: "default", effort: "medium", max: 8000, perDay: 20, images: 1, system: true, size: 2500}
+};
 const JWKS = "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com";
 
 let keys = null, keysAt = 0;
 const members = new Map(); // uid -> {ok, at}
-const counts = new Map();  // uid|day -> n
+const counts = new Map();  // uid|day -> {n, t:{task: n}}, only used when PUSH is not bound
 
 const b64url = s => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(s.length / 4) * 4, "=")), c => c.charCodeAt(0));
 const dec = s => JSON.parse(new TextDecoder().decode(b64url(s)));
@@ -59,6 +84,40 @@ async function isMember(uid, token, env){
   return ok;
 }
 
+// Is the request what this feature sends? Returns an error code, or "" when it is fine.
+function checkInput(inb, task, bytes){
+  if(bytes > task.size * 1024) return "too_large";
+  if(!Array.isArray(inb.messages) || !inb.messages.length || inb.messages.length > 24) return "bad_request";
+  if(inb.system !== undefined && !task.system) return "bad_request";
+  let images = 0;
+  for(const m of inb.messages){
+    if(!m || (m.role !== "user" && m.role !== "assistant") || !Array.isArray(m.content)) return "bad_request";
+    for(const b of m.content){
+      if(b && b.type === "image" && b.source && b.source.type === "base64") images++;
+      else if(!b || b.type !== "text" || typeof b.text !== "string") return "bad_request";
+    }
+  }
+  return images > (task.images || 0) ? "bad_request" : "";
+}
+
+// Count one request for this person today. Returns "" when allowed, or the limit that was reached.
+// Kept in KV when PUSH is bound: one record per person per day, expiring after two days.
+async function countUse(env, uid, taskName, task){
+  const day = new Date().toISOString().slice(0, 10), key = "n:" + uid + ":" + day;
+  const limit = parseInt(env.DAILY_LIMIT) || 150;
+  let rec;
+  if(env.PUSH){ try{ rec = await env.PUSH.get(key, "json"); }catch{} }
+  else rec = counts.get(key);
+  rec = rec && typeof rec === "object" ? rec : {n: 0, t: {}};
+  rec.t = rec.t || {};
+  if(rec.n >= limit) return "daily_limit";
+  if((rec.t[taskName] || 0) >= task.perDay) return "task_limit";
+  rec.n++; rec.t[taskName] = (rec.t[taskName] || 0) + 1;
+  if(env.PUSH){ try{ await env.PUSH.put(key, JSON.stringify(rec), {expirationTtl: 2 * 86400}); }catch{} }
+  else{ counts.set(key, rec); if(counts.size > 5000) counts.clear(); }
+  return "";
+}
+
 function cors(req){
   const o = req.headers.get("Origin") || "";
   return {"Access-Control-Allow-Origin": ORIGINS.includes(o) ? o : ORIGINS[0], "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
@@ -79,19 +138,23 @@ export default {
     try{ uid = await verify(token, env.FIREBASE_PROJECT); }catch{ return reply(req, 401, {error: {code: "not_signed_in"}}); }
     if(!(await isMember(uid, token, env))) return reply(req, 403, {error: {code: "not_member"}});
 
-    const day = new Date().toISOString().slice(0, 10), ck = uid + "|" + day, n = (counts.get(ck) || 0) + 1;
-    if(n > (parseInt(env.DAILY_LIMIT) || 150)) return reply(req, 429, {error: {code: "daily_limit"}});
-    counts.set(ck, n);
-    if(counts.size > 5000) counts.clear();
+    const raw = await req.text();
+    let inb; try{ inb = JSON.parse(raw); }catch{ return reply(req, 400, {error: {code: "bad_request"}}); }
+    const taskName = inb.task === undefined ? "legacy" : String(inb.task);
+    const task = Object.prototype.hasOwnProperty.call(TASKS, taskName) ? TASKS[taskName] : null;
+    if(!task) return reply(req, 400, {error: {code: "unknown_task"}});
+    const bad = checkInput(inb, task, raw.length);
+    if(bad) return reply(req, bad === "too_large" ? 413 : 400, {error: {code: bad, message: bad === "too_large" ? "request too large" : bad}});
 
-    let inb; try{ inb = await req.json(); }catch{ return reply(req, 400, {error: {code: "bad_request"}}); }
-    // Only what the app needs is passed on; the model and limits are decided here.
-    const model = MODELS[inb.tier === "quick" ? "quick" : "default"];
-    const body = {model, max_tokens: Math.min(parseInt(inb.max_tokens) || 8000, 16000), messages: inb.messages, stream: !!inb.stream,
-      output_config: {effort: inb.tier === "quick" ? "low" : "medium"}};
-    if(typeof inb.system === "string") body.system = inb.system;
+    const used = await countUse(env, uid, taskName, task);
+    if(used) return reply(req, 429, {error: {code: used}});
+
+    // Only what the app needs is passed on; the model and limits are decided here, per feature.
+    const model = MODELS[task.model];
+    const body = {model, max_tokens: task.max, messages: inb.messages, stream: !!inb.stream, output_config: {effort: task.effort}};
+    if(task.system && typeof inb.system === "string") body.system = inb.system;
     const headers = {"x-api-key": env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "content-type": "application/json"};
-    if(model === MODELS.default){ body.fallbacks = "default"; headers["anthropic-beta"] = "server-side-fallback-2026-07-01"; }
+    if(model !== MODELS.quick){ body.fallbacks = "default"; headers["anthropic-beta"] = "server-side-fallback-2026-07-01"; }
 
     const res = await fetch("https://api.anthropic.com/v1/messages", {method: "POST", headers, body: JSON.stringify(body)});
     return new Response(res.body, {status: res.status, headers: {...cors(req), "Content-Type": res.headers.get("Content-Type") || "application/json"}});
