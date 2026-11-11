@@ -193,7 +193,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 /* a member of someone else's cellar who may only look */
 .readonly #scanBtn,.readonly [data-imp],.readonly .stock button,.readonly [data-act="t-new"],.readonly [data-act="bought"],
 .readonly [data-act="edit"],.readonly [data-act="del"],.readonly #sharedSave,.readonly .openchip:not(.on){display:none!important}
-.readonly [data-act="rate"],.readonly .openchip{pointer-events:none}
+.readonly .openchip{pointer-events:none}
 .readonly .stock{border-color:transparent}
 .rohint[hidden]{display:none}
 .rohint{display:flex;gap:8px;align-items:center;padding:10px 14px;border:1px dashed var(--line);border-radius:10px}
@@ -217,7 +217,8 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .stars{display:flex;gap:2px}
 .stars button{border:0;background:none;padding:2px;color:var(--line);font-size:1.35rem;line-height:1}
 .stars button.on{color:var(--gold)}
-.stars.ro{pointer-events:none}.stars.ro button{font-size:.95rem;padding:0}
+.stars.ro{pointer-events:none}
+.rating{display:flex;flex-direction:column;gap:1px}.rating .others{font-size:.78rem;color:var(--muted);line-height:1.2}.rating .others b{font-weight:600;color:var(--gold)}.stars.ro button{font-size:.95rem;padding:0}
 .stock{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;overflow:hidden}
 .stock button{border:0;background:none;color:var(--ink);width:32px;height:30px;font-size:1.05rem}
 .stock span{font:500 .82rem var(--mono);padding:0 4px;min-width:58px;text-align:center;font-variant-numeric:tabular-nums}
@@ -750,13 +751,51 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
   const shortDate = d => { try{ return new Date(d+"T12:00:00").toLocaleDateString("nl-BE",{day:"numeric",month:"short"}); }catch{ return d; } };
   const fmtDate = d => { try{ return new Date(d+"T12:00:00").toLocaleDateString("nl-BE",{day:"numeric",month:"short",year:"numeric"}); }catch{ return d; } };
 
+  // ---------- scores: everyone in a shared cellar keeps their own ----------
+  // Stored as scores.<uid> on the wine. The old field `score` stays the owner's score, so older wines keep theirs.
+  // In memory w.score is always *your* score, so the rest of the app reads it as before.
+  function scoreCtx(){ const c = window.mwCloud?.cellar, me = window.mwCloud?.me; return c && me ? {me: me.uid, owner: c.owner} : null; }
+  function normScore(w){
+    const x = scoreCtx();
+    w.scores = w.scores && typeof w.scores==="object" && !Array.isArray(w.scores) ? w.scores : null;
+    if(!x){ w.score = +w.score||0; return; }
+    const base = +w.score||0;
+    Object.defineProperty(w, "ownerScore", {value: w.scores && x.owner in w.scores ? +w.scores[x.owner]||0 : base, writable: true, enumerable: false, configurable: true});
+    w.score = w.scores && x.me in w.scores ? +w.scores[x.me]||0 : (x.me===x.owner ? base : 0);
+  }
+  // The other members' scores for this wine: [{name, score}]
+  function otherScores(w){
+    const x = scoreCtx(); if(!x) return [];
+    const c = window.mwCloud.cellar, ids = new Set(c.memberIds || []), out = [];
+    const all = {...(w.scores || {})}; if(!(x.owner in all) && w.ownerScore) all[x.owner] = w.ownerScore;
+    Object.entries(all).forEach(([uid, n]) => { if(uid!==x.me && +n>0 && ids.has(uid)) out.push({name: ((c.members||{})[uid]||{}).name || "Iemand", score: +n}); });
+    return out.sort((a,b)=>b.score-a.score);
+  }
+  // What to write when you give a wine n stars (also updates the wine in memory).
+  function scorePatch(w, n){
+    const x = scoreCtx(); w.score = n;
+    if(!x) return {score: n};
+    w.scores = {...(w.scores || {}), [x.me]: n};
+    const p = {["scores." + x.me]: n};
+    if(x.me===x.owner){ p.score = n; w.ownerScore = n; }
+    return p;
+  }
+  // In a shared cellar, counts and lists are changed with "add one" / "take one" instead of writing the
+  // whole value, so two people changing the same wine at the same time never undo each other.
+  const FV = () => window.mwCloud?.me && window.firebase?.firestore ? firebase.firestore.FieldValue : null;
+
   // Normalize older records (status, stock, drink window years)
   function norm(w){
     w.status = w.status==="wens" ? "wens" : "kelder";
     w.stock = Number.isFinite(+w.stock) ? Math.max(0,+w.stock) : (w.status==="kelder"?1:0);
     w.tastings = Array.isArray(w.tastings) ? w.tastings : [];
     w.openedAt = typeof w.openedAt==="string" ? w.openedAt : "";
-    w.drunk = Array.isArray(w.drunk) ? w.drunk.filter(d=>typeof d==="string") : []; // one date per bottle you opened or took out
+    // One entry per bottle you opened or took out. Stored as "date#random" so two phones can add one at the
+    // same moment without overwriting each other; in memory w.drunk holds just the dates.
+    const raw = Array.isArray(w.drunk) ? w.drunk.filter(d=>typeof d==="string") : [];
+    Object.defineProperty(w, "drunkRaw", {value: raw, writable: true, enumerable: false, configurable: true});
+    w.drunk = raw.map(d=>d.slice(0,10));
+    normScore(w);
     w.tags = Array.isArray(w.tags) ? w.tags.map(String).filter(Boolean) : [];
     w.shareId = typeof w.shareId==="string" ? w.shareId : "";
     w.boughtQty = Math.max(0, parseInt(w.boughtQty)||0);
@@ -1004,7 +1043,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
           ${w.pending ? `<div><span class="badge b-young" title="Claude vult deze wijn aan zodra het toestel waarmee je scande online is.">Wacht op herkenning</span></div>`
             : w.pendingErr ? `<div><span class="badge b-warn">${esc(w.pendingErr)}</span></div>` : ""}
           <div class="line2">
-            <div data-act="rate" data-id="${w.id}">${starsHTML(w.score||0,false)}</div>
+            <div class="rating"><div data-act="rate" data-id="${w.id}">${starsHTML(w.score||0,false)}</div>${(o=>o.length?`<span class="others">${o.map(x=>`${esc(x.name)} <b>${x.score}★</b>`).join(" · ")}</span>`:"")(otherScores(w))}</div>
             ${isK ? `<div class="ctrls"><div class="stock${w.stock?"":" zero"}" role="group" aria-label="Voorraad">
                 <button type="button" data-act="minus" data-id="${w.id}" aria-label="Eén fles minder">−</button>
                 <span>${w.stock} fles${w.stock===1?"":"sen"}</span>
@@ -1376,7 +1415,8 @@ Antwoord met ALLEEN één JSON-object in deze vorm: ${HOUSE_FIELDS}`;
     const seenBefore = k => new Set(before.flatMap(m => k(m.w)));
     const oldC = seenBefore(w=>[w.country]), oldG = seenBefore(w=>grapesOf(w));
     const newC = countries.filter(x=>!oldC.has(x.k)).map(x=>x.k), newG = grapes.filter(x=>!oldG.has(x.k)).map(x=>x.k);
-    const best = ms.filter(m=>m.t?.score).sort((a,b)=>b.t.score-a.t.score || b.d.localeCompare(a.d))[0]
+    const mine = t => !t.uid || t.uid===window.mwCloud?.me?.uid; // in a shared cellar: your own tastings
+    const best = ms.filter(m=>m.t?.score && mine(m.t)).sort((a,b)=>b.t.score-a.t.score || b.d.localeCompare(a.d))[0]
       || ms.filter(m=>m.w.score).sort((a,b)=>b.w.score-a.w.score)[0];
     const months = Array.from({length:12}, (_,i) => ms.filter(m => +m.d.slice(5,7)===i+1).length), mMax = Math.max(1, ...months);
     const MN = ["jan","feb","mrt","apr","mei","jun","jul","aug","sep","okt","nov","dec"];
@@ -2040,8 +2080,8 @@ ${data}`;
     const w = wines.find(x=>x.id===dupFor); if(!w) return;
     b.disabled = true;
     try{
-      const stock = (w.status==="kelder" ? w.stock : 0) + 1;
-      await commit(col.doc(w.id).update({stock, status:"kelder"}));
+      const stock = (w.status==="kelder" ? w.stock : 0) + 1, fv = FV();
+      await commit(col.doc(w.id).update({stock: fv && w.status==="kelder" ? fv.increment(1) : stock, status:"kelder"}));
       const id = w.id; closeSheet(); goTo(id);
     }catch{ $("err").textContent="Bijtellen lukte niet. Probeer opnieuw."; $("err").hidden=false; b.disabled=false; }
   });
@@ -2101,10 +2141,19 @@ ${data}`;
   // One bottle more or less. A bottle less is written in the drink log (for "Jouw wijnjaar");
   // a bottle more on the same day first undoes a tap too many.
   function stockPatch(w, d){
-    const p = {};
-    if(d < 0 && w.stock > 0){ w.drunk = [...w.drunk, TODAY]; p.drunk = w.drunk; }
-    else if(d > 0 && w.drunk[w.drunk.length-1] === TODAY){ w.drunk = w.drunk.slice(0,-1); p.drunk = w.drunk; }
-    w.stock = Math.max(0, w.stock + d); p.stock = w.stock;
+    const p = {}, fv = FV();
+    if(d < 0 && w.stock > 0){
+      const tok = TODAY + "#" + Math.random().toString(36).slice(2,8);
+      w.drunkRaw = [...w.drunkRaw, tok]; w.drunk = [...w.drunk, TODAY];
+      p.drunk = fv ? fv.arrayUnion(tok) : w.drunkRaw;
+    } else if(d > 0 && w.drunk[w.drunk.length-1] === TODAY){
+      const tok = w.drunkRaw[w.drunkRaw.length-1];
+      w.drunkRaw = w.drunkRaw.slice(0,-1); w.drunk = w.drunk.slice(0,-1);
+      // An older entry is a bare date: removing it by value would remove every bottle of that day, so write the list.
+      p.drunk = fv && tok.includes("#") ? fv.arrayRemove(tok) : w.drunkRaw;
+    }
+    const was = w.stock; w.stock = Math.max(0, w.stock + d);
+    if(w.stock !== was) p.stock = fv ? fv.increment(w.stock - was) : w.stock;
     return p;
   }
 
@@ -2116,10 +2165,12 @@ ${data}`;
     return c.owner === me.uid || !!c.membersEdit;
   }
   window.mwCanEdit = canEdit;
-  const READONLY_ACTS = new Set(["minus","plus","opentoggle","rate","t-new","t-save","tstar","tg","tg-add","bought","edit","del"]);
+  const READONLY_ACTS = new Set(["minus","plus","opentoggle","t-new","t-save","tstar","tg","tg-add","bought","edit","del"]);
 
   async function save(id, patch, msg){
-    if(!canEdit()) return;
+    if(!Object.keys(patch).length) return;
+    const scoreOnly = Object.keys(patch).every(k => k.startsWith("scores."));
+    if(!canEdit() && !scoreOnly) return;
     try{ await col.doc(id).update(patch); }
     catch(err){ $("status").textContent = msg || "Bewaren lukte niet. Probeer opnieuw."; }
   }
@@ -2145,7 +2196,7 @@ ${data}`;
       if(w && window.mwEvents) window.mwEvents.pickFor(w);
     } else if(act==="rate"){
       const s = e.target.closest("[data-s]"); if(!s||!w) return;
-      const n=+s.dataset.s; w.score = w.score===n ? n-1 : n; render(); save(id,{score:w.score});
+      const n=+s.dataset.s, p = scorePatch(w, w.score===n ? n-1 : n); render(); save(id, p);
     } else if(act==="tstar"){
       const s = e.target.closest("[data-s]"); if(!s) return;
       const n=+s.dataset.s; tastingScore = tastingScore===n?n-1:n;
@@ -2187,9 +2238,12 @@ ${data}`;
       if(tDraft.color) entry.color = tDraft.color;
       if(tDraft.aromas.size) entry.aromas = [...tDraft.aromas];
       const st = Object.fromEntries(Object.entries(tDraft.struct).filter(([k,v])=>v)); if(Object.keys(st).length) entry.struct = st;
-      const tastings = [...w.tastings, entry];
-      const patch = {tastings}; if(tastingScore) patch.score = tastingScore;
-      tastingFor=null; Object.assign(w,patch); render(); save(id, patch);
+      if(window.mwCloud?.me) entry.uid = window.mwCloud.me.uid;
+      // Add this one tasting instead of writing the whole list, so a tasting someone else saves at the same time stays.
+      const fv = FV(); w.tastings = [...w.tastings, entry];
+      const patch = {tastings: fv ? fv.arrayUnion(entry) : w.tastings};
+      if(tastingScore) Object.assign(patch, scorePatch(w, tastingScore));
+      tastingFor=null; render(); save(id, patch);
       // Your verdict disagrees with the drink window: point it out.
       const left = w.status==="kelder" && w.stock > 0;
       if(st.rijp==="nog te jong" && (!w.from || w.from <= YEAR)) $("status").textContent = `Je vond ${w.name} nog te jong. Moet hij langer liggen? Pas het drinkvenster aan via Bewerken.`;
@@ -2424,6 +2478,8 @@ Zet "recognized" op false als er geen wijnetiket op de foto staat.`;
     w.createdAt=Date.now(); if(draft?.house) w.house = draft.house;
     if(window.mwCloud?.me) w.addedBy = {uid: window.mwCloud.me.uid, name: window.mwCloud.me.name};
     w.tastings = (w.status==="kelder" && w.score) ? [{date:TODAY, score:w.score, note:""}] : [];
+    const x = scoreCtx();
+    if(x){ if(w.score && w.tastings[0]) w.tastings[0].uid = x.me; w.scores = w.score ? {[x.me]: w.score} : {}; if(x.me!==x.owner) w.score = 0; }
     const ref = col.doc(); return {ref, done: commit(ref.set(w))};
   }
 
@@ -2433,7 +2489,14 @@ Zet "recognized" op false als er geen wijnetiket op de foto staat.`;
     if(!w.name) return;
     $("save").disabled=true;
     try{
-      if(editingId){ w.pendingErr = ""; await commit(col.doc(editingId).update(w)); }
+      if(editingId){
+        w.pendingErr = "";
+        // The score in the form is yours: in a shared cellar it goes to your own place, not the owner's.
+        const cur = wines.find(x=>x.id===editingId), {score, ...rest} = w;
+        if(scoreCtx()){ if(score !== (cur ? cur.score : 0)) Object.assign(rest, scorePatch(cur || {}, score)); }
+        else rest.score = score;
+        await commit(col.doc(editingId).update(rest));
+      }
       else { const {ref, done} = newWine(w); await done; openIds.add(ref.id); tab = w.status; }
       closeSheet(); render();
     }catch(err){ saveErr(err); }

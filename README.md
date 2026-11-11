@@ -99,6 +99,14 @@ Eenmalig instellen:
 5. Firestore → Rules: plak de inhoud van `firestore.rules` en klik Publish.
 6. Authentication → Settings → Authorized domains: voeg `deroovermaarten-spec.github.io` toe.
 
+In een gedeelde kelder geeft iedereen zijn eigen score (`scores.<gebruikers-id>` bij de wijn; het oude veld `score`
+blijft de score van de eigenaar). Ook leden die geen wijnen mogen wijzigen, kunnen scoren. Voorraad, gedronken flessen en
+proefmomenten worden met "één erbij / één eraf" bewaard, zodat twee mensen tegelijk elkaars werk niet overschrijven.
+
+Profielen (`users/`) zijn alleen voor jezelf leesbaar. Om gevonden te worden voor een tip, bewaart de app enkel je naam
+onder je e-mailadres (`emails/`): wie het exacte adres kent, vindt je; niemand kan de lijst opvragen.
+Pas je `firestore.rules` aan, plak ze dan opnieuw in Firebase (stap 5).
+
 Bestaande wijnen op de telefoon zet je over met "Zet ze in deze kelder" in het kelder-menu, of via een backupbestand.
 
 ## Bestanden

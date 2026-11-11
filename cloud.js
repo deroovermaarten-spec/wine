@@ -300,6 +300,9 @@
     // name and e-mail on the profile, so others can find you to send a tip (tips.js); older accounts lack them
     const pd = prof && prof.exists ? prof.data() : {};
     if(!pendingName && cloud.me.email && (pd.email !== cloud.me.email.toLowerCase() || !pd.name)) fs.doc("users/" + user.uid).set({name: pd.name || name, email: cloud.me.email.toLowerCase()}, {merge: true}).catch(() => {});
+    // Profiles are private. To be found for a tip, you leave only your name under your own e-mail address:
+    // someone has to know the address to look it up (emails/{address}, see firestore.rules).
+    if(cloud.me.email) fs.doc("emails/" + cloud.me.email.toLowerCase()).set({uid: user.uid, name}).catch(() => {});
     cloud.prefs = normPrefs(prof && prof.exists ? prof.data().prefs : null);
     // The fact of the day is kept on the profile too: the browser's own storage does not always survive reopening the app.
     cloud.fact = (prof && prof.exists && prof.data().fact) || null;
