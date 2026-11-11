@@ -87,9 +87,10 @@
     const email = draft.email.trim().toLowerCase();
     if(!to && email){
       if(email === (me.email || "").toLowerCase()) throw {nice: "Dat ben je zelf. Kies iemand anders."};
-      const s = await fs.collection("users").where("email", "==", email).limit(1).get();
-      if(s.empty) throw {nice: "Niemand met dat e-mailadres gebruikt de app. Vraag of ze zich eerst aanmelden."};
-      to = s.docs[0].id; toName = s.docs[0].data().name || email;
+      // Only an exact address can be looked up; the list of everyone who uses the app stays private.
+      const s = /^[^\s/@]+@[^\s/@]+$/.test(email) ? await fs.doc("emails/" + email).get() : null;
+      if(!s || !s.exists) throw {nice: "Niemand met dat e-mailadres gebruikt de app (of hij opende de app nog niet sinds de laatste update). Vraag of ze de app even openen."};
+      to = s.data().uid; toName = s.data().name || email;
     }
     if(!to) throw {nice: "Kies eerst wie je wilt tippen."};
     await fs.collection("tips").add({

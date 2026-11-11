@@ -11,10 +11,22 @@ service cloud.firestore {
     function isMember(c) { return signedIn() && me() in cellar(c).memberIds; }
     function changes() { return request.resource.data.diff(resource.data).affectedKeys(); }
 
-    // A small profile (name, e-mail) per person; only they can change it.
+    // A profile per person (name, e-mail, taste, what they have seen): only they can read and change it.
+    // Names of the people in a cellar come from the cellar itself (members).
     match /users/{uid} {
-      allow read: if signedIn();
-      allow write: if signedIn() && me() == uid;
+      allow read, write: if signedIn() && me() == uid;
+    }
+
+    // To be found for a tip: your name under your own e-mail address. Whoever knows the exact address
+    // can look it up (get); nobody can list them all.
+    match /emails/{email} {
+      allow get: if signedIn();
+      allow create, update: if signedIn()
+        && request.auth.token.email is string
+        && request.auth.token.email.lower() == email
+        && request.resource.data.uid == me()
+        && request.resource.data.keys().hasOnly(['uid', 'name']);
+      allow delete: if signedIn() && resource.data.uid == me();
     }
 
     match /cellars/{c} {
@@ -49,9 +61,13 @@ service cloud.firestore {
 
       // The wines: every member may read them. Only the owner adds, changes or removes wines,
       // unless the owner switched on "membersEdit" for this cellar (Settings → Deze kelder).
+      // Every member may give a wine their own score (scores.<their id>), also when they cannot edit wines.
       match /wines/{wine} {
         allow read: if isMember(c);
         allow write: if isMember(c) && (cellar(c).owner == me() || cellar(c).get('membersEdit', false) == true);
+        allow update: if isMember(c)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['scores'])
+          && request.resource.data.get('scores', {}).diff(resource.data.get('scores', {})).affectedKeys().hasOnly([me()]);
       }
     }
 
