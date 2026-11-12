@@ -18,7 +18,8 @@
       items: [
         "Nieuw: “Wat is er nieuw” onder Instellingen › App, met per dag wat er veranderde.",
         "Bij grote vernieuwingen krijg je eenmalig een kaartje als je de app opent.",
-        "Je eigen kelder krijgt bovenaan een eigen kleur. Zo zie je meteen of je in je eigen kelder of in een gedeelde kelder zit."
+        "Je eigen kelder krijgt bovenaan een eigen kleur. Zo zie je meteen of je in je eigen kelder of in een gedeelde kelder zit.",
+        "Het weetje van de dag heeft een eigen lampje, half gevuld met rode wijn. Terwijl er een nieuw weetje wordt ingeschonken, klotst de wijn op en neer."
       ]},
     {date: "2026-11-11",
       items: [
