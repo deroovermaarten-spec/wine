@@ -197,6 +197,7 @@
     glass: '<path d="M7 3h10c0 6-2 9-5 9.5C9 12 7 9 7 3z"/><path d="M12 12.5V20M8.5 21h7"/>',
     back: '<path d="M15 5l-7 7 7 7"/>',
     pin: '<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
+    chart: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
     gear: '<path d="M12.2 2h-.4a2 2 0 0 0-2 2v.2a2 2 0 0 1-1 1.7l-.4.3a2 2 0 0 1-2 0l-.2-.1a2 2 0 0 0-2.7.7l-.2.4a2 2 0 0 0 .7 2.7l.2.1a2 2 0 0 1 1 1.7v.5a2 2 0 0 1-1 1.7l-.2.1a2 2 0 0 0-.7 2.7l.2.4a2 2 0 0 0 2.7.7l.2-.1a2 2 0 0 1 2 0l.4.3a2 2 0 0 1 1 1.7v.2a2 2 0 0 0 2 2h.4a2 2 0 0 0 2-2v-.2a2 2 0 0 1 1-1.7l.4-.3a2 2 0 0 1 2 0l.2.1a2 2 0 0 0 2.7-.7l.2-.4a2 2 0 0 0-.7-2.7l-.2-.1a2 2 0 0 1-1-1.7v-.5a2 2 0 0 1 1-1.7l.2-.1a2 2 0 0 0 .7-2.7l-.2-.4a2 2 0 0 0-2.7-.7l-.2.1a2 2 0 0 1-2 0l-.4-.3a2 2 0 0 1-1-1.7V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>'
   };
   const ico = n => `<svg class="mwi" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n]}</svg>`;
@@ -435,7 +436,7 @@
   const hasPrefs = p => p && (p.colors.length || p.grapes.length || p.regions.length || p.avoid.length || p.note);
   window.mwPrefs = {get: () => cloud.prefs || null, has: () => !!hasPrefs(cloud.prefs)};
   let prefDraft = null;
-  let sheetTab = "kelder"; // Instellingen: kelder | mij | app (remembered while the app is open)
+  let sheetTab = "kelder"; // Instellingen: kelder | mij | app | beheer (remembered while the app is open)
   // Sfeer: the southern skins from index.html (window.mwSkin), per device.
   function skinHtml(){
     const S = window.mwSkin; if(!S) return "";
@@ -606,7 +607,8 @@
     const keepNew = $("mwNew")?.value || "", keepName = $("mwRename")?.value, focus = document.activeElement?.id;
     const ownerName = (c.members?.[c.owner] || {}).name || "de eigenaar";
     const migrate = !!(localCount && (owner || c.membersEdit));
-    const TABS = [["kelder", "cellar", "Kelder", migrate], ["mij", "heart", "Voor mij", false], ["app", "spark", "App", !!window.mwNews?.unread()]];
+    const TABS = [["kelder", "cellar", "Kelder", migrate], ["mij", "heart", "Voor mij", false], ["app", "spark", "App", !!window.mwNews?.unread()]]
+      .concat(window.mwAdmin?.is() ? [["beheer", "chart", "Beheer", false]] : []); // only for the app's builder (admin.js)
     const tab = TABS.some(t => t[0] === sheetTab) ? sheetTab : "kelder";
     $("mwBody").innerHTML = `
       ${sheetMsg ? `<p class="err">${esc(sheetMsg)}</p>` : ""}
@@ -658,6 +660,8 @@
 
       ${aboutHtml()}` : ""}
 
+      ${tab === "beheer" ? (window.mwAdmin.load(), window.mwAdmin.html()) : ""}
+
       <button class="btn ghost mwout" type="button" data-a="logout">${ico("logout")}Afmelden</button>
       ${tab === "app" ? copyHtml() : ""}`;
     showVersion();
@@ -685,7 +689,7 @@
         <p class="mwtag">Je wijnkelder, gedeeld met wie je wilt.</p>
         <div class="mwfacts">
           <div>${ico("info")}<span><b>Versie</b><small id="mwVer">…</small></span></div>
-          <div>${ico("shield")}<span><b>Je gegevens</b><small>Je wijnen staan in Google Firebase in de cloud. Alleen leden van een kelder zien die kelder. Geen reclame, en er wordt niets doorverkocht.</small></span></div>
+          <div>${ico("shield")}<span><b>Je gegevens</b><small>Je wijnen staan in Google Firebase in de cloud. Alleen leden van een kelder zien die kelder. Geen reclame, en er wordt niets doorverkocht. De maker van de app ziet alleen hoe vaak iedereen de app gebruikt (tellingen, geen wijnen of notities).</small></span></div>
           <div>${ico("spark")}<span><b>Slimme functies</b><small>Vragen, etiketten lezen en suggesties gebruiken Claude van Anthropic, via een eigen beveiligde server.</small></span></div>
           <div>${ico("bell")}<span><b>Meldingen</b><small>Alleen als je ze zelf aanzet, en alleen op dit toestel.</small></span></div>
         </div>

@@ -3,7 +3,7 @@
 // Locally it stays "__BUILD__": then app files always come from the network, so edits show up at once.
 const VERSION = "mw-__BUILD__";
 const DEV = VERSION.includes("__BUILD__");
-const SHELL = ["./", "index.html", "store.js", "firebase-config.js", "cloud.js", "events.js", "tips.js", "news.js", "ai.js", "remind.js", "world.json", "manifest.webmanifest",
+const SHELL = ["./", "index.html", "store.js", "firebase-config.js", "cloud.js", "events.js", "tips.js", "news.js", "ai.js", "remind.js", "admin.js", "world.json", "manifest.webmanifest",
   "icons/icon.svg", "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png"];
 
 // Libraries and fonts rarely change, so they live in their own cache that survives app updates.

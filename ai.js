@@ -89,6 +89,7 @@
         }catch(e){ if(opts.signal && opts.signal.aborted) throw err("cancelled", "", {text}); throw e; }
       }
       if(stop === "refusal") throw err("failed", "refusal", {text});
+      try{ window.mwStats && window.mwStats.ai(); }catch{} // counted for the builder's usage overview (admin.js)
       return {text, truncated: stop === "max_tokens"};
     }
 

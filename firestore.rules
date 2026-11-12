@@ -147,5 +147,22 @@ service cloud.firestore {
         && event(request.resource.data.eventId).owner == me();
       allow delete: if signedIn() && resource.data.by == me();
     }
+
+    // Usage counts for the app's builder (admin.js): one record per person, with counts only.
+    // You write only your own record, with a fixed set of fields; only an admin reads them all.
+    // An admin is whoever has a document admins/{their uid}, made by hand in the Firebase console.
+    function isAdmin() { return signedIn() && exists(/databases/$(database)/documents/admins/$(me())); }
+
+    match /admins/{uid} {
+      allow get: if signedIn() && me() == uid;
+    }
+
+    match /stats/{uid} {
+      allow read: if signedIn() && (me() == uid || isAdmin());
+      allow create, update: if signedIn() && me() == uid
+        && request.resource.data.keys().hasOnly(['name', 'first', 'last', 'day', 'opens', 'daysTotal', 'days',
+             'cellars', 'wines', 'scored', 'ai', 'aiTotal'])
+        && (!('name' in request.resource.data) || (request.resource.data.name is string && request.resource.data.name.size() <= 80));
+    }
   }
 }
