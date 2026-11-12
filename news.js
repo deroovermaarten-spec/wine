@@ -20,7 +20,8 @@
         "Bij grote vernieuwingen krijg je eenmalig een kaartje als je de app opent.",
         "Je eigen kelder krijgt bovenaan een eigen kleur. Zo zie je meteen of je in je eigen kelder of in een gedeelde kelder zit.",
         "Het weetje van de dag heeft een eigen lampje, half gevuld met rode wijn. Terwijl er een nieuw weetje wordt ingeschonken, klotst de wijn op en neer.",
-        "De app telt voortaan hoe vaak hij gebruikt wordt, zodat de maker weet wat werkt. Dat zijn alleen tellingen: je wijnen, notities en e-mailadres blijven privé."
+        "De app telt voortaan hoe vaak hij gebruikt wordt, zodat de maker weet wat werkt. Dat zijn alleen tellingen: je wijnen, notities en e-mailadres blijven privé.",
+        "Vragen stel je nu meteen op de eerste pagina, onder het weetje: “Vraag het aan je kelder” vervangt de tab Vraag en het blok “Wat drink ik vanavond?”. Typ bijvoorbeeld wat je vanavond eet."
       ]},
     {date: "2026-11-11",
       items: [

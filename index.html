@@ -130,13 +130,6 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 /* panels */
 .box{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px}
 .tonight{background:var(--accent-soft);border-color:transparent;box-shadow:none}
-.tonight form{display:flex;gap:8px;flex-wrap:wrap}
-.tonight input{flex:1 1 200px;min-width:0;padding:10px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit}
-.picks{display:flex;flex-direction:column;gap:8px}
-.pick{display:grid;grid-template-columns:auto 1fr;gap:10px;background:var(--surface);border-radius:12px;padding:10px;border:0;text-align:left;color:var(--ink);width:100%}
-.pick b{font-family:var(--display);font-weight:400;font-size:1rem}
-.pick span{font-size:.86rem;color:var(--muted)}
-.pick .rank{font:500 .8rem var(--mono);color:var(--accent)}
 .drinkrow{display:flex;flex-direction:column;gap:6px}
 .drinkmore{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 12px;padding:4px 0 2px;font-size:.86rem;color:var(--muted)}
 .drinkmore .link{font-weight:600;padding:4px 0}
@@ -280,10 +273,10 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .msg.err{color:var(--late)}
 .askform{display:flex;gap:8px;align-items:flex-end}
 .askform textarea{flex:1;min-width:0;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:10px 14px;resize:none;min-height:44px;max-height:140px}
-.starters{display:flex;flex-direction:column;gap:6px}
+.askmore{display:flex;gap:12px;justify-content:flex-end}
+.tonight .askform textarea{border-radius:22px;box-sizing:border-box;height:44px;line-height:1.4}
 .askwines{align-self:flex-start;max-width:88%;display:flex;flex-direction:column;gap:6px;margin-top:-2px}
 .askwines .drink{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px}
-.starters button{text-align:left;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:9px 12px;font-size:.88rem}
 .fact{border-left:3px solid var(--accent)}
 .fact h3{font:italic 500 1.15rem/1.25 var(--display);margin:0}
 .fact p{margin:0;max-width:62ch}
@@ -486,7 +479,6 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
     <button role="tab" id="t_kelder" data-tab="kelder" aria-selected="true"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2h4v4c0 1.2 3 2.2 3 6v9a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1v-9c0-3.8 3-4.8 3-6zM7 14h10"/></svg><span class="tl">Kelder</span><span class="n" id="n_kelder"></span></button>
     <button role="tab" id="t_wens" data-tab="wens" aria-selected="false"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg><span class="tl">Verlanglijst</span><span class="n" id="n_wens"></span></button>
     <button role="tab" id="t_stats" data-tab="stats" aria-selected="false"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20v-8M12 20V5M19 20v-5M3 20h18"/></svg><span class="tl">Inzichten</span></button>
-    <button role="tab" id="t_ask" data-tab="ask" aria-selected="false"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5h14a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-8l-4 4v-4H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/></svg><span class="tl">Vraag</span></button>
   </nav>
   <div class="status" id="status">Je wijnen worden geladen…</div>
   <section id="sharedView" hidden></section>
@@ -500,12 +492,14 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
     <p class="hint rohint" id="roHint" hidden></p>
     <div class="box fact" id="factbox" hidden></div>
     <div class="box tonight" id="tonight" hidden>
-      <h2 class="sec">Wat drink ik vanavond?</h2>
-      <form id="tform">
-        <input id="meal" placeholder="Wat eet je? bv. lamsstoofpot met rozemarijn" aria-label="Wat eet je vanavond">
-        <button class="btn sm" id="pickBtn" type="submit">Kies een fles</button>
+      <h2 class="sec">Vraag het aan je kelder</h2>
+      <p class="hint" id="askHint">Wat drink je bij het eten, welke fles moet eerst op, wat koop je best bij? Tik op een wijn in het antwoord om hem te openen.</p>
+      <div class="chat" id="chat" aria-live="polite"></div>
+      <form class="askform" id="askform">
+        <textarea id="askq" rows="1" placeholder="Stel je vraag…" aria-label="Je vraag aan je kelder"></textarea>
+        <button class="btn sm" type="submit" id="askBtn">Vraag</button>
       </form>
-      <div id="picks" class="picks"></div>
+      <div class="askmore"><button class="link" type="button" id="askStop" hidden>Stop</button><button class="link" type="button" id="askNew" hidden>Nieuwe vraag</button></div>
     </div>
     <div class="box" id="drinkbox" hidden></div>
     <div class="chips" id="chips" hidden></div>
@@ -530,19 +524,6 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
 
   <section id="v_stats" hidden style="display:flex;flex-direction:column;gap:18px"></section>
 
-  <section id="v_ask" hidden style="display:flex;flex-direction:column;gap:14px">
-    <div class="box">
-      <h2 class="sec">Vraag het aan je kelder</h2>
-      <p class="hint">Claude kent je kelder, je proefnotities en je verlanglijst. Tik op een wijn in het antwoord om hem te openen.</p>
-    </div>
-    <div class="starters" id="starters"></div>
-    <div class="chat" id="chat" aria-live="polite"></div>
-    <form class="askform" id="askform">
-      <textarea id="askq" rows="1" placeholder="Stel je vraag…" aria-label="Je vraag"></textarea>
-      <button class="btn" type="submit" id="askBtn">Vraag</button>
-    </form>
-    <div style="display:flex;gap:12px;justify-content:flex-end"><button class="link" type="button" id="askStop" hidden>Stop</button><button class="link" type="button" id="askNew" hidden>Nieuw gesprek</button></div>
-  </section>
 </div>
 
 <div class="scanbar">
@@ -746,7 +727,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
   try{ const q = new URLSearchParams(location.search); goParam = q.get("go"); wineParam = q.get("wine");
     if(goParam || wineParam){ q.delete("go"); q.delete("wine"); history.replaceState(null, "", location.pathname + (q.toString() ? "?" + q : "") + location.hash); } }catch{}
   let tab = goParam==="wens" || goParam==="stats" ? goParam : "kelder", typeFilter="", draft=null, scanCtl=null, editingId=null, tastingFor=null, tastingScore=0, target="kelder";
-  let pickCtl=null, lastPicks=null; const houseBusy=new Map();
+  const houseBusy=new Map();
   let mcp=null;
   let menuFor=null; // the wine whose ⋯ actions are open
   const fold = {fact:true, drink:true}; try{ Object.assign(fold, JSON.parse(localStorage.getItem("mw_fold") || "{}")); }catch{}
@@ -904,30 +885,28 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
     $("n_kelder").textContent = kelder.length ? kelder.length : "";
     $("n_wens").textContent = wens.length ? wens.length : "";
     document.querySelectorAll(".tabs button").forEach(b=>b.setAttribute("aria-selected", b.dataset.tab===tab));
-    $("v_list").hidden = tab!=="kelder" && tab!=="wens"; $("v_stats").hidden = tab!=="stats"; $("v_ask").hidden = tab!=="ask";
+    $("v_list").hidden = tab!=="kelder" && tab!=="wens"; $("v_stats").hidden = tab!=="stats";
     if($("v_events")) $("v_events").hidden = tab!=="events";
     const listTab = tab==="kelder" || tab==="wens", canSearch = listTab && (tab==="kelder" ? kelder : wens).length >= 2;
     if(!canSearch){ searchOpen = false; $("q").value = ""; }
     $("searchBtn").hidden = !canSearch; $("searchbar").hidden = !searchOpen;
     $("searchBtn").setAttribute("aria-expanded", searchOpen);
     $("v_list").classList.toggle("searching", !!$("q").value.trim());
-    $("scanBtn").hidden = tab==="ask"; // the floating button would cover the question box
     const ro = !canEdit(); document.body.classList.toggle("readonly", ro);
     $("roHint").hidden = !ro || !listTab;
     if(ro){ const c = window.mwCloud.cellar, on = (c.members?.[c.owner] || {}).name || "de eigenaar"; $("roHint").textContent = `Je bekijkt de kelder van ${on}. Alleen ${on} voegt wijnen toe of past ze aan.`; }
     if(tab==="events"){ updateCollapse(); return window.mwEvents?.render(); }
-    if(tab==="ask"){ updateCollapse(); return renderChat(); }
     if(tab==="stats"){ updateCollapse(); return renderStats(); }
 
     const pool = tab==="kelder" ? kelder : wens;
     $("tonight").hidden = !(tab==="kelder" && kelder.length && sample);
     if(goParam==="drinken" && !$("drinkbox").hidden){ goParam = null; setTimeout(() => { $("drinkbox").scrollIntoView({block:"start"}); $("drinkbox").classList.add("flash"); setTimeout(()=>$("drinkbox").classList.remove("flash"),1600); }, 0); }
-    if(goParam==="vanavond" && !$("tonight").hidden){ goParam = null; setTimeout(() => { $("tonight").scrollIntoView({block:"center"}); $("meal").focus({preventScroll:true}); }, 0); }
+    if(goParam==="vanavond" && !$("tonight").hidden){ goParam = null; setTimeout(() => { $("tonight").scrollIntoView({block:"center"}); const q=$("askq"); if(!q.value) q.value="Wat drink ik vanavond bij "; q.focus({preventScroll:true}); q.setSelectionRange(q.value.length,q.value.length); }, 0); }
     if(goParam==="drinken") fold.drink = false;
     $("swipeHint").hidden = !(tab==="kelder" && canEdit() && TOUCH && !seenHint() && kelder.some(w=>w.stock>0));
     renderDrinkBox(tab==="kelder" ? kelder : []);
     renderFact();
-    renderPicks();
+    renderChat();
 
     // filters
     $("tools").hidden = pool.length < 2; $("chips").hidden = pool.length < 2;
@@ -1386,15 +1365,6 @@ Antwoord met ALLEEN één JSON-object in deze vorm: ${HOUSE_FIELDS}`;
       ${soon.length?`<div class="keep"><div class="eyebrow">Drink binnenkort</div><div class="drinkrow">${drinkList("soon", soon, row)}</div></div>`:""}
       ${ready.length?`<div class="eyebrow">Nu op dronk</div><div class="drinkrow">${drinkList("ready", ready, row)}</div>`:""}
       ${window.mwRemind ? window.mwRemind.html() : ""}`;
-  }
-
-  function renderPicks(){
-    const el = $("picks");
-    if(!lastPicks){ el.innerHTML=""; return; }
-    if(lastPicks.msg){ el.innerHTML = `<p class="hint">${esc(lastPicks.msg)}</p>`; return; }
-    el.innerHTML = lastPicks.picks.map((p,i)=>{ const w=wines.find(x=>x.id===p.id); if(!w) return "";
-      return `<button class="pick" type="button" data-goto="${w.id}"><span class="rank">${i+1}</span><div><b>${esc(w.name)}</b>${w.vintage?` <span class="vint">${esc(w.vintage)}</span>`:""}<br><span>${esc(p.why)}</span></div></button>`; }).join("")
-      + (lastPicks.tip?`<p class="hint">${esc(lastPicks.tip)}</p>`:"");
   }
 
   function groupAvg(rows, keyFn){
@@ -1969,20 +1939,6 @@ Wijnen (JSON): ${JSON.stringify(cellar)}`;
     }
     return out + (inList ? "</ul>" : "");
   }
-  // Starter questions that fit what is actually in the cellar right now.
-  function starterQs(){
-    const kelder = wines.filter(w=>w.status==="kelder"), inStock = kelder.filter(w=>w.stock>0), wens = wines.filter(w=>w.status==="wens");
-    const qs = [];
-    if(kelder.some(w=>w.openedAt)) qs.push("Welke geopende flessen moet ik eerst opdrinken?");
-    if(inStock.some(w=>{ const d=drinkState(w); return d && d.k<=1; })) qs.push("Welke flessen moet ik dit jaar nog drinken, en waarom?");
-    if(wines.some(w=>w.tastings.length)) qs.push("Welke wijn vond ik het lekkerst de laatste maanden, en wat schreef ik erover?");
-    if(inStock.length >= 6) qs.push("Ik krijg zes gasten voor een diner. Welke flessen open ik, in welke volgorde?");
-    if(wens.some(w=>w.tags.some(t=>/tip/i.test(t)))) qs.push("Welke wijnen op mijn verlanglijst kreeg ik als tip, en van wie?");
-    else if(wens.length) qs.push("Wat moet ik van mijn verlanglijst als eerste kopen?");
-    if(inStock.length >= 3) qs.push("Welke stijl of streek ontbreekt nog in mijn kelder?");
-    qs.push("Welke wijn onder €20 is mijn beste koop?");
-    return qs.slice(0,4);
-  }
   const askMark = /\[\[\s*wijnen\s*:([^\]]*)(\]\]|$)/i;
   function askWinesHTML(m){
     const ws = (m.ids||[]).map(id=>wines.find(w=>w.id===id)).filter(Boolean);
@@ -1990,8 +1946,7 @@ Wijnen (JSON): ${JSON.stringify(cellar)}`;
     return `<div class="askwines">${ws.map(w=>`<button class="drink" type="button" data-goto="${w.id}"><span class="t"><b>${esc(w.name)}</b>${w.vintage?` <span class="vint">${esc(w.vintage)}</span>`:""}</span><span class="badge ${w.status==="kelder"&&w.stock?"b-ok":"b-young"}">${w.status==="kelder" ? (w.stock?w.stock+" fl.":"op") : "verlanglijst"}</span></button>`).join("")}</div>`;
   }
   function renderChat(){
-    $("starters").hidden = chat.length > 0;
-    if(!chat.length) $("starters").innerHTML = starterQs().map(q=>`<button type="button">${esc(q)}</button>`).join("");
+    $("askHint").hidden = chat.length > 0;
     $("askNew").hidden = !chat.length || !!askCtl;
     $("askStop").hidden = !askCtl;
     $("askBtn").disabled = !!askCtl || !sample;
@@ -2025,6 +1980,7 @@ Beantwoord vragen over de eigen wijnen enkel op basis van de gegevens hieronder.
 - Antwoord in de taal van de vraag. Begin meteen met het antwoord, zonder inleiding of herhaling van de vraag.
 - Kort en concreet: hoogstens een paar zinnen of een korte lijst met "- ". Geen tabellen of koppen. Zet wijnnamen in **vet** met jaargang.
 - Kies en adviseer echt: zeg welke fles en waarom (drinkvenster, score, proefnotities, prijs), in plaats van alles op te sommen.
+- Vraagt iemand wat te drinken bij een gerecht: kies hoogstens 3 flessen die in huis zijn (flessen > 0), de beste eerst, met per fles één zin waarom ze past. Geef voorrang aan wijnen die snel op moeten. Eventueel één korte serveertip.${tasteText()}
 - "kelder" = in huis (flessen = voorraad; 0 = op), "verlanglijst" = nog niet gekocht, "geopendSinds" = fles staat open. Tags zoals "tip van Jan" zeggen van wie een tip kwam.
 - Staat iets niet in de gegevens, zeg dat eerlijk. Algemene wijnkennis mag, maar maak duidelijk wat uit de eigen kelder komt.
 - Sluit af met één laatste regel [[wijnen: id, id]] met de id's van de wijnen uit de gegevens die je aanraadt of noemt (hoogstens 5, belangrijkste eerst). Noem je geen eigen wijn, laat die regel weg.
@@ -2042,13 +1998,12 @@ ${data}`;
     }
     reply.pending = false; askCtl = null; renderChat(); scrollChat();
   }
-  function scrollChat(){ const last = $("chat").lastElementChild; if(last) last.scrollIntoView({block:"end", behavior:"auto"}); }
+  function scrollChat(){ const last = $("chat").lastElementChild; if(last) last.scrollIntoView({block:"nearest", behavior:"auto"}); }
   $("askform").addEventListener("submit", e => { e.preventDefault(); const q = $("askq").value; $("askq").value = ""; $("askq").style.height = ""; ask(q); });
   $("askq").addEventListener("keydown", e => { if(e.key==="Enter" && !e.shiftKey && !e.isComposing){ e.preventDefault(); $("askform").requestSubmit(); } });
   $("askq").addEventListener("input", e => { const t = e.target; t.style.height = "auto"; t.style.height = Math.min(140, t.scrollHeight) + "px"; });
-  $("starters").addEventListener("click", e => { const b = e.target.closest("button"); if(b) ask(b.textContent); });
   $("askStop").onclick = () => askCtl?.abort();
-  $("askNew").onclick = () => { chat = []; renderChat(); $("askq").focus(); };
+  $("askNew").onclick = () => { askCtl?.abort(); chat = []; renderChat(); $("askq").focus(); };
 
   // ---------- compare ----------
   function updateCmpBar(){ $("cmpCancel").hidden = compareIds.length!==1; if(compareIds.length===1) $("cmpCancel").textContent = "Kies een tweede wijn · annuleren"; }
@@ -2370,30 +2325,6 @@ ${data}`;
   }
   $("list").addEventListener("keydown", e => { if(e.target.id==="tg_own" && e.key==="Enter"){ e.preventDefault(); addOwnAroma(); } });
 
-  // ---------- tonight ----------
-  $("tform").addEventListener("submit", async e => {
-    e.preventDefault();
-    const meal = $("meal").value.trim(); if(!meal || !sample) return;
-    const cand = wines.filter(w=>w.status==="kelder" && w.stock>0);
-    if(!cand.length){ lastPicks={msg:"Je hebt geen flessen meer op voorraad. Verhoog de voorraad bij een wijn om hier suggesties te krijgen."}; renderPicks(); return; }
-    pickCtl?.abort(); pickCtl = new AbortController();
-    $("pickBtn").disabled = true; $("picks").innerHTML = `<p class="hint">Claude kijkt in je kelder…</p>`;
-    const data = cand.slice(0,150).map(w=>({id:w.id,naam:w.name,producent:w.producer,jaar:w.vintage,type:w.color,druif:w.grape,streek:[w.region,w.country].filter(Boolean).join(", "),score:w.score||null,flessen:w.stock,drinkvenster:windowText(w)||null,smaak:w.taste||null}));
-    const prompt = `Je bent een sommelier. Kies uit de wijnkelder hieronder de 3 flessen (of minder als er minder passen) die het best passen bij dit gerecht: "${meal}". Houd rekening met de combinatie met het eten, het drinkvenster (dit jaar is ${YEAR}; geef voorrang aan wijnen die snel gedronken moeten worden) en de persoonlijke score.${tasteText()} Schrijf in het Nederlands.
-Antwoord met ALLEEN dit JSON-object: {"picks":[{"id":"exacte id uit de lijst","why":"één zin waarom deze wijn past"}],"tip":"optioneel: één korte serveertip of ''"}
-Kelder:
-${JSON.stringify(data)}`;
-    try{
-      const r = await sample.json(prompt, {signal:pickCtl.signal, task:"pick"});
-      const picks = (r?.picks||[]).filter(p=>cand.some(w=>w.id===String(p.id))).slice(0,3).map(p=>({id:String(p.id),why:String(p.why||"")}));
-      lastPicks = picks.length ? {picks, tip:String(r?.tip||"")} : {msg:"Claude vond geen passende fles in je kelder voor dit gerecht."};
-    }catch(err){
-      if(err?.code==="cancelled") return;
-      lastPicks = {msg: limitMsg(err) || (err?.code==="not_granted" ? "Claude is niet beschikbaar voor jouw account." : err?.code==="rate_limited" ? "Claude is even niet beschikbaar: je hebt je gebruikslimiet bereikt of er liepen kort na elkaar te veel aanvragen. Probeer het over een tijdje opnieuw." : "Kiezen lukte niet. Probeer opnieuw.")};
-    }finally{ $("pickBtn").disabled=false; }
-    renderPicks();
-  });
-
   // ---------- scanning & form ----------
   function thumbFrom(file){
     return new Promise(res=>{
@@ -2614,7 +2545,6 @@ Zet "recognized" op false als er geen wijnetiket op de foto staat.`;
   (async () => {
     const [d, u, s, m, dl] = await Promise.all([claude.use("db"), claude.use("user"), claude.use("sample"), claude.use("mcp"), claude.use("downloads")]);
     sample = s; db = d; mcp = m; downloads = dl;
-    $("t_ask").hidden = !sample;
     const uid = u ? await u.id() : null;
     if(db && uid) col = db.collection("data/users/"+uid);
     loadShared();

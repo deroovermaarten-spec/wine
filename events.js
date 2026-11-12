@@ -460,7 +460,7 @@
     tab.innerHTML = `<svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 6h14a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1zM4 10h16M8 3v4M16 3v4"/></svg><span class="tl">Events</span>`;
     document.querySelector(".tabs")?.appendChild(tab);
     const sec = document.createElement("section"); sec.id = "v_events"; sec.hidden = true; sec.style.cssText = "display:flex;flex-direction:column;gap:14px";
-    $("v_ask").after(sec);
+    $("v_stats").after(sec);
     sec.addEventListener("click", onClick);
     sec.addEventListener("submit", onSubmit);
     sec.addEventListener("input", e => { if(e.target.id === "evPickQ"){ pickQ = e.target.value; paint(); } });
