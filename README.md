@@ -122,6 +122,11 @@ Profielen (`users/`) zijn alleen voor jezelf leesbaar. Om gevonden te worden voo
 onder je e-mailadres (`emails/`): wie het exacte adres kent, vindt je; niemand kan de lijst opvragen.
 Pas je `firestore.rules` aan, plak ze dan opnieuw in Firebase (stap 5).
 
+Gebruikstellingen (`admin.js`): elke gebruiker bewaart enkel tellingen in `stats/<gebruikers-id>` (laatst gezien,
+actieve dagen, aantal wijnen en scores, slimme vragen). Alleen een beheerder leest ze allemaal, in Instellingen › Beheer.
+Beheerder word je door in Firestore → Data een document `admins/<jouw gebruikers-id>` te maken (inhoud maakt niet uit;
+je id staat onder Instellingen › Kelder › Technische gegevens). De app zelf kan dat document niet aanmaken.
+
 Bestaande wijnen op de telefoon zet je over met "Zet ze in deze kelder" in het kelder-menu, of via een backupbestand.
 
 ## Bestanden
@@ -137,6 +142,7 @@ Bestaande wijnen op de telefoon zet je over met "Zet ze in deze kelder" in het k
 | `.github/workflows/pages.yml` | Publiceert de app op GitHub Pages bij elke push |
 | `cloud.js`, `firebase-config.js`, `vendor/firebase/` | Aanmelden en gedeelde kelders (Firebase) |
 | `remind.js` | Herinneringen: plant meldingen voor flessen die op moeten |
+| `admin.js` | Gebruikstellingen en het beheerscherm (alleen voor de beheerder) |
 | `events.js` | Events: samen een wijnlijst opstellen voor een etentje of proefavond |
 | `firestore.rules` | Beveiligingsregels om in Firebase te plakken |
 
