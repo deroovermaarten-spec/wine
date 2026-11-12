@@ -28,7 +28,14 @@
 .mwurow .bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
 .mwurow .bar i{display:block;height:100%;background:var(--accent);border-radius:3px}
 .mwchipz{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:.78rem;color:var(--muted)}
-.mwchipz span b{color:var(--ink);font-weight:700}`;
+.mwchipz span b{color:var(--ink);font-weight:700}
+#mwTab-beheer{color:var(--gold)}
+#mwTab-beheer[aria-selected="true"]{background:var(--gold);color:var(--onaccent)}
+.mwadmonly{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:12px;font-size:.84rem;font-weight:700;
+  color:var(--gold);background:color-mix(in srgb,var(--gold) 14%,var(--surface));border:1px solid var(--gold)}
+.mwadmonly .mwi{width:16px;height:16px}
+.mwsec.adm{border-color:color-mix(in srgb,var(--gold) 55%,var(--line))}
+.mwsec.adm .mwbadge{background:color-mix(in srgb,var(--gold) 18%,var(--surface));color:var(--gold)}`;
 
   const pad = n => String(n).padStart(2, "0");
   const dayOf = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -94,7 +101,7 @@
 
   function html(){
     const ui = cloud.ui, esc = ui.esc;
-    if(!rows) return `<section class="mwsec">${ui.head("chart", "Gebruik van de app")}<p>${esc(err || "Laden…")}</p></section>`;
+    if(!rows) return `${only()}<section class="mwsec adm">${ui.head("chart", "Gebruik van de app")}<p>${esc(err || "Laden…")}</p></section>`;
     const now = new Date(), today = dayOf(now), month = today.slice(0, 7), week = Date.now() - 7 * 864e5;
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
     const monthName = now.toLocaleDateString("nl-BE", {month: "long"});
@@ -112,11 +119,11 @@
       [list.reduce((a, r) => a + r.aiM, 0), `slimme vragen in ${monthName}`]
     ];
     const top = Math.max(1, ...list.map(r => r.m));
-    return `<section class="mwsec">${ui.head("chart", "Gebruik van de app", `<button class="btn ghost sm" type="button" data-adm="reload">Ververs</button>`)}
+    return `${only()}<section class="mwsec adm">${ui.head("chart", "Gebruik van de app", `<button class="btn ghost sm" type="button" data-adm="reload">Ververs</button>`)}
         <div class="mwadm">${tiles.map(([n, l]) => `<div><b>${n}</b><small>${esc(l)}</small></div>`).join("")}</div>
         <p>${ico("shield")} Alleen jij ziet dit. Er worden enkel tellingen bewaard, geen wijnen, notities of e-mailadressen.${since < Infinity ? ` Geteld sinds ${esc(new Date(since).toLocaleDateString("nl-BE", {day: "numeric", month: "long", year: "numeric"}))}.` : ""}</p>
       </section>
-      <section class="mwsec">${ui.head("users", "Wie gebruikt de app het meest", `<small>dagen in ${esc(monthName)}</small>`)}
+      <section class="mwsec adm">${ui.head("users", "Wie gebruikt de app het meest", `<small>dagen in ${esc(monthName)}</small>`)}
         <div>${list.length ? list.map((r, i) => `<div class="mwurow"><span class="rk">${i + 1}</span><span class="mwav">${ui.initial(r.name)}</span>
           <span class="who"><b>${esc(r.name || "Naamloos")}${r.id === uid ? " (jij)" : ""}</b>
             <span class="bar" aria-hidden="true"><i style="width:${Math.round(r.m / top * 100)}%"></i></span>
@@ -127,6 +134,7 @@
       </section>`;
   }
   const ico = n => cloud.ui.ico(n);
+  const only = () => `<div class="mwadmonly">${ico("shield")}Alleen voor de beheerder. Andere gebruikers zien dit menu niet.</div>`;
 
   window.mwAdmin = {is: () => admin, html, load};
   document.addEventListener("click", e => { if(e.target.closest("[data-adm='reload']")) load(true); });
