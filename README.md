@@ -38,6 +38,13 @@ Telefoons zien dan "Er is een nieuwe versie" en vernieuwen pas als je erop tikt.
 Bibliotheken en lettertypes (`vendor/`, `fonts/`) zitten in een aparte cache die updates overleeft;
 verhoog `LIBS` in `sw.js` alleen als je daar zelf een bestand vervangt.
 
+## Wat is er nieuw
+
+Onder **Instellingen › App** staat "Wat is er nieuw": per dag wat er in de app veranderde. De lijst staat in
+`news.js` (bovenaan `NEWS`, nieuwste dag eerst). Een dag met `big` geeft één keer een kaartje bij het openen
+van de app. Wat iemand al zag, staat in het profiel (`users/{uid}.newsSeen`), zodat het kaartje ook op een
+tweede toestel niet terugkomt. Nieuwe accounts krijgen geen oud nieuws.
+
 ## Herinneringen (melding als een fles op moet)
 
 In "Klaar om te drinken" staat **Stuur me een herinnering**. Je krijgt dan een melding op je telefoon, ook als

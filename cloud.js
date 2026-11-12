@@ -302,6 +302,7 @@
     cloud.me.name = name;
     // name and e-mail on the profile, so others can find you to send a tip (tips.js); older accounts lack them
     const pd = prof && prof.exists ? prof.data() : {};
+    cloud.profile = pd; // news.js reads what you have seen of "Wat is er nieuw"
     if(!pendingName && cloud.me.email && (pd.email !== cloud.me.email.toLowerCase() || !pd.name)) fs.doc("users/" + user.uid).set({name: pd.name || name, email: cloud.me.email.toLowerCase()}, {merge: true}).catch(() => {});
     // Profiles are private. To be found for a tip, you leave only your name under your own e-mail address:
     // someone has to know the address to look it up (emails/{address}, see firestore.rules).
@@ -595,6 +596,7 @@
     $("mwBody").addEventListener("click", onSheetClick);
     $("mwBody").addEventListener("input", e => { const k = e.target.dataset.pf; if(k && prefDraft) prefDraft[k] = e.target.value; });
   }
+  cloud.openSettings = t => { if(t) sheetTab = t; openSheet(); }; // for news.js
   cloud.redraw = () => { if($("mwSheet") && !$("mwSheet").hidden) drawSheet(); }; // for remind.js
   function drawSheet(){
     const c = cloud.cellar, me = cloud.me, owner = c.owner === me.uid;
@@ -604,7 +606,7 @@
     const keepNew = $("mwNew")?.value || "", keepName = $("mwRename")?.value, focus = document.activeElement?.id;
     const ownerName = (c.members?.[c.owner] || {}).name || "de eigenaar";
     const migrate = !!(localCount && (owner || c.membersEdit));
-    const TABS = [["kelder", "cellar", "Kelder", migrate], ["mij", "heart", "Voor mij", false], ["app", "spark", "App", false]];
+    const TABS = [["kelder", "cellar", "Kelder", migrate], ["mij", "heart", "Voor mij", false], ["app", "spark", "App", !!window.mwNews?.unread()]];
     const tab = TABS.some(t => t[0] === sheetTab) ? sheetTab : "kelder";
     $("mwBody").innerHTML = `
       ${sheetMsg ? `<p class="err">${esc(sheetMsg)}</p>` : ""}
@@ -651,6 +653,8 @@
 
       ${tab === "app" ? `
       ${skinHtml()}
+
+      ${window.mwNews ? window.mwNews.settingsHtml() : ""}
 
       ${aboutHtml()}` : ""}
 
