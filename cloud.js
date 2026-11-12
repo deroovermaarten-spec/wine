@@ -452,7 +452,7 @@
     const d = prefDraft || (prefDraft = {...cloud.prefs, grapesTxt: cloud.prefs.grapes.join(", "), regionsTxt: cloud.prefs.regions.join(", "), avoidTxt: cloud.prefs.avoid.join(", ")});
     const sugg = (window.mwSuggest && window.mwSuggest()) || [];
     return `<section class="mwsec">${head("heart", "Mijn smaak", `<small>alleen jij</small>`)}
-      <p>Daarmee kun je in de kelder filteren op "Mijn smaak", en houdt "Wat drink ik vanavond?" er rekening mee. Alleen jij past dit aan; het geldt in al je kelders.</p>
+      <p>Daarmee kun je in de kelder filteren op "Mijn smaak", en houdt "Vraag het aan je kelder" er rekening mee. Alleen jij past dit aan; het geldt in al je kelders.</p>
       <div class="mwchips">${Object.entries(PREF_COLORS).map(([k, v]) => `<button type="button" class="chip" data-pcolor="${k}" aria-pressed="${d.colors.includes(k)}"><span class="dot ${k}"></span>${v}</button>`).join("")}</div>
       <label class="mwlab">Favoriete druiven<input id="mwPG" data-pf="grapesTxt" list="mwSugg" value="${esc(d.grapesTxt)}" placeholder="bv. Albariño, Tempranillo"></label>
       <label class="mwlab">Favoriete streken of landen<input id="mwPR" data-pf="regionsTxt" list="mwSugg" value="${esc(d.regionsTxt)}" placeholder="bv. Rioja, Douro, Portugal"></label>
