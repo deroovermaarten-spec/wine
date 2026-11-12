@@ -273,12 +273,10 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .msg.err{color:var(--late)}
 .askform{display:flex;gap:8px;align-items:flex-end}
 .askform textarea{flex:1;min-width:0;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:10px 14px;resize:none;min-height:44px;max-height:140px}
-.starters{display:flex;flex-wrap:wrap;gap:6px}
 .askmore{display:flex;gap:12px;justify-content:flex-end}
 .tonight .askform textarea{border-radius:22px}
 .askwines{align-self:flex-start;max-width:88%;display:flex;flex-direction:column;gap:6px;margin-top:-2px}
 .askwines .drink{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px}
-.starters button{text-align:left;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:7px 12px;font-size:.84rem}
 .fact{border-left:3px solid var(--accent)}
 .fact h3{font:italic 500 1.15rem/1.25 var(--display);margin:0}
 .fact p{margin:0;max-width:62ch}
@@ -501,7 +499,6 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
         <textarea id="askq" rows="1" placeholder="Stel je vraag…" aria-label="Je vraag aan je kelder"></textarea>
         <button class="btn sm" type="submit" id="askBtn">Vraag</button>
       </form>
-      <div class="starters" id="starters"></div>
       <div class="askmore"><button class="link" type="button" id="askStop" hidden>Stop</button><button class="link" type="button" id="askNew" hidden>Nieuwe vraag</button></div>
     </div>
     <div class="box" id="drinkbox" hidden></div>
@@ -1942,21 +1939,6 @@ Wijnen (JSON): ${JSON.stringify(cellar)}`;
     }
     return out + (inList ? "</ul>" : "");
   }
-  // Starter questions that fit what is actually in the cellar right now.
-  function starterQs(){
-    const kelder = wines.filter(w=>w.status==="kelder"), inStock = kelder.filter(w=>w.stock>0), wens = wines.filter(w=>w.status==="wens");
-    const qs = [];
-    if(inStock.length) qs.push("Wat drink ik vanavond bij …");
-    if(kelder.some(w=>w.openedAt)) qs.push("Welke geopende flessen moet ik eerst opdrinken?");
-    if(inStock.some(w=>{ const d=drinkState(w); return d && d.k<=1; })) qs.push("Welke flessen moet ik dit jaar nog drinken, en waarom?");
-    if(wines.some(w=>w.tastings.length)) qs.push("Welke wijn vond ik het lekkerst de laatste maanden, en wat schreef ik erover?");
-    if(inStock.length >= 6) qs.push("Ik krijg zes gasten voor een diner. Welke flessen open ik, in welke volgorde?");
-    if(wens.some(w=>w.tags.some(t=>/tip/i.test(t)))) qs.push("Welke wijnen op mijn verlanglijst kreeg ik als tip, en van wie?");
-    else if(wens.length) qs.push("Wat moet ik van mijn verlanglijst als eerste kopen?");
-    if(inStock.length >= 3) qs.push("Welke stijl of streek ontbreekt nog in mijn kelder?");
-    qs.push("Welke wijn onder €20 is mijn beste koop?");
-    return qs.slice(0,3);
-  }
   const askMark = /\[\[\s*wijnen\s*:([^\]]*)(\]\]|$)/i;
   function askWinesHTML(m){
     const ws = (m.ids||[]).map(id=>wines.find(w=>w.id===id)).filter(Boolean);
@@ -1964,8 +1946,7 @@ Wijnen (JSON): ${JSON.stringify(cellar)}`;
     return `<div class="askwines">${ws.map(w=>`<button class="drink" type="button" data-goto="${w.id}"><span class="t"><b>${esc(w.name)}</b>${w.vintage?` <span class="vint">${esc(w.vintage)}</span>`:""}</span><span class="badge ${w.status==="kelder"&&w.stock?"b-ok":"b-young"}">${w.status==="kelder" ? (w.stock?w.stock+" fl.":"op") : "verlanglijst"}</span></button>`).join("")}</div>`;
   }
   function renderChat(){
-    $("starters").hidden = chat.length > 0; $("askHint").hidden = chat.length > 0;
-    if(!chat.length) $("starters").innerHTML = starterQs().map(q=>`<button type="button">${esc(q)}</button>`).join("");
+    $("askHint").hidden = chat.length > 0;
     $("askNew").hidden = !chat.length || !!askCtl;
     $("askStop").hidden = !askCtl;
     $("askBtn").disabled = !!askCtl || !sample;
@@ -2021,10 +2002,6 @@ ${data}`;
   $("askform").addEventListener("submit", e => { e.preventDefault(); const q = $("askq").value; $("askq").value = ""; $("askq").style.height = ""; ask(q); });
   $("askq").addEventListener("keydown", e => { if(e.key==="Enter" && !e.shiftKey && !e.isComposing){ e.preventDefault(); $("askform").requestSubmit(); } });
   $("askq").addEventListener("input", e => { const t = e.target; t.style.height = "auto"; t.style.height = Math.min(140, t.scrollHeight) + "px"; });
-  $("starters").addEventListener("click", e => { const b = e.target.closest("button"); if(!b) return;
-    // ends in "…": a question to finish yourself (the dish); the others are asked right away
-    if(/…$/.test(b.textContent)){ const q=$("askq"); q.value = b.textContent.replace(/\s*…$/," "); q.focus(); q.setSelectionRange(q.value.length,q.value.length); return; }
-    ask(b.textContent); });
   $("askStop").onclick = () => askCtl?.abort();
   $("askNew").onclick = () => { askCtl?.abort(); chat = []; renderChat(); $("askq").focus(); };
 
