@@ -62,6 +62,9 @@
 .mwbelli small{color:var(--muted)}
 .mwbelli.new b::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-right:6px;vertical-align:middle}
 .mwacct span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* your own cellar: a tint in the skin's accent colour, so you see at a glance it is yours (no extra space) */
+.mwacct.own{background:var(--accent-soft);border-color:var(--accent)}
+.mwacct.own svg{color:var(--accent)}
 .mwcell{display:flex;flex-direction:column;gap:12px}
 .mwrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:.92rem}
 .mwrow:last-child{border-bottom:0}
@@ -570,7 +573,10 @@
     const n = (cloud.cellar.memberIds || []).length;
     const many = cloud.cellars.length > 1;
     b.innerHTML = `${ico(n > 1 ? "users" : "user")}<span>${esc(cloud.cellar.name)}</span>${many ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>` : ""}`;
-    b.setAttribute("aria-label", (many ? "Kies een kelder: " : "Instellingen: ") + cloud.cellar.name);
+    const own = cloud.cellar.owner === cloud.me.uid;
+    b.classList.toggle("own", own);
+    b.title = own ? "Jouw kelder" : "Gedeelde kelder van " + ((cloud.cellar.members?.[cloud.cellar.owner] || {}).name || "iemand anders");
+    b.setAttribute("aria-label", (many ? "Kies een kelder: " : "Instellingen: ") + cloud.cellar.name + (own ? " (jouw kelder)" : " (gedeeld)"));
   }
 
   let sheetMsg = "", inviteLink = "", localCount = null;
