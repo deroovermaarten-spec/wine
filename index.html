@@ -273,7 +273,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .msg.err{color:var(--late)}
 .askform{display:flex;gap:8px;align-items:flex-end}
 .askform textarea{flex:1;min-width:0;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:10px 14px;resize:none;min-height:44px;max-height:140px}
-.askmore{display:flex;gap:12px;justify-content:flex-end}
+.askhead{display:flex;align-items:center;gap:8px}.askhead .sec{flex:1;min-width:0}.askhead .btn{flex:none;gap:6px}
 .tonight .askform textarea{border-radius:22px;box-sizing:border-box;height:44px;line-height:1.4}
 .askwines{align-self:flex-start;max-width:88%;display:flex;flex-direction:column;gap:6px;margin-top:-2px}
 .askwines .drink{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px}
@@ -492,14 +492,15 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
     <p class="hint rohint" id="roHint" hidden></p>
     <div class="box fact" id="factbox" hidden></div>
     <div class="box tonight" id="tonight" hidden>
-      <h2 class="sec">Vraag het aan je kelder</h2>
+      <div class="askhead"><h2 class="sec">Vraag het aan je kelder</h2>
+        <button class="btn ghost sm" type="button" id="askStop" hidden>Stop</button>
+        <button class="btn ghost sm" type="button" id="askNew" hidden aria-label="Vraag en antwoord wissen"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>Wissen</button></div>
       <p class="hint" id="askHint">Wat drink je bij het eten, welke fles moet eerst op, wat koop je best bij? Tik op een wijn in het antwoord om hem te openen.</p>
       <div class="chat" id="chat" aria-live="polite"></div>
       <form class="askform" id="askform">
         <textarea id="askq" rows="1" placeholder="Stel je vraag…" aria-label="Je vraag aan je kelder"></textarea>
         <button class="btn sm" type="submit" id="askBtn">Vraag</button>
       </form>
-      <div class="askmore"><button class="link" type="button" id="askStop" hidden>Stop</button><button class="link" type="button" id="askNew" hidden>Nieuwe vraag</button></div>
     </div>
     <div class="box" id="drinkbox" hidden></div>
     <div class="chips" id="chips" hidden></div>
@@ -2003,7 +2004,7 @@ ${data}`;
   $("askq").addEventListener("keydown", e => { if(e.key==="Enter" && !e.shiftKey && !e.isComposing){ e.preventDefault(); $("askform").requestSubmit(); } });
   $("askq").addEventListener("input", e => { const t = e.target; t.style.height = "auto"; t.style.height = Math.min(140, t.scrollHeight) + "px"; });
   $("askStop").onclick = () => askCtl?.abort();
-  $("askNew").onclick = () => { askCtl?.abort(); chat = []; renderChat(); $("askq").focus(); };
+  $("askNew").onclick = () => { askCtl?.abort(); chat = []; $("askq").value = ""; $("askq").style.height = ""; renderChat(); $("askq").blur(); };
 
   // ---------- compare ----------
   function updateCmpBar(){ $("cmpCancel").hidden = compareIds.length!==1; if(compareIds.length===1) $("cmpCancel").textContent = "Kies een tweede wijn · annuleren"; }
