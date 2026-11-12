@@ -449,6 +449,22 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
 .keep{display:flex;flex-direction:column;gap:10px}
 .box.folded .fhead + .keep{margin-top:10px}
 .box.folded .keep + .keep{margin-top:10px}
+/* small celebrations on a tap (transform/opacity only, nothing runs on load) */
+.stars.pop button.on{animation:starpop .5s cubic-bezier(.3,1.7,.5,1) both;animation-delay:var(--fxt,0ms)}
+.stars.pop button.on:nth-child(2){animation-delay:calc(var(--fxt,0ms) + 50ms)}.stars.pop button.on:nth-child(3){animation-delay:calc(var(--fxt,0ms) + 100ms)}
+.stars.pop button.on:nth-child(4){animation-delay:calc(var(--fxt,0ms) + 150ms)}.stars.pop button.on:nth-child(5){animation-delay:calc(var(--fxt,0ms) + 200ms)}
+@keyframes starpop{0%{transform:scale(1)}40%{transform:scale(1.45) rotate(-12deg)}100%{transform:none}}
+.stock span.up{animation:cntup .35s ease-out var(--fxt,0ms) both}.stock span.down{animation:cntdown .35s ease-out var(--fxt,0ms) both}
+@keyframes cntup{0%{transform:translateY(60%);opacity:0}100%{transform:none;opacity:1}}
+@keyframes cntdown{0%{transform:translateY(-60%);opacity:0}100%{transform:none;opacity:1}}
+.openchip{position:relative}
+.openchip.plop{animation:chipwob .5s ease-out var(--fxt,0ms)}
+.openchip.plop i::after{content:"";position:absolute;left:12px;top:8px;width:6px;height:9px;border-radius:2px;background:#c89a5b;animation:cork .7s cubic-bezier(.2,.7,.4,1) var(--fxt,0ms) both;pointer-events:none}
+@keyframes chipwob{0%,100%{transform:none}30%{transform:scale(1.08) rotate(-3deg)}60%{transform:scale(.97) rotate(2deg)}}
+@keyframes cork{0%{transform:translate(0,0) rotate(0);opacity:1}70%{opacity:1}100%{transform:translate(10px,-34px) rotate(200deg);opacity:0}}
+.tabs button .ti.hop{animation:tabhop .4s cubic-bezier(.3,1.6,.5,1)}
+@keyframes tabhop{0%{transform:none}40%{transform:translateY(-5px) scale(1.12)}100%{transform:none}}
+@media (prefers-reduced-motion:reduce){.stars.pop button.on,.stock span.up,.stock span.down,.openchip.plop,.openchip.plop i::after,.tabs button .ti.hop{animation:none}}
 /* swipe a wine in the cellar */
 .list{position:relative}
 .card.swiping{z-index:1;touch-action:pan-y}
@@ -729,6 +745,19 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
     if(goParam || wineParam){ q.delete("go"); q.delete("wine"); history.replaceState(null, "", location.pathname + (q.toString() ? "?" + q : "") + location.hash); } }catch{}
   let tab = goParam==="wens" || goParam==="stats" ? goParam : "kelder", typeFilter="", draft=null, scanCtl=null, editingId=null, tastingFor=null, tastingScore=0, target="kelder";
   const houseBusy=new Map();
+  // Play a CSS animation once on part of a wine card. The list is redrawn right after a change (and again when
+  // the database confirms it), so the effect is re-applied to the new element, picking up where it was (--fxt).
+  const fxq = new Map();
+  const fx = (id, sel, cls) => { fxq.set(id+"|"+sel, {id, sel, cls, t: performance.now()}); paintFx(); };
+  function paintFx(){
+    const now = performance.now();
+    for(const [k, f] of fxq){
+      const age = now - f.t; if(age > 900){ fxq.delete(k); continue; }
+      const el = document.querySelector(`#c_${CSS.escape(f.id)} ${f.sel}`); if(!el || el.dataset.fx === String(f.t)) continue;
+      el.classList.remove(f.cls); void el.offsetWidth;
+      el.dataset.fx = String(f.t); el.style.setProperty("--fxt", (-age) + "ms"); el.classList.add(f.cls);
+    }
+  }
   let mcp=null;
   let menuFor=null; // the wine whose ⋯ actions are open
   const fold = {fact:true, drink:true}; try{ Object.assign(fold, JSON.parse(localStorage.getItem("mw_fold") || "{}")); }catch{}
@@ -2094,13 +2123,14 @@ ${data}`;
   window.mwSetTab = t => { tab = t; typeFilter = ""; tastingFor = null; render(); window.scrollTo({top:0}); };
   window.mwWines = () => wines;
   window.mwRender = () => render();
+  new MutationObserver(() => { if(fxq.size) paintFx(); }).observe($("list"), {childList:true, subtree:true});
   document.querySelector(".tabs").addEventListener("click", e => { const b=e.target.closest("[data-tab]"); if(!b) return;
     if(b.dataset.tab===tab){ toTop(); return; }
     const tabsEl = document.querySelector(".tabs");
     if(getComputedStyle(tabsEl).position === "fixed") requestAnimationFrame(()=>window.scrollTo({top:0})); // bottom bar on a phone: start at the top
     else { const tabsY = tabsEl.getBoundingClientRect().top + scrollY - (parseFloat(getComputedStyle(document.documentElement).paddingTop)||0);
       if(scrollY > tabsY) requestAnimationFrame(()=>window.scrollTo({top:tabsY})); }
-    tab=b.dataset.tab; typeFilter=""; tastingFor=null; render(); });
+    tab=b.dataset.tab; typeFilter=""; tastingFor=null; render(); const ti=b.querySelector(".ti"); if(ti){ ti.classList.remove("hop"); void ti.offsetWidth; ti.classList.add("hop"); ti.addEventListener("animationend",()=>ti.classList.remove("hop"),{once:true}); } });
   $("chips").addEventListener("click", e => { const t=e.target.closest("[data-tag]"); if(t){ tagFilter = tagFilter===t.dataset.tag ? "" : t.dataset.tag; render(); return; } const b=e.target.closest("[data-type]"); if(!b) return; typeFilter=b.dataset.type; render(); });
   $("searchBtn").addEventListener("click", () => {
     if(searchOpen){ searchOpen = false; $("q").value = ""; render(); return; }
@@ -2177,18 +2207,18 @@ ${data}`;
       if(w && window.mwEvents) window.mwEvents.pickFor(w);
     } else if(act==="rate"){
       const s = e.target.closest("[data-s]"); if(!s||!w) return;
-      const n=+s.dataset.s, p = scorePatch(w, w.score===n ? n-1 : n); render(); save(id, p);
+      const n=+s.dataset.s, up = w.score!==n, p = scorePatch(w, up ? n : n-1); render(); save(id, p); if(up) fx(id, "[data-act=rate] .stars", "pop");
     } else if(act==="tstar"){
       const s = e.target.closest("[data-s]"); if(!s) return;
       const n=+s.dataset.s; tastingScore = tastingScore===n?n-1:n;
       t.innerHTML = starsHTML(tastingScore,false);
     } else if(act==="plus"||act==="minus"){
       if(!w) return;
-      const had = w.stock, p = stockPatch(w, act==="plus"?1:-1); render(); save(id, p);
+      const had = w.stock, p = stockPatch(w, act==="plus"?1:-1); render(); save(id, p); if(w.stock!==had) fx(id, ".stock span", act==="plus"?"up":"down");
       if(act==="minus" && w.stock < had) undo(`Fles afgeboekt: ${w.name}`, () => { const q = stockPatch(w, 1); render(); return save(id, q); });
     } else if(act==="opentoggle"){
       if(!w) return;
-      if(!w.openedAt){ const p = stockPatch(w, -1); w.openedAt = TODAY; tastingFor=id; resetDraft(); tastingScore=w.score||0; openIds.add(id); render(); save(id,{...p, openedAt:w.openedAt});
+      if(!w.openedAt){ const p = stockPatch(w, -1); w.openedAt = TODAY; tastingFor=id; resetDraft(); tastingScore=w.score||0; openIds.add(id); render(); save(id,{...p, openedAt:w.openedAt}); fx(id, ".openchip", "plop");
         undo(`Fles geopend: ${w.name}`, () => { const q = stockPatch(w, 1); w.openedAt = ""; if(tastingFor===id) tastingFor = null; render(); return save(id, {...q, openedAt:""}); }); }
       else { w.openedAt = ""; render(); save(id,{openedAt:""}); }
     } else if(act==="t-new"){ tastingFor=id; tastingScore=w?.score||0; resetDraft(); render(); $("tf_note")?.focus(); }
