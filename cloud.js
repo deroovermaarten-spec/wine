@@ -63,8 +63,8 @@
 .mwbelli.new b::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-right:6px;vertical-align:middle}
 .mwacct span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* your own cellar: a tint in the skin's accent colour, so you see at a glance it is yours (no extra space) */
-.mwacct.own{background:var(--accent-soft);border-color:var(--accent)}
-.mwacct.own svg{color:var(--accent)}
+.btn.ghost.mwacct.own{background:var(--accent-soft);background:color-mix(in srgb,var(--accent) 24%,var(--surface));border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);color:var(--accent);font-weight:700}
+.btn.ghost.mwacct.own svg{color:var(--accent)}
 .mwcell{display:flex;flex-direction:column;gap:12px}
 .mwrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:.92rem}
 .mwrow:last-child{border-bottom:0}
