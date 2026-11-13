@@ -483,11 +483,11 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
 .card.picked{box-shadow:0 0 0 2px var(--gold)}
 /* undo bar */
 /* "← Inzichten": after jumping from Inzichten to a wine, one tap brings you back to the same spot */
-.backpill{position:fixed;z-index:8;left:50%;top:calc(env(safe-area-inset-top,0px) + 58px);transform:translate(-50%,-10px);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;
+.backpill{position:fixed;z-index:8;left:max(16px,calc(50% - 330px));bottom:calc(22px + env(safe-area-inset-bottom,0px));transform:translateY(10px);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;
   display:inline-flex;align-items:center;gap:6px;padding:9px 16px 9px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-size:.88rem;font-weight:700;box-shadow:0 8px 20px -10px rgba(40,20,10,.5);white-space:nowrap}
-.backpill.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.backpill.show{opacity:1;transform:none;pointer-events:auto}
 .backpill svg{width:16px;height:16px;color:var(--accent)}
-@media (max-width:600px){.backpill{top:calc(env(safe-area-inset-top,0px) + 14px)}}
+@media (max-width:600px){.backpill{left:50%;bottom:auto;top:calc(env(safe-area-inset-top,0px) + 14px);transform:translate(-50%,-10px)}.backpill.show{transform:translate(-50%,0)}}
 @media (prefers-reduced-motion:reduce){.backpill{transition:none}}
 .undo{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:9;transform:translate(-50%,16px);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;
   display:flex;align-items:center;gap:14px;max-width:calc(100% - 32px);box-sizing:border-box;padding:10px 10px 10px 16px;border-radius:12px;background:var(--ink);color:var(--bg);font-size:.9rem;box-shadow:0 8px 24px rgba(0,0,0,.25)}
@@ -1540,7 +1540,20 @@ Antwoord met ALLEEN één JSON-object in deze vorm: ${HOUSE_FIELDS}`;
   function showInCellar(color, q){
     markBack();
     tab = "kelder"; typeFilter = COLORS[color] ? color : ""; tagFilter = ""; $("country").value = ""; $("grape").value = "";
-    $("q").value = q || ""; searchOpen = !!q; render(); window.scrollTo({top:0});
+    $("q").value = q || ""; searchOpen = !!q; render(); toSelection();
+  }
+  // After a jump to a filtered list: scroll past the boxes on top, so the filter and the first wine are in view at once
+  function toSelection(){
+    requestAnimationFrame(() => {
+      const a = [$("searchbar"), $("chips"), $("list")].find(el => el && !el.hidden && el.offsetParent);
+      if(!a) return window.scrollTo({top:0});
+      // the first free line on screen: below the sticky tabs (computer) and below "Terug naar Inzichten"
+      const tabsEl = document.querySelector(".tabs"), ts = getComputedStyle(tabsEl);
+      let free = ts.position === "sticky" ? (parseFloat(ts.top)||0) + tabsEl.offsetHeight : (parseFloat(getComputedStyle(document.documentElement).paddingTop)||0);
+      const pill = $("backPill"); if(pill && !pill.hidden && pill.offsetTop < innerHeight/2) free = Math.max(free, pill.offsetTop + pill.offsetHeight); // phone: it sits on top
+      const top = a.getBoundingClientRect().top + scrollY - free - 10;
+      window.scrollTo({top: Math.max(0, top)});
+    });
   }
   function windowCard(kelder){
     const inHouse = kelder.filter(w=>w.stock>0), withW = inHouse.filter(w=>w.from||w.to);
@@ -1973,7 +1986,7 @@ Sleutels (streek|land): ${JSON.stringify(keys.slice(0,60))}`;
     if(mm){ mapMode = mm.dataset.mmode; mm.parentElement.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed", b===mm)); drawMap(); return; }
     const dna = e.target.closest("[data-dna]"); if(dna){ const [c, q] = dna.dataset.dna.split("|"); showInCellar(c, q); return; }
     const ht = e.target.closest("[data-heat]"); if(ht){ const [c, q] = ht.dataset.heat.split("|"); showInCellar(c, q); return; }
-    if(e.target.closest("[data-ins=ready]")){ markBack(); tab = "kelder"; typeFilter = "__ready"; tagFilter = ""; $("q").value = ""; searchOpen = false; render(); window.scrollTo({top:0}); return; }
+    if(e.target.closest("[data-ins=ready]")){ markBack(); tab = "kelder"; typeFilter = "__ready"; tagFilter = ""; $("q").value = ""; searchOpen = false; render(); toSelection(); return; }
     const ag = e.target.closest("[data-again]");
     if(ag){
       const w = wines.find(x=>x.id===ag.dataset.again); if(!w || !col || !canEdit()) return;

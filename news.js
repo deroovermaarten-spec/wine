@@ -20,7 +20,8 @@
         "Inzichten › Na het openen: een scorekaart per streek en kleur, je verborgen parels en tegenvallers (prijs tegenover score), Koop opnieuw voor topwijnen die op zijn, en of een wijn beter wordt als je hem meer dan eens proeft.",
         "In een gedeelde kelder zie je ook hoe vaak je het eens bent met de andere leden.",
         "De wereldkaart kleurt nu ook op je score: kies Aantal of Score.",
-        "Elke tab onthoudt waar je was: ga je terug naar Inzichten, dan kom je op dezelfde plek uit. Tik je in Inzichten op een wijn, dan brengt “Terug naar Inzichten” (of de terugknop van je telefoon) je meteen terug."
+        "Elke tab onthoudt waar je was: ga je terug naar Inzichten, dan kom je op dezelfde plek uit. Tik je in Inzichten op een wijn, dan brengt “Terug naar Inzichten” (of de terugknop van je telefoon) je meteen terug.",
+        "Tik je in Inzichten op een selectie, dan staat je kelder meteen bij die wijnen: de filter en de eerste fles zijn in beeld zonder te scrollen."
       ]},
     {date: "2026-11-12",
       big: {icon: "spark", title: "Blijf op de hoogte", text: "Vanaf nu lees je onder Instellingen › App wat er nieuw is in de app, per dag. Bij een grote vernieuwing krijg je, zoals nu, één keer dit kaartje."},
