@@ -16,6 +16,7 @@
     {date: "2026-11-13",
       big: {icon: "spark", title: "Nieuwe inzichten", text: "Onder Inzichten zie je nu je kelder-DNA, wanneer je flessen op dronk zijn, waar je wijnen het best scoren, je verborgen parels en wat je opnieuw moet kopen."},
       items: [
+        "Kelder-DNA: druiven die als zin zijn ingevuld (zoals “Voornamelijk Tempranillo met wat Garnacha”) staan nu bij de juiste druif in plaats van bij “Onbekend”. Is er echt geen druif ingevuld, dan zie je “Geen druif ingevuld”.",
         "Inzichten › In je kelder: je kelder-DNA (één ring met een lijst: tik op een kleur voor de landen, op een land voor de druiven, en met “Toon deze wijnen” spring je naar die flessen), wanneer je flessen op dronk zijn per jaar, hoe lang je voorraad nog meegaat aan je drinktempo, en je jaargangen.",
         "Inzichten › Na het openen: een scorekaart per streek en kleur, je verborgen parels en tegenvallers (prijs tegenover score), Koop opnieuw voor topwijnen die op zijn, en of een wijn beter wordt als je hem meer dan eens proeft.",
         "In een gedeelde kelder zie je ook hoe vaak je het eens bent met de andere leden.",

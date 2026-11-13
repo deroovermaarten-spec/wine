@@ -916,10 +916,13 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
   }
   window.mwSuggest = () => [...new Set(wines.flatMap(w => [...grapesOf(w), w.region, w.country]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"nl")).slice(0,200);
   window.addEventListener("mwprefs", () => { if(typeFilter==="__me" && !window.mwPrefs?.has()) typeFilter=""; render(); });
+  // The grapes in the "druif" field, also when Claude wrote it as a sentence
+  // ("Voornamelijk Tempranillo met wat Garnacha", "een blend van Cabernet Sauvignon en Merlot").
+  const GRAPE_FILL = /\b(waarschijnlijk|vermoedelijk|mogelijk|vooral|voornamelijk|hoofdzakelijk|overwegend|grotendeels|meestal|typisch|klassiek|traditioneel|onder andere|o\.a\.|ongeveer|circa|ca\.|aangevuld|aangevuld met|een beetje|beetje|een snuifje|snuifje|een scheut|scheut|een klein deel|klein deel|kleine hoeveelheid|wat|een|van|druif|druiven|druivenras|blend van|assemblage van|cuvée van|mainly|mostly|probably|with|some)\b/gi;
   function grapesOf(w){
-    return String(w.grape||"").split(/,|\/|&|\+|;| en | and /i)
-      .map(x=>x.replace(/\(.*?\)|\d+\s*%/g,"").replace(/\b(waarschijnlijk|vermoedelijk|vooral|onder andere|o\.a\.|mogelijk)\b/gi,"").replace(/\s+/g," ").trim())
-      .filter(x=>x.length>1 && x.split(" ").length<=3 && !/^(blend|assemblage|onbekend)$/i.test(x))
+    return String(w.grape||"").split(/,|\/|&|\+|;|\n|\s(?:en|and|met|plus|aangevuld met)\s/i)
+      .map(x=>x.replace(/\(.*?\)|\d+\s*%|\d+\s*procent/gi,"").replace(/\b(blend|assemblage|cuvée)\s+(van|of)\b/gi,"").replace(GRAPE_FILL,"").replace(/[.:]+$/,"").replace(/\s+/g," ").trim())
+      .filter(x=>x.length>1 && x.split(" ").length<=3 && !/^(blend|assemblage|cuvée|onbekend|rood|wit|rosé|rode|witte|druiven?)$/i.test(x))
       .map(x=>x[0].toUpperCase()+x.slice(1));
   }
   function priceNum(w){
@@ -1610,7 +1613,8 @@ Antwoord met ALLEEN één JSON-object in deze vorm: ${HOUSE_FIELDS}`;
   let dnaPath = [], dnaPick = "";
   function dnaScope(kelder){
     const rows = kelder.filter(w=>w.stock>0);
-    const ofColor = w => COLORS[w.color] ? w.color : "rood", ofCountry = w => w.country || "Onbekend", ofGrape = w => grapesOf(w)[0] || "Onbekend";
+    const raw = w => String(w.grape||"").split(/[,;/\n]/)[0].replace(/\(.*?\)/g,"").trim().slice(0,28);
+    const ofColor = w => COLORS[w.color] ? w.color : "rood", ofCountry = w => w.country || "Onbekend", ofGrape = w => grapesOf(w)[0] || raw(w) || "Onbekend";
     const keys = [ofColor, ofCountry, ofGrape];
     if(dnaPath.length > 2) dnaPath = dnaPath.slice(0,2);
     // drop a path that no longer exists (a bottle was drunk, the last of a country is gone)
@@ -1627,7 +1631,7 @@ Antwoord met ALLEEN één JSON-object in deze vorm: ${HOUSE_FIELDS}`;
     const {rows, inScope, level, items, color} = dnaScope(kelder);
     if(!rows.length) return "";
     const total = items.reduce((s,x)=>s+x.n,0);
-    const name = x => x.rest ? "Overige" : level===0 ? COLORS[x.k] : x.k;
+    const name = x => x.rest ? "Overige" : level===0 ? COLORS[x.k] : x.k==="Onbekend" ? (level===1 ? "Geen land ingevuld" : "Geen druif ingevuld") : x.k;
     const fill = (x, i) => level===0 ? `var(${COLV[x.k]})` : `var(${COLV[color]})`;
     const op = (x, i) => level===0 ? 1 : x.rest ? .22 : Math.max(.3, 1 - i*.14);
     const arc = (r0, r1, a0, a1) => {
@@ -1642,9 +1646,10 @@ Antwoord met ALLEEN één JSON-object in deze vorm: ${HOUSE_FIELDS}`;
       return `<path d="${d}" fill="${fill(x,i)}" fill-opacity="${op(x,i)}" class="${dim ? "dim" : ""}" data-dnai="${esc(x.k)}"><title>${esc(name(x))} · ${x.n} fl.</title></path>`;
     }).join("");
     const pick = items.find(x=>x.k===dnaPick);
-    const scopeN = pick ? pick.n : total, scopeW = pick ? pick.wines : inScope.length;
+    // an empty grape field cannot be filtered on: then the button shows the whole country
+    const scopeN = pick ? pick.n : total, scopeW = pick && pick.k!=="Onbekend" ? pick.wines : inScope.length;
     const here = pick ? name(pick) : level===0 ? "in je kelder" : dnaPath[level-1];
-    const crumbs = [["Alles", 0], ...dnaPath.map((k,i)=>[i===0 ? COLORS[k] : k, i+1])];
+    const crumbs = [["Alles", 0], ...dnaPath.map((k,i)=>[i===0 ? COLORS[k] : k==="Onbekend" ? "Geen land" : k, i+1])];
     const canDrill = x => level < 2 && !x.rest;
     const pct = n => Math.round(n/total*100); // share within what you are looking at
     return `<h2 class="sec">Je kelder-DNA</h2>
