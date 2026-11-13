@@ -13,6 +13,14 @@
  */
 (() => {
   const NEWS = [
+    {date: "2026-11-13",
+      big: {icon: "spark", title: "Nieuwe inzichten", text: "Onder Inzichten zie je nu je kelder-DNA, wanneer je flessen op dronk zijn, waar je wijnen het best scoren, je verborgen parels en wat je opnieuw moet kopen."},
+      items: [
+        "Inzichten › In je kelder: je kelder-DNA (kleur, land en druif in één ring; tik op een stuk om die wijnen te zien), wanneer je flessen op dronk zijn per jaar, hoe lang je voorraad nog meegaat aan je drinktempo, en je jaargangen.",
+        "Inzichten › Na het openen: een scorekaart per streek en kleur, je verborgen parels en tegenvallers (prijs tegenover score), Koop opnieuw voor topwijnen die op zijn, en of een wijn beter wordt als je hem meer dan eens proeft.",
+        "In een gedeelde kelder zie je ook hoe vaak je het eens bent met de andere leden.",
+        "De wereldkaart kleurt nu ook op je score: kies Aantal of Score."
+      ]},
     {date: "2026-11-12",
       big: {icon: "spark", title: "Blijf op de hoogte", text: "Vanaf nu lees je onder Instellingen › App wat er nieuw is in de app, per dag. Bij een grote vernieuwing krijg je, zoals nu, één keer dit kaartje."},
       items: [

@@ -346,6 +346,69 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .status{font-size:.85rem;color:var(--muted)}
 /* stats */
 .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+/* Inzichten: the extra cards (what is in the cellar, what scored well after opening) */
+.insgrp{font:700 .72rem var(--body);letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin:8px 2px -6px;display:flex;align-items:center;gap:10px}
+.insgrp::after{content:"";flex:1;height:1px;background:var(--line)}
+.insline{margin:0;font-size:.92rem}
+.insline b{font-weight:700}
+.wcols{display:flex;align-items:flex-end;gap:6px;height:130px;margin-top:2px}
+.wcols div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;min-width:0;height:100%}
+.wcols i{display:block;width:100%;max-width:34px;min-height:3px;border-radius:5px 5px 0 0;background:var(--accent);opacity:.45;transform-origin:bottom;animation:insgrow .7s cubic-bezier(.3,.7,.3,1) both}
+.wcols i.peak{opacity:1}
+.wcols i.late{background:var(--late);opacity:1}
+.wcols i.vin{background:var(--gold);opacity:.85}
+.wcols b{font:600 .74rem var(--mono);font-variant-numeric:tabular-nums;min-height:1em}
+.wcols span{font:500 .66rem var(--mono);color:var(--muted);white-space:nowrap}
+@keyframes insgrow{from{transform:scaleY(0)}}
+.dna{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.dna svg{width:210px;height:210px;flex:none;margin:0 auto;overflow:visible}
+.dna path{stroke:var(--surface);stroke-width:1.2;cursor:pointer;transition:opacity .15s}
+.dna path:hover,.dna path:focus{opacity:.75;outline:none}
+.dna .ctr b{font:400 26px var(--display);fill:var(--ink)}
+.dna .side{flex:1 1 190px;display:flex;flex-direction:column;gap:10px}
+.dna .side div{display:flex;flex-direction:column;gap:1px}
+.dna .side b{font:400 1.25rem/1.15 var(--display)}
+.pace{display:flex;flex-direction:column;gap:10px}
+.pace .prow{display:grid;grid-template-columns:1fr auto;gap:5px 10px;align-items:center;font-size:.88rem}
+.pace .prow .track{grid-column:1/-1}
+.money.m3{grid-template-columns:repeat(3,1fr)}
+.pace .prow > span:first-child{display:flex;align-items:center;gap:6px}
+.pace .track{display:block;height:8px;background:var(--bg);border-radius:4px;overflow:hidden}
+.pace .track i{display:block;height:100%;border-radius:4px;background:var(--ok);transform-origin:left;animation:inswide .7s cubic-bezier(.3,.7,.3,1) both}
+.pace .track i.low{background:var(--warn)}
+.pace .prow small{color:var(--muted);font-size:.8rem;text-align:right;white-space:nowrap}
+@keyframes inswide{from{transform:scaleX(0)}}
+.heat{display:grid;gap:4px;font-size:.82rem}
+.heat .h{color:var(--muted);font-size:.7rem;text-align:center;align-self:end;display:flex;flex-direction:column;align-items:center;gap:3px}
+.heat .r{color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;align-self:center;padding-right:4px}
+.heat button{border:0;border-radius:7px;min-height:38px;font:600 .84rem var(--mono);font-variant-numeric:tabular-nums;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1}
+.heat button small{font:500 .62rem var(--body);opacity:.8}
+.heat .e{background:var(--bg);border-radius:7px;min-height:38px}
+.scatter svg{width:100%;height:auto;display:block;overflow:visible}
+.scatter circle{cursor:pointer;stroke:var(--surface);stroke-width:1.5}
+.scatter text{font:500 10px var(--mono);fill:var(--muted)}
+.scatter .zone{font:700 10px var(--body);letter-spacing:.12em;text-transform:uppercase}
+.inspair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:520px){.inspair{grid-template-columns:1fr}}
+.again{display:flex;flex-direction:column}
+.again .it{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.again .it:last-child{border-bottom:0}
+.again .it .drink{border:0;padding:0;flex:1;min-width:0}
+.again .it .btn{flex:none}
+.again .drink .t,.trend .drink .t{white-space:normal}
+.again small{display:block;color:var(--gold);font-size:.8rem;letter-spacing:.05em}
+.trend{display:flex;flex-direction:column}
+.trend .drink{padding:8px 0}
+.trend svg{width:84px;height:26px;flex:none;overflow:visible}
+.trend .up{color:var(--ok)}.trend .down{color:var(--late)}.trend .eq{color:var(--muted)}
+.trend em{font-style:normal;font-size:.78rem;font-weight:700;white-space:nowrap;min-width:70px;text-align:right}
+.matchrow{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--line)}
+.matchrow:last-child{border-bottom:0}
+.matchrow .ring{width:54px;height:54px;flex:none}
+.matchrow .ring text{font:600 13px var(--mono);fill:var(--ink)}
+.matchrow p{margin:0;font-size:.88rem}
+.matchrow small{display:block;color:var(--muted);font-size:.8rem}
+@media (prefers-reduced-motion:reduce){.wcols i,.pace .track i{animation:none}}
 @media (max-width:460px){.kpis{grid-template-columns:repeat(2,1fr)}}
 .kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px}
 .kpi b{display:block;font:400 1.6rem/1.1 var(--display);font-variant-numeric:tabular-nums}
@@ -1431,6 +1494,218 @@ Antwoord met ALLEEN één JSON-object in deze vorm: ${HOUSE_FIELDS}`;
     </div>`;
   }
 
+  // ---------- Inzichten: extra cards ----------
+  // What is in the cellar (drink window per year, vintages, cellar DNA, how long your stock lasts) and
+  // what scored well after opening (score map, hidden gems, buy again, better with time, taste match).
+  const f1 = n => n.toFixed(1).replace(".",",");
+  const COLV = {rood:"--red",wit:"--white",rose:"--rose",mousserend:"--spark",dessert:"--dessert"};
+  // Open the cellar list filtered on a colour and/or a search word (from the DNA ring or the score map)
+  function showInCellar(color, q){
+    tab = "kelder"; typeFilter = COLORS[color] ? color : ""; tagFilter = ""; $("country").value = ""; $("grape").value = "";
+    $("q").value = q || ""; searchOpen = !!q; render(); window.scrollTo({top:0});
+  }
+  function windowCard(kelder){
+    const inHouse = kelder.filter(w=>w.stock>0), withW = inHouse.filter(w=>w.from||w.to);
+    if(!withW.length) return "";
+    const sum = ws => ws.reduce((s,w)=>s+w.stock,0);
+    const late = sum(withW.filter(w=>w.to && w.to<YEAR));
+    const yrs = Array.from({length:7},(_,i)=>YEAR+i);
+    const per = yrs.map(y=>sum(withW.filter(w=>(!w.from||w.from<=y) && (!w.to||w.to>=y))));
+    const top = Math.max(...per), peak = per.indexOf(top), max = Math.max(1, late, top);
+    const young = sum(withW.filter(w=>w.from>YEAR)), now = per[0], none = inHouse.length - withW.length;
+    const col = (n, label, cls) => `<div><b>${n||""}</b><i class="${cls}" style="height:${Math.round(n/max*100)}%"></i><span>${label}</span></div>`;
+    const lines = [
+      top ? `De piek ligt in <b>${yrs[peak]}</b>: dan zijn ${top} flessen op dronk.` : "",
+      now ? `Nu op dronk: <b>${now} fles${now===1?"":"sen"}</b>.` : "",
+      young ? `${young} fles${young===1?" is":"sen zijn"} nog te jong.` : "",
+      late ? `<b>${late} fles${late===1?" is":"sen zijn"} over hun hoogtepunt.</b> Drink ze eerst.` : ""].filter(Boolean);
+    return `<div class="box"><h2 class="sec">Wanneer is je kelder op dronk?</h2>
+      <div class="wcols" role="img" aria-label="Flessen op dronk per jaar">${late ? col(late, "te laat", "late") : ""}${per.map((n,i)=>col(n, i===0 ? "nu" : String(yrs[i]).slice(2).padStart(3,"'"), i===peak && n ? "peak" : "")).join("")}</div>
+      <p class="insline">${lines.join(" ")}</p>
+      ${late || now ? `<div><button class="btn ghost sm" type="button" data-ins="ready">Toon wat nu klaar is</button></div>` : ""}
+      ${none ? `<p class="hint">${none} wijn${none===1?"":"en"} zonder drinkvenster niet meegeteld.</p>` : ""}</div>`;
+  }
+  function vintageCard(kelder){
+    const rows = kelder.filter(w=>w.stock>0 && yr(w.vintage));
+    if(rows.length < 2) return "";
+    const m = new Map(); rows.forEach(w=>{ const y = yr(w.vintage); m.set(y, (m.get(y)||0)+w.stock); });
+    let ys = [...m.keys()].sort((a,b)=>a-b), cols;
+    if(ys.length > 10){ const cut = ys[ys.length-9]; cols = [{k:"≤"+String(cut-1).slice(2), n:ys.filter(y=>y<cut).reduce((s,y)=>s+m.get(y),0)}, ...ys.filter(y=>y>=cut).map(y=>({k:"'"+String(y).slice(2), n:m.get(y)}))]; }
+    else cols = ys.map(y=>({k:"'"+String(y).slice(2), n:m.get(y)}));
+    const max = Math.max(...cols.map(c=>c.n)), bottles = rows.reduce((s,w)=>s+w.stock,0);
+    const age = rows.reduce((s,w)=>s+(YEAR-yr(w.vintage))*w.stock,0)/bottles;
+    const oldest = rows.slice().sort((a,b)=>yr(a.vintage)-yr(b.vintage))[0];
+    const best = [...m].sort((a,b)=>b[1]-a[1])[0];
+    return `<div class="box"><h2 class="sec">Jaargangen</h2>
+      <div class="money m3"><div><span class="eyebrow">Leeftijd</span><b>${f1(age)} jaar</b></div><div><span class="eyebrow">Meest</span><b>${best[0]}</b></div><div><span class="eyebrow">Oudste</span><b>${yr(oldest.vintage)}</b></div></div>
+      <div class="wcols" style="height:110px" role="img" aria-label="Flessen per jaargang">${cols.map(c=>`<div><b>${c.n}</b><i class="vin" style="height:${Math.round(c.n/max*100)}%"></i><span>${esc(c.k)}</span></div>`).join("")}</div>
+      <button class="drink" type="button" data-goto="${oldest.id}"><span class="t">Je oudste fles: <b>${esc(oldest.name)}</b> <span class="vint">${esc(oldest.vintage)}</span></span><span class="badge b-young">${YEAR-yr(oldest.vintage)} jaar</span></button></div>`;
+  }
+  function dnaCard(kelder){
+    const rows = kelder.filter(w=>w.stock>0); if(!rows.length) return "";
+    const total = rows.reduce((s,w)=>s+w.stock,0);
+    const tree = new Map(); // colour -> {n, c: country -> {n, g: grape -> n}}
+    rows.forEach(w=>{
+      const c = COLORS[w.color] ? w.color : "rood", co = w.country || "Onbekend", g = grapesOf(w)[0] || "Onbekend";
+      const a = tree.get(c) || {n:0, c:new Map()}; a.n += w.stock; tree.set(c, a);
+      const b = a.c.get(co) || {n:0, g:new Map()}; b.n += w.stock; a.c.set(co, b);
+      b.g.set(g, (b.g.get(g)||0) + w.stock);
+    });
+    const arc = (r0, r1, a0, a1) => {
+      if(a1 - a0 >= Math.PI*2 - 1e-6) a1 = a0 + Math.PI*2 - 1e-4;
+      const p = (r, a) => `${(r*Math.sin(a)).toFixed(2)} ${(-r*Math.cos(a)).toFixed(2)}`, big = a1-a0 > Math.PI ? 1 : 0;
+      return `M${p(r1,a0)}A${r1} ${r1} 0 ${big} 1 ${p(r1,a1)}L${p(r0,a1)}A${r0} ${r0} 0 ${big} 0 ${p(r0,a0)}Z`;
+    };
+    const seg = (d, fill, op, data, title) => `<path d="${d}" fill="var(${fill})" fill-opacity="${op}" data-dna="${esc(data)}" tabindex="0" role="button"><title>${esc(title)}</title></path>`;
+    let a = 0, out = "";
+    const order = Object.keys(COLORS).filter(c=>tree.has(c));
+    for(const c of order){
+      const C = tree.get(c), a0 = a, span = C.n/total*Math.PI*2;
+      out += seg(arc(40, 66, a0, a0+span), COLV[c], 1, c + "|", `${COLORS[c]} · ${C.n} fl.`);
+      let b = a0;
+      for(const [co, B] of [...C.c].sort((x,y)=>y[1].n-x[1].n)){
+        const sb = B.n/total*Math.PI*2;
+        out += seg(arc(68, 86, b, b+sb), COLV[c], .72, c + "|" + (co==="Onbekend" ? "" : co), `${COLORS[c]} · ${co} · ${B.n} fl.`);
+        let g0 = b;
+        for(const [g, n] of [...B.g].sort((x,y)=>y[1]-x[1])){
+          const sg = n/total*Math.PI*2;
+          out += seg(arc(88, 104, g0, g0+sg), COLV[c], .45, c + "|" + (g==="Onbekend" ? (co==="Onbekend" ? "" : co) : g), `${COLORS[c]} · ${co} · ${g} · ${n} fl.`);
+          g0 += sg;
+        }
+        b += sb;
+      }
+      a += span;
+    }
+    const pct = n => Math.round(n/total*100) + "%";
+    const topC = order.slice().sort((x,y)=>tree.get(y).n-tree.get(x).n)[0];
+    const cm = new Map(), gm = new Map();
+    rows.forEach(w=>{ if(w.country) cm.set(w.country, (cm.get(w.country)||0)+w.stock); const g = grapesOf(w)[0]; if(g) gm.set(g, (gm.get(g)||0)+w.stock); });
+    const tc = [...cm].sort((x,y)=>y[1]-x[1])[0], tg = [...gm].sort((x,y)=>y[1]-x[1])[0];
+    return `<div class="box"><h2 class="sec">Je kelder-DNA</h2>
+      <div class="dna"><svg viewBox="-110 -110 220 220" role="img" aria-label="Je kelder per kleur, land en druif">${out}
+        <text class="ctr" text-anchor="middle" y="4" style="font:400 26px var(--display);fill:var(--ink)">${total}</text><text text-anchor="middle" y="20" style="font:600 9px var(--body);letter-spacing:.14em;fill:var(--muted)">FLESSEN</text></svg>
+        <div class="side">
+          <div><span class="eyebrow">Vooral</span><b>${COLORS[topC]} · ${pct(tree.get(topC).n)}</b></div>
+          ${tc ? `<div><span class="eyebrow">Meest uit</span><b>${esc(tc[0])} · ${pct(tc[1])}</b></div>` : ""}
+          ${tg ? `<div><span class="eyebrow">Topdruif</span><b>${esc(tg[0])} · ${pct(tg[1])}</b></div>` : ""}
+          <p class="hint" style="margin:0">Binnen: kleur. Midden: land. Buiten: druif. Tik op een stuk om die wijnen te zien.</p>
+        </div></div></div>`;
+  }
+  function paceCard(kelder){
+    const since = localDay(new Date(Date.now() - 182*864e5));
+    const ms = drinkMoments().filter(m=>m.d >= since && m.w.status==="kelder");
+    if(ms.length < 2) return `<div class="box"><h2 class="sec">Hoe lang doe je nog met je voorraad?</h2><p class="hint">Open of boek een paar flessen af, dan zie je hier hoe lang je voorraad nog meegaat aan het tempo waarop je drinkt.</p></div>`;
+    const rows = Object.keys(COLORS).map(c=>{
+      const n = ms.filter(m=>m.w.color===c).length, rate = n/6, stock = kelder.filter(w=>w.color===c).reduce((s,w)=>s+w.stock,0);
+      return {c, rate, stock, months: rate ? stock/rate : Infinity};
+    }).filter(r=>r.stock || r.rate);
+    const label = r => !r.rate ? "niet gedronken" : !r.stock ? "op" : r.months < 1.5 ? `~${Math.max(1, Math.round(r.months*4.3))} weken` : r.months < 24 ? `~${Math.round(r.months)} maanden` : "2 jaar +";
+    const per = ms.length/6, low = rows.filter(r=>r.rate && r.months < 1.5);
+    return `<div class="box"><h2 class="sec">Hoe lang doe je nog met je voorraad?</h2>
+      <p class="insline">Je drinkt zo'n <b>${per < 1 ? "1 fles per " + Math.round(1/per*4.3) + " weken" : f1(per).replace(",0","") + " fles" + (per>=1.5?"sen":"") + " per maand"}</b>, gemeten over het laatste halfjaar.</p>
+      <div class="pace">${rows.map(r=>`<div class="prow"><span><span class="dot ${r.c}"></span>${COLORS[r.c]}</span>
+        <small>${r.stock} fl. · ${label(r)}</small>
+        <span class="track"><i class="${r.rate && r.months < 1.5 ? "low" : ""}" style="width:${r.rate ? Math.max(4, Math.min(100, Math.round(r.months/12*100))) : 100}%;${r.rate ? "" : "opacity:.25"}"></i></span></div>`).join("")}</div>
+      ${low.length ? `<p class="insline" style="color:var(--warn)">Tijd om aan te vullen: ${low.map(r=>COLORS[r.c].toLowerCase()).join(" en ")}.</p>` : ""}
+      <p class="hint">Balk vol = een jaar of meer voorraad.</p></div>`;
+  }
+  // Score map: your average score per region and colour, for every wine you scored (also the ones that are op)
+  function heatCard(kelder){
+    const sc = kelder.filter(w=>w.score);
+    if(sc.length < 3) return `<div class="box"><h2 class="sec">Waar scoren je wijnen het best?</h2><p class="hint">Geef na het openen een score aan je wijnen. Vanaf drie gescoorde wijnen zie je hier per streek en kleur waar je het meest van geniet.</p></div>`;
+    const reg = w => w.region || w.country || "";
+    const rm = new Map(); sc.forEach(w=>{ const r = reg(w); if(r) rm.set(r, (rm.get(r)||0)+1); });
+    const regions = [...rm].sort((a,b)=>b[1]-a[1]).slice(0,6).map(x=>x[0]);
+    const cols = Object.keys(COLORS).filter(c=>sc.some(w=>w.color===c && regions.includes(reg(w))));
+    if(!regions.length || !cols.length) return "";
+    const cell = (r, c) => { const ws = sc.filter(w=>reg(w)===r && w.color===c); return ws.length ? {avg: ws.reduce((s,w)=>s+w.score,0)/ws.length, n: ws.length} : null; };
+    const paint = avg => {
+      const [v, pct] = avg >= 3.75 ? ["--ok", 30 + (avg-3.75)/1.25*60] : avg >= 3 ? ["--gold", 30 + (avg-3)/.75*15] : ["--late", 30 + (3-avg)/2*50];
+      return `background:color-mix(in srgb,var(${v}) ${Math.round(pct)}%,var(--surface));color:${pct > 52 ? "#fff" : "var(--ink)"}`;
+    };
+    let best = null;
+    const grid = regions.map(r=>`<span class="r">${esc(r)}</span>` + cols.map(c=>{ const x = cell(r,c); if(!x) return `<span class="e"></span>`;
+      if(!best || x.avg > best.avg || (x.avg===best.avg && x.n > best.n)) best = {...x, r, c};
+      return `<button type="button" data-heat="${esc(c + "|" + r)}" style="${paint(x.avg)}" aria-label="${esc(r)}, ${COLORS[c]}: ${f1(x.avg)} sterren uit ${x.n} wijn${x.n===1?"":"en"}">${f1(x.avg)}<small>${x.n}×</small></button>`; }).join("")).join("");
+    return `<div class="box"><h2 class="sec">Waar scoren je wijnen het best?</h2>
+      ${best ? `<p class="insline">Je beste combinatie: <b>${COLORS[best.c].toLowerCase()} uit ${esc(best.r)}</b>, gemiddeld ${f1(best.avg)} ★.</p>` : ""}
+      <div class="heat" style="grid-template-columns:minmax(70px,1.2fr) repeat(${cols.length},minmax(0,1fr))"><span></span>${cols.map(c=>`<span class="h"><span class="dot ${c}"></span>${COLORS[c]}</span>`).join("")}${grid}</div>
+      <p class="hint">Je gemiddelde score per streek en kleur, ook van flessen die al op zijn. Tik op een vakje voor de wijnen.</p></div>`;
+  }
+  // Hidden gems and disappointments: price against score
+  function gemsCard(kelder){
+    const pts = kelder.filter(w=>w.score && priceNum(w)>0);
+    if(pts.length < 4) return "";
+    const ps = pts.map(priceNum).sort((a,b)=>a-b), med = ps[Math.floor(ps.length/2)];
+    const lo = Math.log(Math.max(1, ps[0]*0.85)), hi = Math.log(ps[ps.length-1]*1.15);
+    const W = 320, H = 170, L = 26, B = 22, T = 8, R = 8;
+    const X = p => L + (Math.log(p)-lo)/(hi-lo || 1)*(W-L-R), Y = sc => T + (5-sc)/4*(H-T-B);
+    const jit = id => { let h = 0; for(const ch of String(id)) h = (h*31 + ch.charCodeAt(0)) | 0; return ((h & 255)/255 - .5) * 8; };
+    const gems = pts.filter(w=>w.score>=4 && priceNum(w)<=med).sort((a,b)=>b.score-a.score || priceNum(a)-priceNum(b));
+    const flops = pts.filter(w=>w.score<=3 && priceNum(w)>med).sort((a,b)=>a.score-b.score || priceNum(b)-priceNum(a));
+    const cls = w => gems.includes(w) ? "var(--ok)" : flops.includes(w) ? "var(--late)" : "var(--muted)";
+    const xm = X(med);
+    const svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Prijs tegenover score">
+      <rect x="${L}" y="${T}" width="${(xm-L).toFixed(1)}" height="${(Y(4)-T+9).toFixed(1)}" rx="6" fill="var(--ok)" fill-opacity=".12"/>
+      <rect x="${xm.toFixed(1)}" y="${(Y(3)-9).toFixed(1)}" width="${(W-R-xm).toFixed(1)}" height="${(H-B-Y(3)+9).toFixed(1)}" rx="6" fill="var(--late)" fill-opacity=".1"/>
+      <text class="zone" x="${L+6}" y="${T+13}" style="fill:var(--ok)">parels</text>
+      <text class="zone" x="${W-R-6}" y="${H-B-6}" text-anchor="end" style="fill:var(--late)">tegenvallers</text>
+      <line x1="${L}" y1="${H-B}" x2="${W-R}" y2="${H-B}" stroke="var(--line)"/><line x1="${L}" y1="${T}" x2="${L}" y2="${H-B}" stroke="var(--line)"/>
+      ${[1,3,5].map(v=>`<text x="${L-6}" y="${(Y(v)+3).toFixed(1)}" text-anchor="end">${v}★</text>`).join("")}
+      ${[ps[0], med, ps[ps.length-1]].filter((v,i,a)=>a.indexOf(v)===i).map(v=>`<text x="${X(v).toFixed(1)}" y="${H-6}" text-anchor="middle">€${Math.round(v)}</text>`).join("")}
+      ${pts.map(w=>`<circle cx="${X(priceNum(w)).toFixed(1)}" cy="${(Y(w.score)+jit(w.id)).toFixed(1)}" r="6" fill="${cls(w)}" data-goto="${w.id}"><title>${esc(w.name)} · €${Math.round(priceNum(w))} · ${w.score}★</title></circle>`).join("")}</svg>`;
+    const row = w => `<button class="drink" type="button" data-goto="${w.id}"><span class="t"><b>${esc(w.name)}</b>${w.vintage?` <span class="vint">${esc(w.vintage)}</span>`:""}</span><span class="badge ${gems.includes(w)?"b-ok":"b-late"}">€${Math.round(priceNum(w))} · ${w.score}★</span></button>`;
+    return `<div class="box scatter"><h2 class="sec">Verborgen parels</h2>
+      <p class="insline">Elke stip is een wijn: hoe verder naar rechts, hoe duurder. Hoe hoger, hoe beter je hem vond.</p>${svg}
+      <div class="inspair">${gems.length ? `<div><div class="eyebrow">Parels: veel smaak voor weinig geld</div><div class="drinkrow">${gems.slice(0,3).map(row).join("")}</div></div>` : ""}
+        ${flops.length ? `<div><div class="eyebrow">Tegenvallers: duur maar matig</div><div class="drinkrow">${flops.slice(0,3).map(row).join("")}</div></div>` : ""}</div>
+      <p class="hint">Betaalde prijs, of anders de geschatte prijs. Grens tussen goedkoop en duur: €${Math.round(med)}, het midden van je kelder.</p></div>`;
+  }
+  // Buy again: wines you scored 4 or 5 that are op
+  function againCard(kelder){
+    const wish = new Set(wines.filter(w=>w.status==="wens").map(w=>nrm(w.name)));
+    const rows = kelder.filter(w=>w.stock===0 && w.score>=4).sort((a,b)=>b.score-a.score || String(b.drunk.at(-1)||"").localeCompare(String(a.drunk.at(-1)||""))).slice(0,6);
+    if(!rows.length) return "";
+    return `<div class="box"><h2 class="sec">Koop opnieuw</h2><p class="insline">Deze vond je top, maar ze zijn op.</p>
+      <div class="again">${rows.map(w=>`<div class="it"><button class="drink" type="button" data-goto="${w.id}"><span class="t"><b>${esc(w.name)}</b>${w.vintage?` <span class="vint">${esc(w.vintage)}</span>`:""}<small>${"★".repeat(w.score)}${w.drunk.length ? `<span style="color:var(--muted);letter-spacing:0"> · laatst ${esc(shortDate(w.drunk.slice().sort().at(-1)))}</span>` : ""}</small></span></button>
+        ${wish.has(nrm(w.name)) ? `<span class="badge b-young">op verlanglijst</span>` : canEdit() && col ? `<button class="btn ghost sm" type="button" data-again="${w.id}">♡ Bewaar</button>` : ""}</div>`).join("")}</div>
+      <p class="hint">Bewaar zet een kopie op je verlanglijst, zodat je hem in de winkel terugvindt.</p></div>`;
+  }
+  // Better with time? Your scores for a wine you tasted more than once
+  function trendCard(){
+    const me = window.mwCloud?.me?.uid, mine = t => !t.uid || t.uid===me;
+    const rows = wines.filter(w=>w.status==="kelder").map(w=>({w, t: w.tastings.filter(t=>t.score && mine(t) && t.date).sort((a,b)=>String(a.date).localeCompare(String(b.date)))}))
+      .filter(x=>x.t.length>=2).map(x=>({...x, d: x.t.at(-1).score - x.t[0].score})).sort((a,b)=>Math.abs(b.d)-Math.abs(a.d) || b.t.length-a.t.length).slice(0,5);
+    if(!rows.length) return `<div class="box"><h2 class="sec">Beter met de tijd?</h2><p class="hint">Proef je een wijn meer dan eens en geef je telkens een score, dan zie je hier of hij nog groeit of al terugvalt.</p></div>`;
+    const spark = t => { const n = t.length, x = i => 4 + i*(76/(n-1)), y = v => 22 - (v-1)/4*18;
+      return `<svg viewBox="0 0 84 26" aria-hidden="true"><polyline points="${t.map((p,i)=>`${x(i).toFixed(1)},${y(p.score).toFixed(1)}`).join(" ")}" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>${t.map((p,i)=>`<circle cx="${x(i).toFixed(1)}" cy="${y(p.score).toFixed(1)}" r="2.6" fill="currentColor"/>`).join("")}</svg>`; };
+    return `<div class="box"><h2 class="sec">Beter met de tijd?</h2>
+      <div class="trend">${rows.map(({w,t,d})=>{ const k = d>0 ? "up" : d<0 ? "down" : "eq";
+        return `<button class="drink" type="button" data-goto="${w.id}"><span class="t"><b>${esc(w.name)}</b>${w.vintage?` <span class="vint">${esc(w.vintage)}</span>`:""}<small style="display:block;color:var(--muted);font-size:.78rem">${t.length}× geproefd · ${t.map(x=>x.score).join(" → ")}</small></span>
+          <span class="${k}" style="display:flex;align-items:center;gap:8px">${spark(t)}<em>${d>0 ? "↑ groeit" : d<0 ? (w.stock ? "↓ drink op" : "↓ minder") : "= stabiel"}</em></span></button>`; }).join("")}</div>
+      <p class="hint">Je eigen scores bij elk proefmoment, van eerste naar laatste.</p></div>`;
+  }
+  // Taste match in a shared cellar: how often you and each other member agree
+  function matchCard(kelder){
+    const c = window.mwCloud?.cellar, me = window.mwCloud?.me?.uid;
+    if(!c || !me || (c.memberIds||[]).length < 2) return "";
+    const out = (c.memberIds||[]).filter(u=>u!==me).map(u=>{
+      const both = kelder.map(w=>{ const all = {...(w.scores||{})}; if(!(c.owner in all) && w.ownerScore) all[c.owner] = w.ownerScore; return {w, a: w.score, b: +all[u]||0}; }).filter(x=>x.a && x.b);
+      if(both.length < 3) return {u, n: both.length};
+      const pct = Math.round(both.reduce((s,x)=>s + (1 - Math.abs(x.a-x.b)/4), 0)/both.length*100);
+      const diff = both.slice().sort((x,y)=>Math.abs(y.a-y.b)-Math.abs(x.a-x.b))[0];
+      const fav = both.filter(x=>x.a>=4 && x.b>=4).sort((x,y)=>(y.a+y.b)-(x.a+x.b))[0];
+      return {u, n: both.length, pct, diff: Math.abs(diff.a-diff.b) >= 2 ? diff : null, fav};
+    });
+    const name = u => ((c.members||{})[u]||{}).name || "Iemand";
+    const ring = p => { const r = 22, L = 2*Math.PI*r; return `<svg class="ring" viewBox="0 0 54 54" aria-hidden="true"><circle cx="27" cy="27" r="${r}" fill="none" stroke="var(--line)" stroke-width="5"/><circle cx="27" cy="27" r="${r}" fill="none" stroke="var(--accent)" stroke-width="5" stroke-linecap="round" stroke-dasharray="${(L*p/100).toFixed(1)} ${L.toFixed(1)}" transform="rotate(-90 27 27)"/><text x="27" y="31" text-anchor="middle">${p}%</text></svg>`; };
+    return `<div class="box"><h2 class="sec">Smaakmatch</h2>
+      ${out.map(x=> x.pct===undefined
+        ? `<div class="matchrow"><p><b>${esc(name(x.u))}</b><small>Nog te weinig wijnen die jullie allebei scoorden (${x.n} van 3).</small></p></div>`
+        : `<div class="matchrow">${ring(x.pct)}<p>${esc(name(x.u))} en jij zijn het <b>${x.pct}%</b> eens<small>over ${x.n} wijnen${x.fav ? ` · samen fan van ${esc(x.fav.w.name)}` : ""}${x.diff ? ` · oneens over ${esc(x.diff.w.name)} (jij ${x.diff.a}★, ${esc(name(x.u))} ${x.diff.b}★)` : ""}</small></p></div>`).join("")}
+      <p class="hint">Vergelijkt jullie eigen scores voor dezelfde wijnen.</p></div>`;
+  }
+
   function renderStats(){
     const el = $("v_stats");
     const kelder = wines.filter(w=>w.status==="kelder");
@@ -1461,9 +1736,22 @@ Antwoord met ALLEEN één JSON-object in deze vorm: ${HOUSE_FIELDS}`;
         <div class="kpi"><span class="eyebrow">Gem. score</span><b>${avg?avg.toFixed(1).replace(".",","):"–"}</b></div>
         <div class="kpi"><span class="eyebrow">Proefmomenten</span><b>${tcount}</b></div>
       </div>
+      <div class="insgrp">In je kelder</div>
+      ${dnaCard(kelder)}
+      ${windowCard(kelder)}
+      ${paceCard(kelder)}
+      ${vintageCard(kelder)}
+      <div class="insgrp">Na het openen</div>
+      ${heatCard(kelder)}
+      ${gemsCard(kelder)}
+      ${againCard(kelder)}
+      ${trendCard()}
+      ${matchCard(kelder)}
       ${yearHTML()}
+      <div class="insgrp">Meer</div>
       <div class="box"><h2 class="sec">Waar je wijnen vandaan komen</h2>
         <div class="maptools">
+          <div class="seg mini" role="group" aria-label="Kleur op de kaart"><button type="button" data-mmode="n" aria-pressed="${mapMode==="n"}">Aantal</button><button type="button" data-mmode="s" aria-pressed="${mapMode==="s"}">Score</button></div>
           <div class="seg mini" role="group" aria-label="Kaartweergave"><button type="button" data-zoom="fit" aria-pressed="${mapZoom==="fit"}">Ingezoomd</button><button type="button" data-zoom="world" aria-pressed="${mapZoom==="world"}">Wereld</button></div>
           <div class="maplegend"><span><i style="background:var(--accent)"></i>Land</span><span><i style="background:var(--gold)"></i>Kelder</span><span><i style="background:var(--surface);border:1.5px solid var(--gold)"></i>Verlanglijst</span></div>
         </div>
@@ -1478,10 +1766,6 @@ Antwoord met ALLEEN één JSON-object in deze vorm: ${HOUSE_FIELDS}`;
           <div><span class="eyebrow">Gem. per fles</span><b>${avgBottle?eur(avgBottle):"–"}</b></div>
         </div>
         <p class="hint">Waarde: zelf betaalde prijs of anders de geschatte prijs, maal het aantal flessen in huis${unpriced?` (${unpriced} wijn${unpriced>1?"en":""} zonder prijs niet meegeteld)`:""}. Uitgaven: betaalde prijs maal aantal gekocht, voor aankopen met een datum in ${YEAR}.</p>
-      </div>
-      <div class="box"><h2 class="sec">Wat ligt er in je kelder</h2>
-        <div class="stack">${types.map(x=>`<div style="width:${x.n/tsum*100}%;background:var(${colVar[x.c]})"></div>`).join("")}</div>
-        <div class="legend">${types.map(x=>`<span><span class="dot ${x.c}"></span>${COLORS[x.c]} · ${x.n}</span>`).join("")}</div>
       </div>
       <div class="box"><h2 class="sec">Je favoriete druiven</h2>
         ${grapes.length? bars(grapes.map(g=>({...g,v:g.avg})),5,i=>`${i.avg.toFixed(1).replace(".",",")} ★ · ${i.n}×`) : `<p class="hint">Geef je wijnen een score om dit te zien.</p>`}
@@ -1503,6 +1787,7 @@ Antwoord met ALLEEN één JSON-object in deze vorm: ${HOUSE_FIELDS}`;
   }
 
   // ---------- map ----------
+  let mapMode = "n"; // colour the countries by number of bottles or by your average score
   let worldP = null, mapZoom = "fit", mapSel = null, geoBusy = false, mapVB = null, mapBase = null, mapMeta = null, mapMoved = false;
   let geo = {}; try{ geo = JSON.parse(localStorage.getItem("wk_geo")||"{}") || {}; }catch{}
   const ALIAS = {vs:"US",verenigdestaten:"US",verenigdestatenvanamerika:"US",usa:"US",amerika:"US",engeland:"GB",schotland:"GB",verenigdkoninkrijk:"GB",uk:"GB",grootbrittannie:"GB",zuidafrika:"ZA",nieuwzeeland:"NZ",tsjechie:"CZ",noordmacedonie:"MK",macedonie:"MK",bosnie:"BA",moldavie:"MD",rusland:"RU",libanon:"LB",georgie:"GE"};
@@ -1540,7 +1825,7 @@ Sleutels (streek|land): ${JSON.stringify(keys.slice(0,60))}`;
       const c = countryFeat(world, w.country);
       if(!c){ if(w.country || w.region) unplaced.push(w); continue; }
       const n = w.status==="kelder" ? Math.max(1, w.stock) : 0;
-      const cc = byCountry.get(c) || {c, n:0, wines:[]}; cc.n += n; cc.wines.push(w); byCountry.set(c, cc);
+      const cc = byCountry.get(c) || {c, n:0, wines:[], s:0, k:0}; cc.n += n; cc.wines.push(w); if(w.status==="kelder" && w.score){ cc.s += w.score; cc.k++; } byCountry.set(c, cc);
       const key = (w.region ? w.region : "") + "|" + (w.country||"");
       const ll = w.region ? geo[key] : 0;
       const xy = ll ? projLL(m, ll[1], ll[0]) : c.c;
@@ -1567,8 +1852,9 @@ Sleutels (streek|land): ${JSON.stringify(keys.slice(0,60))}`;
     const pxW = box.clientWidth || 600, unit = vb[2]/pxW;
     const maxN = Math.max(1, ...[...byCountry.values()].map(x=>x.n));
     const countryPaths = world.countries.map(c=>{ const bc = byCountry.get(c);
-      const op = bc ? (0.25 + 0.55*Math.sqrt(bc.n/maxN)).toFixed(2) : null;
-      return `<path class="land${bc?" has":""}${bc && mapSel==="#"+c.a2?" sel":""}" d="${c.d}"${bc?` data-mk="#${c.a2}" style="fill-opacity:${op}"`:""}><title>${esc(c.nl||c.en)}${bc?` · ${bc.n} fl.`:""}</title></path>`; }).join("");
+      const avg = bc && bc.k ? bc.s/bc.k : 0;
+      const op = !bc ? null : mapMode==="s" ? (avg ? 0.12 + 0.78*Math.pow((avg-1)/4, 1.5) : 0.06).toFixed(2) : (0.25 + 0.55*Math.sqrt(bc.n/maxN)).toFixed(2);
+      return `<path class="land${bc?" has":""}${bc && mapSel==="#"+c.a2?" sel":""}" d="${c.d}"${bc?` data-mk="#${c.a2}" style="fill-opacity:${op}"`:""}><title>${esc(c.nl||c.en)}${bc?(mapMode==="s" ? (avg ? ` · gemiddeld ${f1(avg)} ★ (${bc.k} wijn${bc.k===1?"":"en"})` : " · nog geen score") : ` · ${bc.n} fl.`):""}</title></path>`; }).join("");
     const pinEls = [...pins.values()].sort((a,b)=>b.n-a.n).map(p=>{ const r = (4 + Math.sqrt(p.n)*2.4) * unit;
       return `<circle class="pin${p.wish?" wish":""}${mapSel===p.key?" sel":""}" cx="${p.xy[0].toFixed(1)}" cy="${p.xy[1].toFixed(1)}" r="${r.toFixed(2)}" data-r0="${(4 + Math.sqrt(p.n)*2.4).toFixed(2)}" data-mk="${esc(p.key)}"><title>${esc(p.label)}</title></circle>`; }).join("");
     const nC = byCountry.size, bottles = [...byCountry.values()].reduce((s,x)=>s+x.n,0);
@@ -1643,6 +1929,22 @@ Sleutels (streek|land): ${JSON.stringify(keys.slice(0,60))}`;
   }
   $("v_stats").addEventListener("click", e => {
     const wy = e.target.closest("[data-wy]"); if(wy){ wyYear = +wy.dataset.wy; renderStats(); return; }
+    const mm = e.target.closest("[data-mmode]");
+    if(mm){ mapMode = mm.dataset.mmode; mm.parentElement.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed", b===mm)); drawMap(); return; }
+    const dna = e.target.closest("[data-dna]"); if(dna){ const [c, q] = dna.dataset.dna.split("|"); showInCellar(c, q); return; }
+    const ht = e.target.closest("[data-heat]"); if(ht){ const [c, q] = ht.dataset.heat.split("|"); showInCellar(c, q); return; }
+    if(e.target.closest("[data-ins=ready]")){ tab = "kelder"; typeFilter = "__ready"; tagFilter = ""; $("q").value = ""; searchOpen = false; render(); window.scrollTo({top:0}); return; }
+    const ag = e.target.closest("[data-again]");
+    if(ag){
+      const w = wines.find(x=>x.id===ag.dataset.again); if(!w || !col || !canEdit()) return;
+      const copy = {...w}; delete copy.id; delete copy.scores;
+      Object.assign(copy, {status:"wens", stock:0, drunk:[], tastings:[], openedAt:"", loc:"", bought:"", boughtQty:0, shareId:"", score:0,
+        createdAt:Date.now(), tags:[...new Set([...(w.tags||[]), "koop opnieuw"])]});
+      if(window.mwCloud?.me) copy.addedBy = {uid: window.mwCloud.me.uid, name: window.mwCloud.me.name};
+      ag.disabled = true; ag.textContent = "Bewaard ✓";
+      commit(col.doc().set(copy)).catch(()=>{ ag.disabled = false; ag.textContent = "Probeer opnieuw"; });
+      return;
+    }
     const z = e.target.closest("[data-zoom]");
     const mz = e.target.closest("[data-mz]");
     if(mz){ const a = mz.dataset.mz; if(a==="in") zoomBy(1.8); else if(a==="out") zoomBy(1/1.8); else { mapVB = null; applyVB(mapBase, true); } return; }
@@ -1656,6 +1958,7 @@ Sleutels (streek|land): ${JSON.stringify(keys.slice(0,60))}`;
     }
   });
 
+  $("v_stats").addEventListener("keydown", e => { if((e.key==="Enter" || e.key===" ") && e.target.matches?.("[data-dna]")){ e.preventDefault(); e.target.dispatchEvent(new MouseEvent("click", {bubbles:true})); } });
   let expNote = "";
   const setExpMsg = t => { expNote = t; const m = $("expMsg"); if(m) m.textContent = t; };
   function exportRows(){
