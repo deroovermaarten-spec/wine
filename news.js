@@ -16,7 +16,7 @@
     {date: "2026-11-13",
       big: {icon: "spark", title: "Nieuwe inzichten", text: "Onder Inzichten zie je nu je kelder-DNA, wanneer je flessen op dronk zijn, waar je wijnen het best scoren, je verborgen parels en wat je opnieuw moet kopen."},
       items: [
-        "Inzichten › In je kelder: je kelder-DNA (kleur, land en druif in één ring; tik op een stuk om die wijnen te zien), wanneer je flessen op dronk zijn per jaar, hoe lang je voorraad nog meegaat aan je drinktempo, en je jaargangen.",
+        "Inzichten › In je kelder: je kelder-DNA (één ring met een lijst: tik op een kleur voor de landen, op een land voor de druiven, en met “Toon deze wijnen” spring je naar die flessen), wanneer je flessen op dronk zijn per jaar, hoe lang je voorraad nog meegaat aan je drinktempo, en je jaargangen.",
         "Inzichten › Na het openen: een scorekaart per streek en kleur, je verborgen parels en tegenvallers (prijs tegenover score), Koop opnieuw voor topwijnen die op zijn, en of een wijn beter wordt als je hem meer dan eens proeft.",
         "In een gedeelde kelder zie je ook hoe vaak je het eens bent met de andere leden.",
         "De wereldkaart kleurt nu ook op je score: kies Aantal of Score.",

@@ -360,14 +360,26 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .wcols b{font:600 .74rem var(--mono);font-variant-numeric:tabular-nums;min-height:1em}
 .wcols span{font:500 .66rem var(--mono);color:var(--muted);white-space:nowrap}
 @keyframes insgrow{from{transform:scaleY(0)}}
-.dna{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
-.dna svg{width:210px;height:210px;flex:none;margin:0 auto;overflow:visible}
-.dna path{stroke:var(--surface);stroke-width:1.2;cursor:pointer;transition:opacity .15s}
-.dna path:hover,.dna path:focus{opacity:.75;outline:none}
-.dna .ctr b{font:400 26px var(--display);fill:var(--ink)}
-.dna .side{flex:1 1 190px;display:flex;flex-direction:column;gap:10px}
-.dna .side div{display:flex;flex-direction:column;gap:1px}
-.dna .side b{font:400 1.25rem/1.15 var(--display)}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.dnacrumb{display:flex;flex-wrap:wrap;align-items:center;gap:2px;font-size:.86rem;margin-top:-4px}
+.dnacrumb button{border:0;background:none;color:var(--accent);font:inherit;font-weight:700;padding:4px 6px;border-radius:6px}
+.dnacrumb button[aria-current]{color:var(--ink);cursor:default}
+.dnacrumb .sep{color:var(--muted)}
+.dna{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.dna svg{width:190px;height:190px;flex:none;margin:0 auto;overflow:visible;animation:dnain .35s cubic-bezier(.3,1.3,.5,1) both}
+@keyframes dnain{from{transform:scale(.86) rotate(-14deg);opacity:.3}}
+.dna path{stroke:var(--surface);stroke-width:2;cursor:pointer;transition:transform .2s}
+.dna path.dim{opacity:.35}
+.dnalist{flex:1 1 200px;display:flex;flex-direction:column;min-width:0}
+.dnalist button{display:grid;grid-template-columns:14px 1fr auto 14px;gap:10px;align-items:center;width:100%;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink);font:inherit;text-align:left;padding:9px 2px}
+.dnalist button:last-child{border-bottom:0}
+.dnalist button[aria-pressed="true"]{background:var(--accent-soft);border-radius:8px}
+.dnalist .sw{width:14px;height:14px;border-radius:4px}
+.dnalist .nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.dnalist .ct{color:var(--muted);font:500 .8rem var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.dnalist .go{color:var(--muted);font-size:1rem;line-height:1}
+.dnafoot{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+@media (prefers-reduced-motion:reduce){.dna svg{animation:none}}
 .pace{display:flex;flex-direction:column;gap:10px}
 .pace .prow{display:grid;grid-template-columns:1fr auto;gap:5px 10px;align-items:center;font-size:.88rem}
 .pace .prow .track{grid-column:1/-1}
@@ -1537,9 +1549,10 @@ Antwoord met ALLEEN één JSON-object in deze vorm: ${HOUSE_FIELDS}`;
   $("backPill").addEventListener("click", () => { if(history.state?.mwBack) history.back(); else goBack(); });
   addEventListener("popstate", () => { if(backTo) goBack(); });
 
-  function showInCellar(color, q){
+  function showInCellar(color, q, country){
     markBack();
-    tab = "kelder"; typeFilter = COLORS[color] ? color : ""; tagFilter = ""; $("country").value = ""; $("grape").value = "";
+    tab = "kelder"; typeFilter = COLORS[color] ? color : ""; tagFilter = ""; $("grape").value = "";
+    const cs = $("country"); if(country && ![...cs.options].some(o=>o.value===country)) cs.add(new Option(country, country)); cs.value = country || "";
     $("q").value = q || ""; searchOpen = !!q; render(); toSelection();
   }
   // After a jump to a filtered list: scroll past the boxes on top, so the filter and the first wine are in view at once
@@ -1592,56 +1605,62 @@ Antwoord met ALLEEN één JSON-object in deze vorm: ${HOUSE_FIELDS}`;
       <div class="wcols" style="height:110px" role="img" aria-label="Flessen per jaargang">${cols.map(c=>`<div><b>${c.n}</b><i class="vin" style="height:${Math.round(c.n/max*100)}%"></i><span>${esc(c.k)}</span></div>`).join("")}</div>
       <button class="drink" type="button" data-goto="${oldest.id}"><span class="t">Je oudste fles: <b>${esc(oldest.name)}</b> <span class="vint">${esc(oldest.vintage)}</span></span><span class="badge b-young">${YEAR-yr(oldest.vintage)} jaar</span></button></div>`;
   }
-  function dnaCard(kelder){
-    const rows = kelder.filter(w=>w.stock>0); if(!rows.length) return "";
-    const total = rows.reduce((s,w)=>s+w.stock,0);
-    const tree = new Map(); // colour -> {n, c: country -> {n, g: grape -> n}}
-    rows.forEach(w=>{
-      const c = COLORS[w.color] ? w.color : "rood", co = w.country || "Onbekend", g = grapesOf(w)[0] || "Onbekend";
-      const a = tree.get(c) || {n:0, c:new Map()}; a.n += w.stock; tree.set(c, a);
-      const b = a.c.get(co) || {n:0, g:new Map()}; b.n += w.stock; a.c.set(co, b);
-      b.g.set(g, (b.g.get(g)||0) + w.stock);
-    });
+  // Cellar DNA: one ring at a time. Colours first; tap one to see its countries, then a country to see its grapes.
+  // The list next to the ring names every piece, and "Toon deze wijnen" only jumps to the cellar when you ask.
+  let dnaPath = [], dnaPick = "";
+  function dnaScope(kelder){
+    const rows = kelder.filter(w=>w.stock>0);
+    const ofColor = w => COLORS[w.color] ? w.color : "rood", ofCountry = w => w.country || "Onbekend", ofGrape = w => grapesOf(w)[0] || "Onbekend";
+    const keys = [ofColor, ofCountry, ofGrape];
+    if(dnaPath.length > 2) dnaPath = dnaPath.slice(0,2);
+    // drop a path that no longer exists (a bottle was drunk, the last of a country is gone)
+    while(dnaPath.length && !rows.some(w => dnaPath.every((k,i)=>keys[i](w)===k))) dnaPath.pop();
+    const inScope = rows.filter(w => dnaPath.every((k,i)=>keys[i](w)===k));
+    const level = dnaPath.length, key = keys[level];
+    const m = new Map(); inScope.forEach(w => { const k = key(w), x = m.get(k) || {k, n:0, wines:0}; x.n += w.stock; x.wines++; m.set(k, x); });
+    let items = level===0 ? Object.keys(COLORS).filter(c=>m.has(c)).map(c=>m.get(c)) : [...m.values()].sort((a,b)=>b.n-a.n || a.k.localeCompare(b.k,"nl"));
+    if(items.length > 7){ const rest = items.slice(6); items = items.slice(0,6).concat({k:"__rest", n:rest.reduce((s,x)=>s+x.n,0), wines:rest.reduce((s,x)=>s+x.wines,0), rest:true}); }
+    if(dnaPick && !items.some(x=>x.k===dnaPick && !x.rest)) dnaPick = "";
+    return {rows, inScope, level, items, color: level ? dnaPath[0] : ""};
+  }
+  function dnaInner(kelder){
+    const {rows, inScope, level, items, color} = dnaScope(kelder);
+    if(!rows.length) return "";
+    const total = items.reduce((s,x)=>s+x.n,0);
+    const name = x => x.rest ? "Overige" : level===0 ? COLORS[x.k] : x.k;
+    const fill = (x, i) => level===0 ? `var(${COLV[x.k]})` : `var(${COLV[color]})`;
+    const op = (x, i) => level===0 ? 1 : x.rest ? .22 : Math.max(.3, 1 - i*.14);
     const arc = (r0, r1, a0, a1) => {
       if(a1 - a0 >= Math.PI*2 - 1e-6) a1 = a0 + Math.PI*2 - 1e-4;
       const p = (r, a) => `${(r*Math.sin(a)).toFixed(2)} ${(-r*Math.cos(a)).toFixed(2)}`, big = a1-a0 > Math.PI ? 1 : 0;
       return `M${p(r1,a0)}A${r1} ${r1} 0 ${big} 1 ${p(r1,a1)}L${p(r0,a1)}A${r0} ${r0} 0 ${big} 0 ${p(r0,a0)}Z`;
     };
-    const seg = (d, fill, op, data, title) => `<path d="${d}" fill="var(${fill})" fill-opacity="${op}" data-dna="${esc(data)}" tabindex="0" role="button"><title>${esc(title)}</title></path>`;
-    let a = 0, out = "";
-    const order = Object.keys(COLORS).filter(c=>tree.has(c));
-    for(const c of order){
-      const C = tree.get(c), a0 = a, span = C.n/total*Math.PI*2;
-      out += seg(arc(40, 66, a0, a0+span), COLV[c], 1, c + "|", `${COLORS[c]} · ${C.n} fl.`);
-      let b = a0;
-      for(const [co, B] of [...C.c].sort((x,y)=>y[1].n-x[1].n)){
-        const sb = B.n/total*Math.PI*2;
-        out += seg(arc(68, 86, b, b+sb), COLV[c], .72, c + "|" + (co==="Onbekend" ? "" : co), `${COLORS[c]} · ${co} · ${B.n} fl.`);
-        let g0 = b;
-        for(const [g, n] of [...B.g].sort((x,y)=>y[1]-x[1])){
-          const sg = n/total*Math.PI*2;
-          out += seg(arc(88, 104, g0, g0+sg), COLV[c], .45, c + "|" + (g==="Onbekend" ? (co==="Onbekend" ? "" : co) : g), `${COLORS[c]} · ${co} · ${g} · ${n} fl.`);
-          g0 += sg;
-        }
-        b += sb;
-      }
-      a += span;
-    }
-    const pct = n => Math.round(n/total*100) + "%";
-    const topC = order.slice().sort((x,y)=>tree.get(y).n-tree.get(x).n)[0];
-    const cm = new Map(), gm = new Map();
-    rows.forEach(w=>{ if(w.country) cm.set(w.country, (cm.get(w.country)||0)+w.stock); const g = grapesOf(w)[0]; if(g) gm.set(g, (gm.get(g)||0)+w.stock); });
-    const tc = [...cm].sort((x,y)=>y[1]-x[1])[0], tg = [...gm].sort((x,y)=>y[1]-x[1])[0];
-    return `<div class="box"><h2 class="sec">Je kelder-DNA</h2>
-      <div class="dna"><svg viewBox="-110 -110 220 220" role="img" aria-label="Je kelder per kleur, land en druif">${out}
-        <text class="ctr" text-anchor="middle" y="4" style="font:400 26px var(--display);fill:var(--ink)">${total}</text><text text-anchor="middle" y="20" style="font:600 9px var(--body);letter-spacing:.14em;fill:var(--muted)">FLESSEN</text></svg>
-        <div class="side">
-          <div><span class="eyebrow">Vooral</span><b>${COLORS[topC]} · ${pct(tree.get(topC).n)}</b></div>
-          ${tc ? `<div><span class="eyebrow">Meest uit</span><b>${esc(tc[0])} · ${pct(tc[1])}</b></div>` : ""}
-          ${tg ? `<div><span class="eyebrow">Topdruif</span><b>${esc(tg[0])} · ${pct(tg[1])}</b></div>` : ""}
-          <p class="hint" style="margin:0">Binnen: kleur. Midden: land. Buiten: druif. Tik op een stuk om die wijnen te zien.</p>
-        </div></div></div>`;
+    let a = 0;
+    const segs = items.map((x, i) => {
+      const span = x.n/total*Math.PI*2, on = dnaPick===x.k, dim = dnaPick && !on;
+      const d = arc(on ? 62 : 64, on ? 104 : 98, a, a+span); a += span;
+      return `<path d="${d}" fill="${fill(x,i)}" fill-opacity="${op(x,i)}" class="${dim ? "dim" : ""}" data-dnai="${esc(x.k)}"><title>${esc(name(x))} · ${x.n} fl.</title></path>`;
+    }).join("");
+    const pick = items.find(x=>x.k===dnaPick);
+    const scopeN = pick ? pick.n : total, scopeW = pick ? pick.wines : inScope.length;
+    const here = pick ? name(pick) : level===0 ? "in je kelder" : dnaPath[level-1];
+    const crumbs = [["Alles", 0], ...dnaPath.map((k,i)=>[i===0 ? COLORS[k] : k, i+1])];
+    const canDrill = x => level < 2 && !x.rest;
+    const pct = n => Math.round(n/total*100); // share within what you are looking at
+    return `<h2 class="sec">Je kelder-DNA</h2>
+      ${level ? `<nav class="dnacrumb" aria-label="Waar je bent">${crumbs.map(([t,n],i)=>(i?`<span class="sep">›</span>`:"") + `<button type="button" data-dnanav="${n}" ${n===level?'aria-current="page"':""}>${esc(t)}</button>`).join("")}</nav>` : ""}
+      <div class="dna"><svg viewBox="-110 -110 220 220" aria-hidden="true">${segs}
+          <text text-anchor="middle" y="6" style="font:400 34px var(--display);fill:var(--ink)">${scopeN}</text>
+          <text text-anchor="middle" y="26" style="font:700 9px var(--body);letter-spacing:.14em;fill:var(--muted)">${scopeN===1 ? "FLES" : "FLESSEN"}</text></svg>
+        <div class="dnalist" role="list">${items.map((x,i)=>`<button type="button" data-dnai="${esc(x.k)}" ${level===2 && !x.rest ? `aria-pressed="${dnaPick===x.k}"` : ""} ${x.rest ? "disabled" : ""}>
+            <span class="sw" style="background:${fill(x,i)};opacity:${op(x,i)}"></span><span class="nm">${esc(name(x))}</span>
+            <span class="ct">${x.n} fl. · ${pct(x.n)}%</span><span class="go" aria-hidden="true">${canDrill(x) ? "›" : ""}</span></button>`).join("")}</div></div>
+      <div class="dnafoot"><p class="hint" style="margin:0">${level===0 ? "Tik op een kleur om te zien uit welke landen ze komen." : level===1 ? "Tik op een land voor de druiven." : "Tik op een druif om die te kiezen."}</p>
+        ${level ? `<button class="btn sm" type="button" data-dnago>Toon ${scopeW === 1 ? "deze wijn" : `deze ${scopeW} wijnen`}</button>` : ""}</div>
+      <span class="sr-only" aria-live="polite">${esc(scopeN + " flessen " + here)}</span>`;
   }
+  const dnaCard = kelder => kelder.some(w=>w.stock>0) ? `<div class="box" id="dnaBox">${dnaInner(kelder)}</div>` : "";
+  function dnaRedraw(){ const b = $("dnaBox"); if(b) b.innerHTML = dnaInner(wines.filter(w=>w.status==="kelder")); }
   function paceCard(kelder){
     const since = localDay(new Date(Date.now() - 182*864e5));
     const ms = drinkMoments().filter(m=>m.d >= since && m.w.status==="kelder");
@@ -1984,7 +2003,14 @@ Sleutels (streek|land): ${JSON.stringify(keys.slice(0,60))}`;
     const wy = e.target.closest("[data-wy]"); if(wy){ wyYear = +wy.dataset.wy; renderStats(); return; }
     const mm = e.target.closest("[data-mmode]");
     if(mm){ mapMode = mm.dataset.mmode; mm.parentElement.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed", b===mm)); drawMap(); return; }
-    const dna = e.target.closest("[data-dna]"); if(dna){ const [c, q] = dna.dataset.dna.split("|"); showInCellar(c, q); return; }
+    const di = e.target.closest("[data-dnai]");
+    if(di && !di.disabled){ const k = di.dataset.dnai; if(k === "__rest") return;
+      if(dnaPath.length < 2) { dnaPath.push(k); dnaPick = ""; } else dnaPick = dnaPick===k ? "" : k;
+      dnaRedraw(); return; }
+    const dn = e.target.closest("[data-dnanav]"); if(dn){ dnaPath = dnaPath.slice(0, +dn.dataset.dnanav); dnaPick = ""; dnaRedraw(); return; }
+    if(e.target.closest("[data-dnago]")){
+      const [c, country] = dnaPath, grape = dnaPick;
+      showInCellar(c, grape && grape!=="Onbekend" ? grape : "", country && country!=="Onbekend" ? country : ""); return; }
     const ht = e.target.closest("[data-heat]"); if(ht){ const [c, q] = ht.dataset.heat.split("|"); showInCellar(c, q); return; }
     if(e.target.closest("[data-ins=ready]")){ markBack(); tab = "kelder"; typeFilter = "__ready"; tagFilter = ""; $("q").value = ""; searchOpen = false; render(); toSelection(); return; }
     const ag = e.target.closest("[data-again]");
@@ -2011,7 +2037,6 @@ Sleutels (streek|land): ${JSON.stringify(keys.slice(0,60))}`;
     }
   });
 
-  $("v_stats").addEventListener("keydown", e => { if((e.key==="Enter" || e.key===" ") && e.target.matches?.("[data-dna]")){ e.preventDefault(); e.target.dispatchEvent(new MouseEvent("click", {bubbles:true})); } });
   let expNote = "";
   const setExpMsg = t => { expNote = t; const m = $("expMsg"); if(m) m.textContent = t; };
   function exportRows(){
