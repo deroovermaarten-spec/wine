@@ -1011,21 +1011,25 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
     if(allTags.length){ $("chips").hidden=false; $("chips").innerHTML += `<span style="flex-basis:100%;height:0"></span>` + allTags.map(t=>`<button class="tag" data-tag="${esc(t)}" aria-pressed="${tagFilter===t}">#${esc(t)}</button>`).join(""); }
     const cSel = $("country"), cur = cSel.value;
     const countries = [...new Set(pool.map(w=>w.country).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"nl"));
-    cSel.innerHTML = `<option value="">Alle landen</option>` + countries.map(c=>`<option ${c===cur?"selected":""}>${esc(c)}</option>`).join("");
-    cSel.hidden = countries.length < 2;
+    // "Geen … ingevuld": the wines where that field is empty (also the target of the Kelder-DNA)
+    const noCountry = pool.some(w=>!w.country), noGrape = pool.some(w=>!String(w.grape||"").trim());
+    cSel.innerHTML = `<option value="">Alle landen</option>` + countries.map(c=>`<option ${c===cur?"selected":""}>${esc(c)}</option>`).join("")
+      + (noCountry ? `<option value="__none" ${cur==="__none"?"selected":""}>Geen land ingevuld</option>` : "");
+    cSel.hidden = countries.length < 2 && cSel.value !== "__none";
 
     const gSel = $("grape"), gCur = gSel.value;
     const grapeList = [...new Set(pool.flatMap(grapesOf))].sort((a,b)=>a.localeCompare(b,"nl"));
-    gSel.innerHTML = `<option value="">Alle druiven</option>` + grapeList.map(g=>`<option ${g===gCur?"selected":""}>${esc(g)}</option>`).join("");
-    gSel.hidden = grapeList.length < 2;
-    const grape = grapeList.includes(gCur) ? gCur : "";
+    gSel.innerHTML = `<option value="">Alle druiven</option>` + grapeList.map(g=>`<option ${g===gCur?"selected":""}>${esc(g)}</option>`).join("")
+      + (noGrape ? `<option value="__none" ${gCur==="__none"?"selected":""}>Geen druif ingevuld</option>` : "");
+    const grape = grapeList.includes(gCur) || (gCur==="__none" && noGrape) ? gCur : "";
+    gSel.hidden = grapeList.length < 2 && grape !== "__none";
     const q = $("q").value.trim().toLowerCase(), sort = $("sort").value, country = cSel.value;
     let rows = pool.filter(w =>
       (!q || [w.name,w.producer,w.region,w.country,w.grape,w.vintage,w.loc,w.shop,...w.tags].join(" ").toLowerCase().includes(q)) &&
       (!tagFilter || w.tags.includes(tagFilter)) &&
       (!typeFilter || (typeFilter==="__stock" ? w.stock>0 : typeFilter==="__ready" ? isReady(w) : typeFilter==="__me" ? tasteScore(w) > 0 : w.color===typeFilter)) &&
-      (!country || w.country===country) &&
-      (!grape || grapesOf(w).includes(grape)));
+      (!country || (country==="__none" ? !w.country : w.country===country)) &&
+      (!grape || (grape==="__none" ? !String(w.grape||"").trim() : grapesOf(w).includes(grape))));
     const ds = w => { const d=drinkState(w); return d? d.k*10000 + (w.to||9999) : 99999; };
     rows.sort((a,b)=> (typeFilter==="__me" ? tasteScore(b)-tasteScore(a) : typeFilter==="__ready" ? ds(a)-ds(b) : 0) || (sort==="score" ? (b.score||0)-(a.score||0) || (b.createdAt||0)-(a.createdAt||0)
       : sort==="price" ? (priceNum(a)||999)-(priceNum(b)||999) || (a.tier||9)-(b.tier||9)
@@ -1552,10 +1556,11 @@ Antwoord met ALLEEN één JSON-object in deze vorm: ${HOUSE_FIELDS}`;
   $("backPill").addEventListener("click", () => { if(history.state?.mwBack) history.back(); else goBack(); });
   addEventListener("popstate", () => { if(backTo) goBack(); });
 
-  function showInCellar(color, q, country){
+  function showInCellar(color, q, country, noGrape){
     markBack();
-    tab = "kelder"; typeFilter = COLORS[color] ? color : ""; tagFilter = ""; $("grape").value = "";
-    const cs = $("country"); if(country && ![...cs.options].some(o=>o.value===country)) cs.add(new Option(country, country)); cs.value = country || "";
+    tab = "kelder"; typeFilter = COLORS[color] ? color : ""; tagFilter = "";
+    const pickOpt = (sel, v) => { if(v && ![...sel.options].some(o=>o.value===v)) sel.add(new Option(v, v)); sel.value = v || ""; };
+    pickOpt($("country"), country); pickOpt($("grape"), noGrape ? "__none" : "");
     $("q").value = q || ""; searchOpen = !!q; render(); toSelection();
   }
   // After a jump to a filtered list: scroll past the boxes on top, so the filter and the first wine are in view at once
@@ -1646,8 +1651,7 @@ Antwoord met ALLEEN één JSON-object in deze vorm: ${HOUSE_FIELDS}`;
       return `<path d="${d}" fill="${fill(x,i)}" fill-opacity="${op(x,i)}" class="${dim ? "dim" : ""}" data-dnai="${esc(x.k)}"><title>${esc(name(x))} · ${x.n} fl.</title></path>`;
     }).join("");
     const pick = items.find(x=>x.k===dnaPick);
-    // an empty grape field cannot be filtered on: then the button shows the whole country
-    const scopeN = pick ? pick.n : total, scopeW = pick && pick.k!=="Onbekend" ? pick.wines : inScope.length;
+    const scopeN = pick ? pick.n : total, scopeW = pick ? pick.wines : inScope.length;
     const here = pick ? name(pick) : level===0 ? "in je kelder" : dnaPath[level-1];
     const crumbs = [["Alles", 0], ...dnaPath.map((k,i)=>[i===0 ? COLORS[k] : k==="Onbekend" ? "Geen land" : k, i+1])];
     const canDrill = x => level < 2 && !x.rest;
@@ -2015,7 +2019,7 @@ Sleutels (streek|land): ${JSON.stringify(keys.slice(0,60))}`;
     const dn = e.target.closest("[data-dnanav]"); if(dn){ dnaPath = dnaPath.slice(0, +dn.dataset.dnanav); dnaPick = ""; dnaRedraw(); return; }
     if(e.target.closest("[data-dnago]")){
       const [c, country] = dnaPath, grape = dnaPick;
-      showInCellar(c, grape && grape!=="Onbekend" ? grape : "", country && country!=="Onbekend" ? country : ""); return; }
+      showInCellar(c, grape && grape!=="Onbekend" ? grape : "", country==="Onbekend" ? "__none" : country || "", grape==="Onbekend"); return; }
     const ht = e.target.closest("[data-heat]"); if(ht){ const [c, q] = ht.dataset.heat.split("|"); showInCellar(c, q); return; }
     if(e.target.closest("[data-ins=ready]")){ markBack(); tab = "kelder"; typeFilter = "__ready"; tagFilter = ""; $("q").value = ""; searchOpen = false; render(); toSelection(); return; }
     const ag = e.target.closest("[data-again]");
