@@ -482,6 +482,13 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
 .cmenu .danger{color:var(--accent)}
 .card.picked{box-shadow:0 0 0 2px var(--gold)}
 /* undo bar */
+/* "← Inzichten": after jumping from Inzichten to a wine, one tap brings you back to the same spot */
+.backpill{position:fixed;z-index:8;left:50%;top:calc(env(safe-area-inset-top,0px) + 58px);transform:translate(-50%,-10px);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;
+  display:inline-flex;align-items:center;gap:6px;padding:9px 16px 9px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-size:.88rem;font-weight:700;box-shadow:0 8px 20px -10px rgba(40,20,10,.5);white-space:nowrap}
+.backpill.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.backpill svg{width:16px;height:16px;color:var(--accent)}
+@media (max-width:600px){.backpill{top:calc(env(safe-area-inset-top,0px) + 14px)}}
+@media (prefers-reduced-motion:reduce){.backpill{transition:none}}
 .undo{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:9;transform:translate(-50%,16px);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;
   display:flex;align-items:center;gap:14px;max-width:calc(100% - 32px);box-sizing:border-box;padding:10px 10px 10px 16px;border-radius:12px;background:var(--ink);color:var(--bg);font-size:.9rem;box-shadow:0 8px 24px rgba(0,0,0,.25)}
 .undo.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
@@ -591,6 +598,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
 </div>
 
 <div class="scanbar">
+  <button class="backpill" id="backPill" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg><span>Terug naar Inzichten</span></button>
   <button class="btn ghost totop" id="toTop" type="button" aria-label="Terug naar boven" hidden>
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
   </button>
@@ -790,6 +798,8 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
   let wineParam = null; // ?wine=<id>: open that wine once the cellar is loaded (from a reminder)
   try{ const q = new URLSearchParams(location.search); goParam = q.get("go"); wineParam = q.get("wine");
     if(goParam || wineParam){ q.delete("go"); q.delete("wine"); history.replaceState(null, "", location.pathname + (q.toString() ? "?" + q : "") + location.hash); } }catch{}
+  // where you were on each tab (scroll), the tab on screen, and where "Terug naar Inzichten" leads
+  const tabScroll = {}; let shownTab = null, backTo = null;
   let tab = goParam==="wens" || goParam==="stats" ? goParam : "kelder", typeFilter="", draft=null, scanCtl=null, editingId=null, tastingFor=null, tastingScore=0, target="kelder";
   const houseBusy=new Map();
   let mcp=null;
@@ -942,6 +952,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
 
   // ---------- render ----------
   function render(){
+    if(tab !== shownTab){ if(shownTab) tabScroll[shownTab] = scrollY; shownTab = tab; if(tab === "stats") hideBack(); }
     $("collapseAll").hidden = true;
     const kelder = wines.filter(w=>w.status==="kelder"), wens = wines.filter(w=>w.status==="wens");
     const bottles = kelder.reduce((s,w)=>s+w.stock,0);
@@ -1500,7 +1511,34 @@ Antwoord met ALLEEN één JSON-object in deze vorm: ${HOUSE_FIELDS}`;
   const f1 = n => n.toFixed(1).replace(".",",");
   const COLV = {rood:"--red",wit:"--white",rose:"--rose",mousserend:"--spark",dessert:"--dessert"};
   // Open the cellar list filtered on a colour and/or a search word (from the DNA ring or the score map)
+  // ---------- getting around: each tab keeps its scroll position; from Inzichten to a wine and back ----------
+  // Back to a tab at the spot you left it. The map on Inzichten draws a moment later, so try again once it has.
+  function restoreScroll(t){
+    const y = tabScroll[t] || 0; let moved = false;
+    const stop = () => { moved = true; };
+    addEventListener("touchstart", stop, {once: true, passive: true}); addEventListener("wheel", stop, {once: true, passive: true});
+    requestAnimationFrame(() => window.scrollTo({top: y}));
+    [250, 700].forEach(ms => setTimeout(() => { if(!moved && tab === t && Math.abs(scrollY - y) > 2) window.scrollTo({top: y}); }, ms));
+  }
+  // Leaving Inzichten for a wine or a filtered list: show "Terug naar Inzichten", and let the phone's back button do the same
+  function markBack(){
+    if(tab !== "stats") return;
+    tabScroll.stats = scrollY; backTo = "stats";
+    try{ history.pushState({mwBack: "stats"}, ""); }catch{}
+    const b = $("backPill"); b.hidden = false; requestAnimationFrame(() => b.classList.add("show"));
+  }
+  function hideBack(){ backTo = null; const b = $("backPill"); if(!b || b.hidden) return; b.classList.remove("show"); b.hidden = true; }
+  function goBack(){
+    if(!backTo) return;
+    const t = backTo; hideBack();
+    tab = t; typeFilter = ""; tagFilter = ""; $("q").value = ""; searchOpen = false; openIds.clear(); tastingFor = null;
+    render(); restoreScroll(t);
+  }
+  $("backPill").addEventListener("click", () => { if(history.state?.mwBack) history.back(); else goBack(); });
+  addEventListener("popstate", () => { if(backTo) goBack(); });
+
   function showInCellar(color, q){
+    markBack();
     tab = "kelder"; typeFilter = COLORS[color] ? color : ""; tagFilter = ""; $("country").value = ""; $("grape").value = "";
     $("q").value = q || ""; searchOpen = !!q; render(); window.scrollTo({top:0});
   }
@@ -1755,7 +1793,7 @@ Antwoord met ALLEEN één JSON-object in deze vorm: ${HOUSE_FIELDS}`;
           <div class="seg mini" role="group" aria-label="Kaartweergave"><button type="button" data-zoom="fit" aria-pressed="${mapZoom==="fit"}">Ingezoomd</button><button type="button" data-zoom="world" aria-pressed="${mapZoom==="world"}">Wereld</button></div>
           <div class="maplegend"><span><i style="background:var(--accent)"></i>Land</span><span><i style="background:var(--gold)"></i>Kelder</span><span><i style="background:var(--surface);border:1.5px solid var(--gold)"></i>Verlanglijst</span></div>
         </div>
-        <div class="mapwrap" id="mapwrap"><p class="hint" style="padding:40px 16px;text-align:center">Kaart laden…</p></div>
+        <div class="mapwrap" id="mapwrap" style="${mapH ? `min-height:${mapH}px` : ""}"><p class="hint" style="padding:40px 16px;text-align:center">Kaart laden…</p></div>
         <p class="hint" id="mapnote"></p>
         <div id="mapsel"></div>
       </div>
@@ -1787,6 +1825,7 @@ Antwoord met ALLEEN één JSON-object in deze vorm: ${HOUSE_FIELDS}`;
   }
 
   // ---------- map ----------
+  let mapH = 0; // last height of the map, kept as room while it redraws
   let mapMode = "n"; // colour the countries by number of bottles or by your average score
   let worldP = null, mapZoom = "fit", mapSel = null, geoBusy = false, mapVB = null, mapBase = null, mapMeta = null, mapMoved = false;
   let geo = {}; try{ geo = JSON.parse(localStorage.getItem("wk_geo")||"{}") || {}; }catch{}
@@ -1862,6 +1901,7 @@ Sleutels (streek|land): ${JSON.stringify(keys.slice(0,60))}`;
       <div class="mapzoom"><button type="button" data-mz="in" aria-label="Inzoomen"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button><button type="button" data-mz="out" aria-label="Uitzoomen"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg></button><button type="button" data-mz="reset" aria-label="Kaart terugzetten"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4h4"/></svg></button></div>`;
     applyVB(vb, true); bindMapDrag(box.querySelector("svg"));
     box._pins = pins; box._byCountry = byCountry;
+    requestAnimationFrame(() => { if(box.isConnected){ mapH = box.offsetHeight; box.style.minHeight = ""; } });
     $("mapnote").textContent = nC ? `${bottles} fles${bottles===1?"":"sen"} uit ${nC} land${nC===1?"":"en"}${geoBusy?" · streken worden op de kaart gezet…":""}. Tik op een land of stip.` : "Nog geen wijnen met een land om te tonen.";
     if(unplaced.length) $("mapnote").textContent += ` ${unplaced.length} wijn${unplaced.length>1?"en":""} kon${unplaced.length>1?"den":""} niet op de kaart (land onbekend).`;
     renderMapSel();
@@ -1933,7 +1973,7 @@ Sleutels (streek|land): ${JSON.stringify(keys.slice(0,60))}`;
     if(mm){ mapMode = mm.dataset.mmode; mm.parentElement.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed", b===mm)); drawMap(); return; }
     const dna = e.target.closest("[data-dna]"); if(dna){ const [c, q] = dna.dataset.dna.split("|"); showInCellar(c, q); return; }
     const ht = e.target.closest("[data-heat]"); if(ht){ const [c, q] = ht.dataset.heat.split("|"); showInCellar(c, q); return; }
-    if(e.target.closest("[data-ins=ready]")){ tab = "kelder"; typeFilter = "__ready"; tagFilter = ""; $("q").value = ""; searchOpen = false; render(); window.scrollTo({top:0}); return; }
+    if(e.target.closest("[data-ins=ready]")){ markBack(); tab = "kelder"; typeFilter = "__ready"; tagFilter = ""; $("q").value = ""; searchOpen = false; render(); window.scrollTo({top:0}); return; }
     const ag = e.target.closest("[data-again]");
     if(ag){
       const w = wines.find(x=>x.id===ag.dataset.again); if(!w || !col || !canEdit()) return;
@@ -2373,6 +2413,7 @@ ${data}`;
   // ---------- interactions ----------
   function goTo(id){
     const w = wines.find(x=>x.id===id); if(!w) return;
+    markBack();
     tab = w.status; typeFilter=""; tagFilter=""; $("q").value=""; searchOpen=false; $("country").value=""; $("grape").value="";
     openIds.add(id); render();
     const c = $("c_"+id); if(c){ c.scrollIntoView({behavior: matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth", block:"start"}); c.classList.add("flash"); setTimeout(()=>c.classList.remove("flash"),1600); }
@@ -2399,11 +2440,10 @@ ${data}`;
   window.mwRender = () => render();
   document.querySelector(".tabs").addEventListener("click", e => { const b=e.target.closest("[data-tab]"); if(!b) return;
     if(b.dataset.tab===tab){ toTop(); return; }
-    const tabsEl = document.querySelector(".tabs");
-    if(getComputedStyle(tabsEl).position === "fixed") requestAnimationFrame(()=>window.scrollTo({top:0})); // bottom bar on a phone: start at the top
-    else { const tabsY = tabsEl.getBoundingClientRect().top + scrollY - (parseFloat(getComputedStyle(document.documentElement).paddingTop)||0);
-      if(scrollY > tabsY) requestAnimationFrame(()=>window.scrollTo({top:tabsY})); }
-    tab=b.dataset.tab; typeFilter=""; tastingFor=null; render(); });
+    const t = b.dataset.tab;
+    if(backTo && t === backTo){ if(history.state?.mwBack) history.back(); else goBack(); return; }
+    hideBack();
+    tab=t; typeFilter=""; tastingFor=null; render(); restoreScroll(t); });
   $("chips").addEventListener("click", e => { const t=e.target.closest("[data-tag]"); if(t){ tagFilter = tagFilter===t.dataset.tag ? "" : t.dataset.tag; render(); return; } const b=e.target.closest("[data-type]"); if(!b) return; typeFilter=b.dataset.type; render(); });
   $("searchBtn").addEventListener("click", () => {
     if(searchOpen){ searchOpen = false; $("q").value = ""; render(); return; }
