@@ -13,6 +13,10 @@
  */
 (() => {
   const NEWS = [
+    {date: "2026-11-14",
+      items: [
+        "Een fles die open staat, herken je nu meteen aan een half vol flesje naast de naam: in je kelder (beide weergaven) en bij Open flessen."
+      ]},
     {date: "2026-11-13",
       big: {icon: "spark", title: "Nieuwe inzichten", text: "Onder Inzichten zie je nu je kelder-DNA, wanneer je flessen op dronk zijn, waar je wijnen het best scoren, je verborgen parels en wat je opnieuw moet kopen."},
       items: [
