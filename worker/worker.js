@@ -152,7 +152,9 @@ export default {
     // Only what the app needs is passed on; the model and limits are decided here, per feature.
     const model = MODELS[task.model];
     const body = {model, max_tokens: task.max, messages: inb.messages, stream: !!inb.stream, output_config: {effort: task.effort}};
-    if(task.system && typeof inb.system === "string") body.system = inb.system;
+    // The system prompt (the Vraag tab sends the whole cellar there) is cached: follow-up questions within
+    // a few minutes read it back at a fraction of the price instead of paying for the whole cellar again.
+    if(task.system && typeof inb.system === "string") body.system = [{type: "text", text: inb.system, cache_control: {type: "ephemeral"}}];
     const headers = {"x-api-key": env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "content-type": "application/json"};
     if(model !== MODELS.quick){ body.fallbacks = "default"; headers["anthropic-beta"] = "server-side-fallback-2026-07-01"; }
 
