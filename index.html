@@ -140,6 +140,11 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .drunkmonth span{color:var(--muted);font-size:.82rem}
 .drunklist{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:2px 14px}
 .drunklist .it{align-items:flex-start;flex-wrap:wrap}
+.bedit{flex:none;width:34px;height:34px;border:0;border-radius:50%;background:none;color:var(--muted);display:inline-grid;place-items:center;padding:0}
+.bedit svg{width:16px;height:16px}
+.bedit:hover{color:var(--accent);background:var(--accent-soft)}
+.bdel{border-top:1px solid var(--line);padding-top:12px;display:flex;flex-direction:column;gap:8px}
+.bdel .actions{justify-content:flex-start}
 .drunklist.again .it .drink{flex:1 1 200px}
 .drunklist .it .btn{margin:0 0 2px 52px}
 .drunklist .day{flex:none;width:42px;text-align:center;line-height:1.05;padding-top:2px}
@@ -206,6 +211,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .readonly #scanBtn,.readonly [data-imp],.readonly .stock button,.readonly [data-act="t-new"],.readonly [data-act="bought"],
 .readonly [data-act="edit"],.readonly [data-act="del"],.readonly #sharedSave,.readonly .openchip:not(.on){display:none!important}
 .readonly .openchip{pointer-events:none}
+.readonly .bedit{display:none!important}
 .readonly .stock{border-color:transparent}
 .rohint[hidden]{display:none}
 .rohint{display:flex;gap:8px;align-items:center;padding:10px 14px;border:1px dashed var(--line);border-radius:10px}
@@ -654,6 +660,13 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
   </div>
 </div>
 
+<div class="sheet" id="bsheet" hidden>
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="bTitle">
+    <h2 id="bTitle">Fles aanpassen</h2>
+    <div id="bBody" style="display:flex;flex-direction:column;gap:14px"></div>
+  </div>
+</div>
+
 <div class="sheet" id="share" hidden>
   <div class="panel" role="dialog" aria-modal="true" aria-labelledby="shareTitle">
     <h2 id="shareTitle">Wijn delen</h2>
@@ -1084,6 +1097,90 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
   // Gedronken: every bottle you opened or took out, newest first, grouped per month. Only the wines that
   // pass the other filters (search, country, grape, tag). Tap one to see the wine; one you loved that is op
   // gets "Koop opnieuw".
+  const PENCIL = `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>`;
+  // The bottle that is open right now: the last one logged on the day it was opened.
+  function isOpenMoment(m){
+    const w = m.w; if(!w.openedAt || m.d !== w.openedAt) return false;
+    if(m.raw) return w.drunkRaw.filter(r => r.slice(0,10) === w.openedAt).pop() === m.raw;
+    return !w.drunkRaw.some(r => r.slice(0,10) === w.openedAt);
+  }
+
+  // ---------- "Fles aanpassen": the date and status of one bottle you opened ----------
+  // For when a tap went wrong: a different day, open or finished, or not drunk at all.
+  let bFor = null, bOpen = false, bAsk = false;
+  const bMoment = () => {
+    if(!bFor) return null;
+    const ms = drinkMoments().filter(m => m.w.id === bFor.id);
+    return bFor.key === "open" ? ms.find(isOpenMoment) || null : ms.find(m => m.key === bFor.key) || null;
+  };
+  function openBottle(id, key){
+    bFor = {id, key}; bAsk = false; const m = bMoment(); if(!m) { bFor = null; return; }
+    bOpen = isOpenMoment(m); $("bsheet").hidden = false; renderBottle();
+  }
+  function closeBottle(){ $("bsheet").hidden = true; bFor = null; }
+  function renderBottle(){
+    const m = bMoment(); if(!m){ closeBottle(); return; }
+    const w = m.w, other = bOpen && w.openedAt && !isOpenMoment(m);
+    $("bBody").innerHTML = `<p style="margin:0"><b>${esc(w.name)}</b>${w.vintage ? ` <span class="vint">${esc(w.vintage)}</span>` : ""}</p>
+      <label>Geopend op<input type="date" id="b_date" value="${esc(m.d)}" max="${TODAY}"></label>
+      <div><div class="eyebrow" style="margin-bottom:6px">Deze fles</div>
+        <div class="seg" role="group" aria-label="Status"><button type="button" data-bopen="1" aria-pressed="${bOpen}">Staat nog open</button><button type="button" data-bopen="0" aria-pressed="${!bOpen}">Is op</button></div></div>
+      ${other ? `<p class="hint" style="margin:0">Er staat al een fles open sinds ${esc(fmtDate(w.openedAt))}. Die telt dan als op.</p>` : ""}
+      ${m.t ? `<p class="hint" style="margin:0">Kies je een andere datum, dan verhuist je proefnotitie van die dag mee.</p>` : ""}
+      <div class="actions"><button class="btn ghost" type="button" id="bCancel">Annuleren</button><button class="btn" type="button" id="bSave">Bewaren</button></div>
+      <div class="bdel">${bAsk
+        ? `<p class="hint" style="margin:0">Deze fles gaat uit Gedronken${m.t ? ", samen met je proefnotitie van die dag" : ""}. Moet hij terug in je kelder?</p>
+           <div class="actions"><button class="btn sm" type="button" data-bdel="back">Ja, terug in de kelder (+1 fles)</button><button class="btn ghost sm" type="button" data-bdel="only">Nee, alleen weghalen</button></div>`
+        : `<button class="btn ghost sm" type="button" id="bAskDel" style="align-self:flex-start">Toch niet gedronken?</button>`}</div>`;
+  }
+  // everything this sheet can change, to put back with "Ongedaan maken"
+  const bSnap = w => ({drunkRaw: [...w.drunkRaw], tastings: [...w.tastings], openedAt: w.openedAt, stock: w.stock});
+  function bRestore(w, s){
+    w.drunkRaw = s.drunkRaw; w.drunk = s.drunkRaw.map(d=>d.slice(0,10)); w.tastings = s.tastings; w.openedAt = s.openedAt; w.stock = s.stock;
+    render(); return save(w.id, {drunk: s.drunkRaw, tastings: s.tastings, openedAt: s.openedAt, stock: s.stock});
+  }
+  function bottleSave(){
+    const m = bMoment(); if(!m) return closeBottle();
+    const w = m.w, snap = bSnap(w), nd = $("b_date").value || m.d, was = isOpenMoment(m), p = {};
+    if(nd > TODAY){ $("b_date").setCustomValidity("Kies vandaag of een dag ervoor."); $("b_date").reportValidity(); return; }
+    if(nd !== m.d){
+      if(m.raw){
+        const tok = nd + (m.raw.includes("#") ? m.raw.slice(m.raw.indexOf("#")) : "#" + Math.random().toString(36).slice(2,8));
+        w.drunkRaw = w.drunkRaw.map(r => r === m.raw ? tok : r); w.drunk = w.drunkRaw.map(d=>d.slice(0,10)); p.drunk = w.drunkRaw;
+      }
+      if(m.t){ w.tastings = w.tastings.map(t => t === m.t ? {...t, date: nd} : t); p.tastings = w.tastings; }
+    }
+    const open = bOpen ? nd : was ? "" : w.openedAt;
+    if(open !== w.openedAt){ w.openedAt = open; p.openedAt = open; }
+    closeBottle();
+    if(!Object.keys(p).length) return;
+    render(); save(w.id, p);
+    undo(`Aangepast: ${w.name}`, () => bRestore(w, snap));
+  }
+  function bottleDelete(back){
+    const m = bMoment(); if(!m) return closeBottle();
+    const w = m.w, snap = bSnap(w), p = {}, fv = FV();
+    if(m.raw){ w.drunkRaw = w.drunkRaw.filter(r => r !== m.raw); w.drunk = w.drunkRaw.map(d=>d.slice(0,10)); p.drunk = w.drunkRaw; }
+    if(m.t){ w.tastings = w.tastings.filter(t => t !== m.t); p.tastings = w.tastings; }
+    if(isOpenMoment(m)){ w.openedAt = ""; p.openedAt = ""; }
+    if(back){ w.stock += 1; p.stock = fv ? fv.increment(1) : w.stock; }
+    closeBottle(); render(); save(w.id, p);
+    undo(back ? `Terug in de kelder: ${w.name}` : `Weggehaald: ${w.name}`, () => bRestore(w, snap));
+  }
+  document.addEventListener("click", e => {
+    const b = e.target.closest("[data-bedit]");
+    if(b){ e.stopPropagation(); if(canEdit()) openBottle(b.dataset.bedit, b.dataset.key); return; }
+    if(!bFor) return;
+    if(e.target.id === "bsheet" || e.target.id === "bCancel") return closeBottle();
+    const o = e.target.closest("[data-bopen]");
+    if(o){ const d = $("b_date").value; bOpen = o.dataset.bopen === "1"; renderBottle(); if(d) $("b_date").value = d; return; }
+    if(e.target.id === "bSave") return bottleSave();
+    if(e.target.id === "bAskDel"){ const d = $("b_date").value; bAsk = true; renderBottle(); if(d) $("b_date").value = d; return; }
+    const del = e.target.closest("[data-bdel]"); if(del) bottleDelete(del.dataset.bdel === "back");
+  }, true);
+  document.addEventListener("keydown", e => { if(e.key === "Escape" && bFor) closeBottle(); });
+  document.addEventListener("input", e => { if(e.target.id === "b_date") e.target.setCustomValidity(""); });
+
   function drunkHTML(rows){
     const ok = new Set(rows.map(w=>w.id));
     const ms = drinkMoments().filter(m => ok.has(m.w.id)).sort((a,b)=>b.d.localeCompare(a.d));
@@ -1096,7 +1193,8 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
       return `<div class="it"><span class="day"><b>${dt.getDate()}</b><small>${dt.toLocaleDateString("nl-BE",{weekday:"short"})}</small></span>
         <button class="drink" type="button" data-goto="${w.id}"><span class="t"><b>${esc(w.name)}</b>${w.vintage?` <span class="vint">${esc(w.vintage)}</span>`:""}
           <span class="meta2"><span class="dot ${esc(w.color)}"></span>${esc([w.producer, w.country].filter(Boolean).join(" · ") || COLORS[w.color] || "Wijn")}${sc ? `<span class="st" aria-label="${sc} van 5 sterren">${"★".repeat(sc)}</span>` : ""}<span class="badge ${w.stock?"b-ok":"b-young"}">${w.stock ? `nog ${w.stock} fl.` : "op"}</span></span>
-          ${m.t?.note ? `<span class="note">“${esc(m.t.note)}”</span>` : ""}</span></button>
+          ${m.t?.note ? `<span class="note">“${esc(m.t.note)}”</span>` : ""}${isOpenMoment(m) ? `<span class="badge b-ok" style="align-self:flex-start">staat open</span>` : ""}</span></button>
+        ${canEdit() && col ? `<button class="bedit" type="button" data-bedit="${w.id}" data-key="${esc(m.key)}" aria-label="Datum of status aanpassen: ${esc(w.name)}">${PENCIL}</button>` : ""}
         ${buy ? `<button class="btn ghost sm" type="button" data-again="${w.id}">♡ Koop opnieuw</button>` : ""}</div>`;
     };
     return [...months].map(([k, list]) => `<div class="drunkmonth"><h3>${new Date(k+"-15T12:00:00").toLocaleDateString("nl-BE",{month:"long",year:"numeric"})}</h3><span>${list.length===1 ? "1 fles" : list.length+" flessen"}</span></div>
@@ -1184,7 +1282,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
                 <button type="button" data-act="minus" data-id="${w.id}" aria-label="Eén fles minder">−</button>
                 <span>${w.stock} fles${w.stock===1?"":"sen"}</span>
                 <button type="button" data-act="plus" data-id="${w.id}" aria-label="Eén fles meer">+</button></div>
-                ${w.stock>0 || w.openedAt ? `<button type="button" class="openchip${w.openedAt?" on":""}" data-act="opentoggle" data-id="${w.id}" aria-pressed="${!!w.openedAt}" title="${w.openedAt?"Tik als de fles op is":"Tik als je een fles opentrekt"}"><i></i>${w.openedAt?`Geopend · ${esc(shortDate(w.openedAt))}`:"Niet geopend"}</button>`:""}</div>`
+                ${w.stock>0 || w.openedAt ? `<button type="button" class="openchip${w.openedAt?" on":""}" data-act="opentoggle" data-id="${w.id}" aria-pressed="${!!w.openedAt}" title="${w.openedAt?"Tik als de fles op is":"Tik als je een fles opentrekt"}"><i></i>${w.openedAt?`Geopend · ${esc(shortDate(w.openedAt))}`:"Niet geopend"}</button>`:""}${w.openedAt && canEdit() ? `<button class="bedit" type="button" data-bedit="${w.id}" data-key="open" aria-label="Datum of status van de open fles aanpassen">${PENCIL}</button>` : ""}</div>`
               : `<button class="btn sm" type="button" data-act="bought" data-id="${w.id}">Gekocht</button>`}
           </div>
         </div>
@@ -1521,11 +1619,11 @@ Antwoord met ALLEEN één JSON-object in deze vorm: ${HOUSE_FIELDS}`;
   function drinkMoments(){
     const out = [];
     wines.forEach(w => {
-      const logged = new Map(); w.drunk.forEach(d => logged.set(d, (logged.get(d)||0)+1));
+      const logged = new Set();
       const ts = new Map(); w.tastings.forEach(t => { const d = String(t.date||"").slice(0,10); if(d) ts.set(d, t); });
-      logged.forEach((n, d) => { for(let i=0;i<n;i++) out.push({w, d, t: i===0 ? ts.get(d) : null}); });
-      ts.forEach((t, d) => { if(!logged.has(d)) out.push({w, d, t}); });
-      if(w.openedAt && !logged.has(w.openedAt) && !ts.has(w.openedAt)) out.push({w, d: w.openedAt, t: null});
+      w.drunkRaw.forEach(raw => { const d = raw.slice(0,10); out.push({w, d, t: logged.has(d) ? null : ts.get(d), raw, key: "l:"+raw}); logged.add(d); });
+      ts.forEach((t, d) => { if(!logged.has(d)) out.push({w, d, t, key: "t:"+d}); });
+      if(w.openedAt && !logged.has(w.openedAt) && !ts.has(w.openedAt)) out.push({w, d: w.openedAt, t: null, key: "o:"+w.openedAt});
     });
     return out.filter(m => /^\d{4}-\d{2}-\d{2}/.test(m.d));
   }
