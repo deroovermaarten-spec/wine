@@ -1126,10 +1126,10 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
       <div><div class="eyebrow" style="margin-bottom:6px">Deze fles</div>
         <div class="seg" role="group" aria-label="Status"><button type="button" data-bopen="1" aria-pressed="${bOpen}">Staat nog open</button><button type="button" data-bopen="0" aria-pressed="${!bOpen}">Is op</button></div></div>
       ${other ? `<p class="hint" style="margin:0">Er staat al een fles open sinds ${esc(fmtDate(w.openedAt))}. Die telt dan als op.</p>` : ""}
-      ${m.t ? `<p class="hint" style="margin:0">Kies je een andere datum, dan verhuist je proefnotitie van die dag mee.</p>` : ""}
+      ${m.t && String(m.t.date).slice(0,10) === m.d ? `<p class="hint" style="margin:0">Kies je een andere datum, dan verhuist je proefnotitie van die dag mee.</p>` : ""}
       <div class="actions"><button class="btn ghost" type="button" id="bCancel">Annuleren</button><button class="btn" type="button" id="bSave">Bewaren</button></div>
       <div class="bdel">${bAsk
-        ? `<p class="hint" style="margin:0">Deze fles gaat uit Gedronken${m.t ? ", samen met je proefnotitie van die dag" : ""}. Moet hij terug in je kelder?</p>
+        ? `<p class="hint" style="margin:0">Deze fles gaat uit Gedronken${m.t ? ", samen met je proefnotitie" : ""}. Moet hij terug in je kelder?</p>
            <div class="actions"><button class="btn sm" type="button" data-bdel="back">Ja, terug in de kelder (+1 fles)</button><button class="btn ghost sm" type="button" data-bdel="only">Nee, alleen weghalen</button></div>`
         : `<button class="btn ghost sm" type="button" id="bAskDel" style="align-self:flex-start">Toch niet gedronken?</button>`}</div>`;
   }
@@ -1148,7 +1148,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
         const tok = nd + (m.raw.includes("#") ? m.raw.slice(m.raw.indexOf("#")) : "#" + Math.random().toString(36).slice(2,8));
         w.drunkRaw = w.drunkRaw.map(r => r === m.raw ? tok : r); w.drunk = w.drunkRaw.map(d=>d.slice(0,10)); p.drunk = w.drunkRaw;
       }
-      if(m.t){ w.tastings = w.tastings.map(t => t === m.t ? {...t, date: nd} : t); p.tastings = w.tastings; }
+      if(m.t && String(m.t.date).slice(0,10) === m.d){ w.tastings = w.tastings.map(t => t === m.t ? {...t, date: nd} : t); p.tastings = w.tastings; }
     }
     const open = bOpen ? nd : was ? "" : w.openedAt;
     if(open !== w.openedAt){ w.openedAt = open; p.openedAt = open; }
@@ -1192,7 +1192,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
       const buy = w.stock===0 && w.score>=4 && !again.has(w.id) && !wish.has(nrm(w.name)) && canEdit() && col; if(buy) again.add(w.id);
       return `<div class="it"><span class="day"><b>${dt.getDate()}</b><small>${dt.toLocaleDateString("nl-BE",{weekday:"short"})}</small></span>
         <button class="drink" type="button" data-goto="${w.id}"><span class="t"><b>${esc(w.name)}</b>${w.vintage?` <span class="vint">${esc(w.vintage)}</span>`:""}
-          <span class="meta2"><span class="dot ${esc(w.color)}"></span>${esc([w.producer, w.country].filter(Boolean).join(" · ") || COLORS[w.color] || "Wijn")}${sc ? `<span class="st" aria-label="${sc} van 5 sterren">${"★".repeat(sc)}</span>` : ""}<span class="badge ${w.stock?"b-ok":"b-young"}">${w.stock ? `nog ${w.stock} fl.` : "op"}</span></span>
+          <span class="meta2"><span class="dot ${esc(w.color)}"></span>${esc([w.producer, w.country].filter(Boolean).join(" · ") || COLORS[w.color] || "Wijn")}${sc ? `<span class="st" aria-label="${sc} van 5 sterren">${"★".repeat(sc)}</span>` : ""}${w.stock ? `<span class="badge b-ok">nog ${w.stock} fl.</span>` : isOpenMoment(m) ? "" : `<span class="badge b-young">op</span>`}</span>
           ${m.t?.note ? `<span class="note">“${esc(m.t.note)}”</span>` : ""}${isOpenMoment(m) ? `<span class="badge b-ok" style="align-self:flex-start">staat open</span>` : ""}</span></button>
         ${canEdit() && col ? `<button class="bedit" type="button" data-bedit="${w.id}" data-key="${esc(m.key)}" aria-label="Datum of status aanpassen: ${esc(w.name)}">${PENCIL}</button>` : ""}
         ${buy ? `<button class="btn ghost sm" type="button" data-again="${w.id}">♡ Koop opnieuw</button>` : ""}</div>`;
@@ -1619,10 +1619,16 @@ Antwoord met ALLEEN één JSON-object in deze vorm: ${HOUSE_FIELDS}`;
   function drinkMoments(){
     const out = [];
     wines.forEach(w => {
-      const logged = new Set();
+      const logged = new Set(), mine = [];
       const ts = new Map(); w.tastings.forEach(t => { const d = String(t.date||"").slice(0,10); if(d) ts.set(d, t); });
-      w.drunkRaw.forEach(raw => { const d = raw.slice(0,10); out.push({w, d, t: logged.has(d) ? null : ts.get(d), raw, key: "l:"+raw}); logged.add(d); });
-      ts.forEach((t, d) => { if(!logged.has(d)) out.push({w, d, t, key: "t:"+d}); });
+      w.drunkRaw.forEach(raw => { const d = raw.slice(0,10); mine.push({w, d, t: logged.has(d) ? null : ts.get(d), raw, key: "l:"+raw}); logged.add(d); });
+      ts.forEach((t, d) => {
+        if(logged.has(d)) return;
+        // A tasting a few days after you opened a bottle is about that same bottle, not another one.
+        const near = mine.filter(m => m.raw && !m.t && m.d <= d && (Date.parse(d) - Date.parse(m.d)) / 864e5 <= 7).sort((a,b)=>a.d.localeCompare(b.d)).pop();
+        if(near) near.t = t; else mine.push({w, d, t, key: "t:"+d});
+      });
+      out.push(...mine);
       if(w.openedAt && !logged.has(w.openedAt) && !ts.has(w.openedAt)) out.push({w, d: w.openedAt, t: null, key: "o:"+w.openedAt});
     });
     return out.filter(m => /^\d{4}-\d{2}-\d{2}/.test(m.d));
