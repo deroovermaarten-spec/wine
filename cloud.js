@@ -658,6 +658,8 @@
 
       ${window.mwNews ? window.mwNews.settingsHtml() : ""}
 
+      ${window.mwFeatures ? window.mwFeatures.settingsHtml() : ""}
+
       ${aboutHtml()}` : ""}
 
       ${tab === "beheer" ? (window.mwAdmin.load(), window.mwAdmin.html()) : ""}

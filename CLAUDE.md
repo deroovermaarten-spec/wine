@@ -6,4 +6,6 @@
   README, opruimen) komen er niet in.
 - Voeg alleen `big: {icon, title, text}` toe voor iets wat niemand mag missen: dan krijgt iedereen één keer
   een kaartje bij het openen van de app. Liever zelden dan te vaak.
+- Krijgt een wijziging `big`, of komt er een echt nieuwe functie bij, vul dan ook de lijst `FEATURES` in `features.js`
+  aan (Instellingen › App › "Wat kan deze app?"), met `since` = vandaag. Kort, ludiek, in gewoon Nederlands.
 - `cloud.js`, `sw.js` en `README.md` hebben CRLF-regeleinden; houd die zo.
