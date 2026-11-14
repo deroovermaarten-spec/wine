@@ -202,6 +202,12 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .crow .cr{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
 .crow .cq{font:500 .8rem var(--mono);font-variant-numeric:tabular-nums}
 .crow .cq.zero{color:var(--muted)}
+.crow .crt{display:flex;align-items:center;gap:7px}
+.cnote{display:inline-flex;align-items:center;gap:1px;color:var(--muted);transform:rotate(-8deg);transition:transform .25s cubic-bezier(.3,1.6,.5,1)}
+.cnote svg{width:20px;height:20px}
+.cnote b{font:700 .66rem var(--body);color:var(--accent);margin-top:-8px}
+.crow:hover .cnote{transform:rotate(6deg) scale(1.12)}
+@media (prefers-reduced-motion:reduce){.cnote{transition:none}}
 .crow .cst{font-size:.8rem;color:var(--gold);letter-spacing:.04em;white-space:nowrap}
 .crow .cst s{text-decoration:none;color:var(--line)}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);overflow:hidden;scroll-margin-top:64px}
@@ -1220,6 +1226,13 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
 
   // a half-full bottle: shown next to the name while a bottle is open
   const openIco = w => w.openedAt ? `<svg class="openico" viewBox="0 0 24 28" role="img" aria-label="Fles is open"><title>Open sinds ${esc(shortDate(w.openedAt))}</title><path class="wine" d="M6.6 15h10.8v9.6a1.4 1.4 0 0 1-1.4 1.4H8a1.4 1.4 0 0 1-1.4-1.4z"/><path d="M10 1.5h4v6.2c0 1.3 3.4 2.4 3.4 6v10.9a1.4 1.4 0 0 1-1.4 1.4H8a1.4 1.4 0 0 1-1.4-1.4V13.7c0-3.6 3.4-4.7 3.4-6z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>` : "";
+  // a little tasting notebook with a wine ring on it: you already wrote something about this wine
+  function noteIco(w){
+    const ns = w.tastings.filter(t => String(t.note||"").trim()); if(!ns.length) return "";
+    const last = ns.reduce((a,b) => String(b.date||"") >= String(a.date||"") ? b : a), txt = String(last.note).trim();
+    const lbl = ns.length === 1 ? "1 proefnotitie" : ns.length + " proefnotities";
+    return `<span class="cnote" role="img" aria-label="${lbl}" title="“${esc(txt.length > 90 ? txt.slice(0,88) + "…" : txt)}”"><svg viewBox="0 0 22 22" aria-hidden="true"><rect x="3" y="2.5" width="14" height="17" rx="2" fill="var(--surface)" stroke="currentColor" stroke-width="1.5"/><path d="M6.5 7.5h7M6.5 10.5h7M6.5 13.5h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><circle cx="15.5" cy="15.5" r="4.2" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="20 3" opacity=".75"/></svg>${ns.length > 1 ? `<b>${ns.length}</b>` : ""}</span>`;
+  }
   function compactHTML(w){
     const isK = w.status==="kelder", s = Math.round(w.score||0);
     const sub = [w.region, w.country].filter(Boolean).join(", ");
@@ -1231,7 +1244,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
           <div class="cs"><span class="dot ${esc(w.color)}"></span><span>${esc(sub || COLORS[w.color] || "Wijn")}</span></div>
         </div>
         <div class="cr">
-          ${isK ? `<span class="cq${w.stock?"":" zero"}">${w.stock} fl.</span>` : ""}
+          ${isK || noteIco(w) ? `<span class="crt">${noteIco(w)}${isK ? `<span class="cq${w.stock?"":" zero"}">${w.stock} fl.</span>` : ""}</span>` : ""}
           ${s ? `<span class="cst" aria-label="${s} van 5 sterren">${"★".repeat(s)}<s>${"★".repeat(Math.max(0,5-s))}</s></span>` : ""}
         </div>
       </button>

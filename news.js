@@ -18,7 +18,8 @@
         "Een fles die open staat, herken je nu meteen aan een half vol flesje naast de naam: in je kelder (beide weergaven) en bij Open flessen.",
         "Nieuw in je kelder: de knop Gedronken. Daar zie je elke fles die je opende of afboekte, per maand en de recentste eerst, met je score en proefnotitie. Tik op een fles om ze te bekijken en met “Terug naar Gedronken” sta je weer op dezelfde plek. Een topwijn die op is, zet je met Koop opnieuw meteen op je verlanglijst.",
         "Per ongeluk getikt? Na het openen van een fles, het aantikken dat een fles op is of het verhuizen van een wijn naar je kelder krijg je onderaan “Ongedaan maken”. De balk blijft nu 10 seconden staan, en zolang je hem aanraakt.",
-        "Iets verkeerd aangetikt bij een fles? In Gedronken staat bij elke fles een potloodje, en bij een open fles in je kelder ook. Daarmee pas je de datum aan, zet je de fles op open of op, of zeg je dat je hem toch niet dronk, en dan gaat hij terug in je kelder. Een proefnotitie van een paar dagen na het openen hoort nu bij die fles en telt niet meer als een extra fles."
+        "Iets verkeerd aangetikt bij een fles? In Gedronken staat bij elke fles een potloodje, en bij een open fles in je kelder ook. Daarmee pas je de datum aan, zet je de fles op open of op, of zeg je dat je hem toch niet dronk, en dan gaat hij terug in je kelder. Een proefnotitie van een paar dagen na het openen hoort nu bij die fles en telt niet meer als een extra fles.",
+        "In de compacte lijst zie je nu een notitieboekje met een wijnkring bij elke wijn waar je al een proefnotitie over schreef. Staat er een cijfertje bij, dan zijn het er meer. Hou je muis erop om je laatste notitie te lezen."
       ]},
     {date: "2026-11-13",
       big: {icon: "spark", title: "Nieuwe inzichten", text: "Onder Inzichten zie je nu je kelder-DNA, wanneer je flessen op dronk zijn, waar je wijnen het best scoren, je verborgen parels en wat je opnieuw moet kopen."},
