@@ -2632,7 +2632,8 @@ ${data}`;
       if(!w) return;
       if(!w.openedAt){ const p = stockPatch(w, -1); w.openedAt = TODAY; tastingFor=id; resetDraft(); tastingScore=w.score||0; openIds.add(id); render(); save(id,{...p, openedAt:w.openedAt});
         undo(`Fles geopend: ${w.name}`, () => { const q = stockPatch(w, 1); w.openedAt = ""; if(tastingFor===id) tastingFor = null; render(); return save(id, {...q, openedAt:""}); }); }
-      else { w.openedAt = ""; render(); save(id,{openedAt:""}); }
+      else { const was = w.openedAt; w.openedAt = ""; render(); save(id,{openedAt:""});
+        undo(`Fles is op: ${w.name}`, () => { w.openedAt = was; render(); return save(id, {openedAt:was}); }); }
     } else if(act==="t-new"){ tastingFor=id; tastingScore=w?.score||0; resetDraft(); render(); $("tf_note")?.focus(); }
     else if(act==="tg"){
       const k = t.dataset.k, v = t.dataset.v;
@@ -2672,7 +2673,9 @@ ${data}`;
       if(st.rijp==="nog te jong" && (!w.from || w.from <= YEAR)) $("status").textContent = `Je vond ${w.name} nog te jong. Moet hij langer liggen? Pas het drinkvenster aan via Bewerken.`;
       else if(st.rijp==="over hoogtepunt" && left && (!w.to || w.to >= YEAR)) $("status").textContent = `Je vond ${w.name} over zijn hoogtepunt. Drink de ${w.stock===1?"laatste fles":w.stock+" andere flessen"} best snel.`;
     } else if(act==="bought"){
-      if(!w) return; w.status="kelder"; w.stock=Math.max(1,w.stock); w.bought=w.bought||TODAY; w.boughtQty=w.boughtQty||w.stock; render(); save(id,{status:"kelder",stock:w.stock,bought:w.bought,boughtQty:w.boughtQty});
+      if(!w) return; const before = {status:w.status, stock:w.stock, bought:w.bought, boughtQty:w.boughtQty};
+      w.status="kelder"; w.stock=Math.max(1,w.stock); w.bought=w.bought||TODAY; w.boughtQty=w.boughtQty||w.stock; render(); save(id,{status:"kelder",stock:w.stock,bought:w.bought,boughtQty:w.boughtQty});
+      undo(`Naar je kelder: ${w.name}`, () => { Object.assign(w, before); render(); return save(id, before); });
     } else if(act==="del"){
       if(!w) return;
       const keep = {...w}; delete keep.id;
@@ -2685,7 +2688,7 @@ ${data}`;
   // tap anywhere else: the ⋯ actions close
   document.addEventListener("click", e => { if(menuFor && !e.target.closest(".cmenu,.cmore")){ menuFor = null; render(); } });
 
-  // "Ongedaan maken": a short bar after deleting a wine or taking out a bottle
+  // "Ongedaan maken": a short bar after deleting a wine, taking out, opening or finishing a bottle, or moving a wine to the cellar
   let undoTimer = 0;
   function undo(msg, fn){
     let el = $("undo");
@@ -2693,9 +2696,13 @@ ${data}`;
     const hide = () => { el.classList.remove("show"); };
     clearTimeout(undoTimer);
     el.innerHTML = `<span>${esc(msg)}</span><button type="button">Ongedaan maken</button>`;
-    el.querySelector("button").onclick = async () => { hide(); try{ await fn(); }catch{ $("status").textContent = "Ongedaan maken lukte niet."; } };
+    el.querySelector("button").onclick = async () => { clearTimeout(undoTimer); hide(); try{ await fn(); }catch{ $("status").textContent = "Ongedaan maken lukte niet."; } };
+    // stays 10 seconds, and does not disappear while your finger or mouse is on it
+    const later = () => { clearTimeout(undoTimer); undoTimer = setTimeout(hide, 10000); };
+    el.onpointerenter = el.ontouchstart = () => clearTimeout(undoTimer);
+    el.onpointerleave = el.ontouchend = later;
     requestAnimationFrame(() => el.classList.add("show"));
-    undoTimer = setTimeout(hide, 6000);
+    later();
   }
 
   // fold or unfold "Weetje van de dag" and "Klaar om te drinken"
