@@ -133,6 +133,22 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 /* half-full bottle next to the name of a bottle that is open */
 .openico{display:inline-block;width:1em;height:1.15em;vertical-align:-.18em;margin-right:5px;color:var(--ink);flex:none}
 .openico .wine{fill:var(--accent)}
+/* Gedronken: every bottle you opened, newest month first */
+.drunkmonth{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:14px 2px 2px}
+.drunkmonth:first-child{margin-top:0}
+.drunkmonth h3{font:400 1.15rem var(--display);margin:0;text-transform:capitalize}
+.drunkmonth span{color:var(--muted);font-size:.82rem}
+.drunklist{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:2px 14px}
+.drunklist .it{align-items:flex-start;flex-wrap:wrap}
+.drunklist.again .it .drink{flex:1 1 200px}
+.drunklist .it .btn{margin:0 0 2px 52px}
+.drunklist .day{flex:none;width:42px;text-align:center;line-height:1.05;padding-top:2px}
+.drunklist .day b{display:block;font:400 1.35rem var(--display)}
+.drunklist .day small{color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.08em}
+.drunklist .t{white-space:normal}
+.drunklist .meta2{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-top:3px;font-size:.8rem;color:var(--muted)}
+.drunklist .meta2 .st{color:var(--gold);letter-spacing:.05em}
+.drunklist .note{display:block;margin-top:4px;font-size:.86rem;color:var(--ink);font-style:italic;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .drinkrow{display:flex;flex-direction:column;gap:6px}
 .drinkmore{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 12px;padding:4px 0 2px;font-size:.86rem;color:var(--muted)}
 .drinkmore .link{font-weight:600;padding:4px 0}
@@ -613,7 +629,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
 </div>
 
 <div class="scanbar">
-  <button class="backpill" id="backPill" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg><span>Terug naar Inzichten</span></button>
+  <button class="backpill" id="backPill" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg><span id="backPillT">Terug naar Inzichten</span></button>
   <button class="btn ghost totop" id="toTop" type="button" aria-label="Terug naar boven" hidden>
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
   </button>
@@ -1008,6 +1024,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
       types.map(t=>`<button class="chip" data-type="${t}" aria-pressed="${typeFilter===t}"><span class="dot ${t}"></span>${COLORS[t]}</button>`).join("") +
       (tab==="kelder" && kelder.some(isReady) ? `<button class="chip" data-type="__ready" aria-pressed="${typeFilter==="__ready"}">Klaar om te drinken</button>` : "") +
       (tab==="kelder" ? `<button class="chip" data-type="__stock" aria-pressed="${typeFilter==="__stock"}">Op voorraad</button>` : "") +
+      (tab==="kelder" && drinkMoments().length ? `<button class="chip" data-type="__drunk" aria-pressed="${typeFilter==="__drunk"}">Gedronken</button>` : "") +
       (window.mwPrefs?.has() ? `<button class="chip" data-type="__me" aria-pressed="${typeFilter==="__me"}">♥ Mijn smaak</button>` : "");
     const allTags = [...new Set(pool.flatMap(w=>w.tags))].sort((a,b)=>a.localeCompare(b,"nl"));
     if(tagFilter && !allTags.includes(tagFilter)) tagFilter="";
@@ -1030,7 +1047,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
     let rows = pool.filter(w =>
       (!q || [w.name,w.producer,w.region,w.country,w.grape,w.vintage,w.loc,w.shop,...w.tags].join(" ").toLowerCase().includes(q)) &&
       (!tagFilter || w.tags.includes(tagFilter)) &&
-      (!typeFilter || (typeFilter==="__stock" ? w.stock>0 : typeFilter==="__ready" ? isReady(w) : typeFilter==="__me" ? tasteScore(w) > 0 : w.color===typeFilter)) &&
+      (!typeFilter || (typeFilter==="__stock" ? w.stock>0 : typeFilter==="__drunk" ? true : typeFilter==="__ready" ? isReady(w) : typeFilter==="__me" ? tasteScore(w) > 0 : w.color===typeFilter)) &&
       (!country || (country==="__none" ? !w.country : w.country===country)) &&
       (!grape || (grape==="__none" ? !String(w.grape||"").trim() : grapesOf(w).includes(grape))));
     const ds = w => { const d=drinkState(w); return d? d.k*10000 + (w.to||9999) : 99999; };
@@ -1046,7 +1063,9 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
         : `<div class="empty"><div class="big">Nog geen wensen</div><p>Proefde je ergens iets lekkers? Scan het etiket en kies "Op verlanglijst". Zo vind je het terug in de winkel.</p></div>`;
       return;
     }
+    $("sort").hidden = typeFilter==="__drunk"; document.querySelector(".viewsw").hidden = typeFilter==="__drunk";
     if(!rows.length){ list.innerHTML = `<div class="empty"><p>Geen wijn gevonden met deze filters.</p></div>`; return; }
+    if(typeFilter==="__drunk"){ list.classList.remove("compact"); listKey = ""; listRows = []; list.innerHTML = drunkHTML(rows); updateCollapse(); return; }
     const kn = $("tf_note")?.value, kd = $("tf_date")?.value, focused = document.activeElement?.id;
     list.classList.toggle("compact", viewMode==="compact");
     document.querySelectorAll(".viewsw button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.view===viewMode));
@@ -1060,6 +1079,28 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
     watchMore();
     updateCollapse();
     if($("tf_note")){ if(kn!==undefined) $("tf_note").value = kn; if(kd) $("tf_date").value = kd; if(focused==="tf_note"||focused==="tf_date") $(focused).focus(); }
+  }
+
+  // Gedronken: every bottle you opened or took out, newest first, grouped per month. Only the wines that
+  // pass the other filters (search, country, grape, tag). Tap one to see the wine; one you loved that is op
+  // gets "Koop opnieuw".
+  function drunkHTML(rows){
+    const ok = new Set(rows.map(w=>w.id));
+    const ms = drinkMoments().filter(m => ok.has(m.w.id)).sort((a,b)=>b.d.localeCompare(a.d));
+    if(!ms.length) return `<div class="empty"><p>Nog niets gedronken met deze filters. Een fles komt hier zodra je hem opent of afboekt met −.</p></div>`;
+    const wish = new Set(wines.filter(w=>w.status==="wens").map(w=>nrm(w.name))), again = new Set();
+    const months = new Map(); ms.forEach(m => { const k = m.d.slice(0,7); if(!months.has(k)) months.set(k, []); months.get(k).push(m); });
+    const item = m => {
+      const w = m.w, dt = new Date(m.d+"T12:00:00"), sc = Math.round(m.t?.score || w.score || 0);
+      const buy = w.stock===0 && w.score>=4 && !again.has(w.id) && !wish.has(nrm(w.name)) && canEdit() && col; if(buy) again.add(w.id);
+      return `<div class="it"><span class="day"><b>${dt.getDate()}</b><small>${dt.toLocaleDateString("nl-BE",{weekday:"short"})}</small></span>
+        <button class="drink" type="button" data-goto="${w.id}"><span class="t"><b>${esc(w.name)}</b>${w.vintage?` <span class="vint">${esc(w.vintage)}</span>`:""}
+          <span class="meta2"><span class="dot ${esc(w.color)}"></span>${esc([w.producer, w.country].filter(Boolean).join(" · ") || COLORS[w.color] || "Wijn")}${sc ? `<span class="st" aria-label="${sc} van 5 sterren">${"★".repeat(sc)}</span>` : ""}<span class="badge ${w.stock?"b-ok":"b-young"}">${w.stock ? `nog ${w.stock} fl.` : "op"}</span></span>
+          ${m.t?.note ? `<span class="note">“${esc(m.t.note)}”</span>` : ""}</span></button>
+        ${buy ? `<button class="btn ghost sm" type="button" data-again="${w.id}">♡ Koop opnieuw</button>` : ""}</div>`;
+    };
+    return [...months].map(([k, list]) => `<div class="drunkmonth"><h3>${new Date(k+"-15T12:00:00").toLocaleDateString("nl-BE",{month:"long",year:"numeric"})}</h3><span>${list.length===1 ? "1 fles" : list.length+" flessen"}</span></div>
+      <div class="drunklist again">${list.map(item).join("")}</div>`).join("");
   }
 
   const PAGE = 40;
@@ -1545,16 +1586,21 @@ Antwoord met ALLEEN één JSON-object in deze vorm: ${HOUSE_FIELDS}`;
     [250, 700].forEach(ms => setTimeout(() => { if(!moved && tab === t && Math.abs(scrollY - y) > 2) window.scrollTo({top: y}); }, ms));
   }
   // Leaving Inzichten for a wine or a filtered list: show "Terug naar Inzichten", and let the phone's back button do the same
+  // From Gedronken to a wine works the same way: "Terug naar Gedronken" brings you back to the same spot.
+  let drunkY = 0;
   function markBack(){
-    if(tab !== "stats") return;
-    tabScroll.stats = scrollY; backTo = "stats";
-    try{ history.pushState({mwBack: "stats"}, ""); }catch{}
+    const fromDrunk = tab === "kelder" && typeFilter === "__drunk";
+    if(tab !== "stats" && !fromDrunk) return;
+    if(fromDrunk){ drunkY = scrollY; backTo = "drunk"; } else { tabScroll.stats = scrollY; backTo = "stats"; }
+    $("backPillT").textContent = fromDrunk ? "Terug naar Gedronken" : "Terug naar Inzichten";
+    try{ history.pushState({mwBack: backTo}, ""); }catch{}
     const b = $("backPill"); b.hidden = false; requestAnimationFrame(() => b.classList.add("show"));
   }
   function hideBack(){ backTo = null; const b = $("backPill"); if(!b || b.hidden) return; b.classList.remove("show"); b.hidden = true; }
   function goBack(){
     if(!backTo) return;
     const t = backTo; hideBack();
+    if(t === "drunk"){ openIds.clear(); tastingFor = null; tab = "kelder"; typeFilter = "__drunk"; render(); requestAnimationFrame(() => window.scrollTo({top: drunkY})); return; }
     tab = t; typeFilter = ""; tagFilter = ""; $("q").value = ""; searchOpen = false; openIds.clear(); tastingFor = null;
     render(); restoreScroll(t);
   }
@@ -2013,6 +2059,16 @@ Sleutels (streek|land): ${JSON.stringify(keys.slice(0,60))}`;
     if(!list.length){ el.innerHTML = ""; return; }
     el.innerHTML = `<div class="eyebrow" style="margin-top:4px">${esc(label)}</div><div class="maplist">${list.map(w=>`<button class="drink" type="button" data-goto="${w.id}"><span class="t"><b>${esc(w.name)}</b>${w.vintage?` <span class="vint">${esc(w.vintage)}</span>`:""}${w.region?` · ${esc(w.region)}`:""}</span><span class="badge ${w.status==="kelder"?"b-ok":"b-young"}">${w.status==="kelder"?w.stock+" fl.":"verlanglijst"}</span></button>`).join("")}</div>`;
   }
+  // Koop opnieuw: a copy of the wine on the wish list, tagged "koop opnieuw" (Inzichten and Gedronken)
+  function buyAgain(ag){
+    const w = wines.find(x=>x.id===ag.dataset.again); if(!w || !col || !canEdit()) return;
+    const copy = {...w}; delete copy.id; delete copy.scores;
+    Object.assign(copy, {status:"wens", stock:0, drunk:[], tastings:[], openedAt:"", loc:"", bought:"", boughtQty:0, shareId:"", score:0,
+      createdAt:Date.now(), tags:[...new Set([...(w.tags||[]), "koop opnieuw"])]});
+    if(window.mwCloud?.me) copy.addedBy = {uid: window.mwCloud.me.uid, name: window.mwCloud.me.name};
+    ag.disabled = true; ag.textContent = "Bewaard ✓";
+    commit(col.doc().set(copy)).catch(()=>{ ag.disabled = false; ag.textContent = "Probeer opnieuw"; });
+  }
   $("v_stats").addEventListener("click", e => {
     const wy = e.target.closest("[data-wy]"); if(wy){ wyYear = +wy.dataset.wy; renderStats(); return; }
     const mm = e.target.closest("[data-mmode]");
@@ -2028,16 +2084,7 @@ Sleutels (streek|land): ${JSON.stringify(keys.slice(0,60))}`;
     const ht = e.target.closest("[data-heat]"); if(ht){ const [c, q] = ht.dataset.heat.split("|"); showInCellar(c, q); return; }
     if(e.target.closest("[data-ins=ready]")){ markBack(); tab = "kelder"; typeFilter = "__ready"; tagFilter = ""; $("q").value = ""; searchOpen = false; render(); toSelection(); return; }
     const ag = e.target.closest("[data-again]");
-    if(ag){
-      const w = wines.find(x=>x.id===ag.dataset.again); if(!w || !col || !canEdit()) return;
-      const copy = {...w}; delete copy.id; delete copy.scores;
-      Object.assign(copy, {status:"wens", stock:0, drunk:[], tastings:[], openedAt:"", loc:"", bought:"", boughtQty:0, shareId:"", score:0,
-        createdAt:Date.now(), tags:[...new Set([...(w.tags||[]), "koop opnieuw"])]});
-      if(window.mwCloud?.me) copy.addedBy = {uid: window.mwCloud.me.uid, name: window.mwCloud.me.name};
-      ag.disabled = true; ag.textContent = "Bewaard ✓";
-      commit(col.doc().set(copy)).catch(()=>{ ag.disabled = false; ag.textContent = "Probeer opnieuw"; });
-      return;
-    }
+    if(ag){ buyAgain(ag); return; }
     const z = e.target.closest("[data-zoom]");
     const mz = e.target.closest("[data-mz]");
     if(mz){ const a = mz.dataset.mz; if(a==="in") zoomBy(1.8); else if(a==="out") zoomBy(1/1.8); else { mapVB = null; applyVB(mapBase, true); } return; }
@@ -2496,7 +2543,7 @@ ${data}`;
     if(backTo && t === backTo){ if(history.state?.mwBack) history.back(); else goBack(); return; }
     hideBack();
     tab=t; typeFilter=""; tastingFor=null; render(); restoreScroll(t); });
-  $("chips").addEventListener("click", e => { const t=e.target.closest("[data-tag]"); if(t){ tagFilter = tagFilter===t.dataset.tag ? "" : t.dataset.tag; render(); return; } const b=e.target.closest("[data-type]"); if(!b) return; typeFilter=b.dataset.type; render(); });
+  $("chips").addEventListener("click", e => { const t=e.target.closest("[data-tag]"); if(t){ tagFilter = tagFilter===t.dataset.tag ? "" : t.dataset.tag; render(); return; } const b=e.target.closest("[data-type]"); if(!b) return; if(backTo==="drunk") hideBack(); typeFilter=b.dataset.type; render(); });
   $("searchBtn").addEventListener("click", () => {
     if(searchOpen){ searchOpen = false; $("q").value = ""; render(); return; }
     searchOpen = true; render();
@@ -2511,7 +2558,7 @@ ${data}`;
     render();
   });
   let qTimer = 0; $("q").addEventListener("input", () => { clearTimeout(qTimer); qTimer = setTimeout(render, 140); });
-  $("list").addEventListener("click", e => { if(e.target.closest("#listMore")) showMore(); });
+  $("list").addEventListener("click", e => { if(e.target.closest("#listMore")) showMore(); const ag = e.target.closest("[data-again]"); if(ag) buyAgain(ag); });
   $("sort").addEventListener("change", render); $("country").addEventListener("change", render); $("grape").addEventListener("change", render);
 
   // One bottle more or less. A bottle less is written in the drink log (for "Jouw wijnjaar");

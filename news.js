@@ -15,7 +15,8 @@
   const NEWS = [
     {date: "2026-11-14",
       items: [
-        "Een fles die open staat, herken je nu meteen aan een half vol flesje naast de naam: in je kelder (beide weergaven) en bij Open flessen."
+        "Een fles die open staat, herken je nu meteen aan een half vol flesje naast de naam: in je kelder (beide weergaven) en bij Open flessen.",
+        "Nieuw in je kelder: de knop Gedronken. Daar zie je elke fles die je opende of afboekte, per maand en de recentste eerst, met je score en proefnotitie. Tik op een fles om ze te bekijken en met “Terug naar Gedronken” sta je weer op dezelfde plek. Een topwijn die op is, zet je met Koop opnieuw meteen op je verlanglijst."
       ]},
     {date: "2026-11-13",
       big: {icon: "spark", title: "Nieuwe inzichten", text: "Onder Inzichten zie je nu je kelder-DNA, wanneer je flessen op dronk zijn, waar je wijnen het best scoren, je verborgen parels en wat je opnieuw moet kopen."},
