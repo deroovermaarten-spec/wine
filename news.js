@@ -20,7 +20,7 @@
         "Per ongeluk getikt? Na het openen van een fles, het aantikken dat een fles op is of het verhuizen van een wijn naar je kelder krijg je onderaan “Ongedaan maken”. De balk blijft nu 10 seconden staan, en zolang je hem aanraakt.",
         "Iets verkeerd aangetikt bij een fles? In Gedronken staat bij elke fles een potloodje, en bij een open fles in je kelder ook. Daarmee pas je de datum aan, zet je de fles op open of op, of zeg je dat je hem toch niet dronk, en dan gaat hij terug in je kelder. Een proefnotitie van een paar dagen na het openen hoort nu bij die fles en telt niet meer als een extra fles.",
         "In de compacte lijst zie je nu een notitieboekje met een wijnkring bij elke wijn waar je al een proefnotitie over schreef. Staat er een cijfertje bij, dan zijn het er meer. Hou je muis erop om je laatste notitie te lezen.",
-        "Nieuw onder Instellingen › App: “Wat kan deze app?”, een overzicht van alles wat je wijnkelder kan. Bij een grote vernieuwing komt er telkens iets bij."
+        "Nieuw onder Instellingen › App: “Wat kan deze app?”, een overzicht van alles wat je wijnkelder kan. Bij een grote vernieuwing komt er telkens iets bij. Scrol je ver naar beneden in de instellingen, dan brengt een pijltje je weer naar boven."
       ]},
     {date: "2026-11-13",
       big: {icon: "spark", title: "Nieuwe inzichten", text: "Onder Inzichten zie je nu je kelder-DNA, wanneer je flessen op dronk zijn, waar je wijnen het best scoren, je verborgen parels en wat je opnieuw moet kopen."},

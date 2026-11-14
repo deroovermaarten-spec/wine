@@ -76,6 +76,9 @@
 .mwpick[aria-current="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
 .mwpick small{color:var(--muted)}
 .mwi{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.mwupw{position:sticky;bottom:0;height:0;margin-top:-14px;display:flex;justify-content:flex-end;pointer-events:none;z-index:2}
+.mwupw .totop{transform:translateY(calc(-100% - 4px)) scale(.9);background:var(--surface);box-shadow:0 6px 18px -8px rgba(40,20,10,.5)}
+.mwupw .totop.show{transform:translateY(calc(-100% - 4px));pointer-events:auto}
 .mwtop{display:flex;justify-content:space-between;align-items:center;gap:10px;position:sticky;top:-20px;margin:-20px 0 0;padding:20px 0 6px;background:var(--surface);z-index:1}
 .mwx{border:0;background:var(--bg);color:var(--ink);width:38px;height:38px;border-radius:50%;display:grid;place-items:center;flex:none}
 .mwsec{display:flex;flex-direction:column;gap:10px;padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
@@ -586,9 +589,14 @@
     const sh = document.createElement("div"); sh.className = "sheet"; sh.id = "mwSheet"; sh.hidden = true;
     sh.innerHTML = `<div class="panel" role="dialog" aria-modal="true" aria-labelledby="mwSheetTitle">
       <div class="mwtop"><h2 id="mwSheetTitle">Instellingen</h2><button class="mwx" type="button" id="mwClose" aria-label="Sluiten">${ico("close")}</button></div>
-      <div class="mwcell" id="mwBody"></div></div>`;
+      <div class="mwcell" id="mwBody"></div>
+      <div class="mwupw"><button class="btn ghost totop" type="button" id="mwUp" aria-label="Terug naar boven"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></div></div>`;
     document.body.appendChild(sh);
-    const close = () => { sh.hidden = true; sheetMsg = ""; inviteLink = ""; prefDraft = null; aboutOpen = false; };
+    // Settings scrolls on its own (long lists like "Wat kan deze app?"), so it gets its own "back to top" button.
+    const panel = sh.querySelector(".panel"), up = $("mwUp");
+    panel.addEventListener("scroll", () => up.classList.toggle("show", panel.scrollTop > panel.clientHeight * .6), {passive: true});
+    up.onclick = () => panel.scrollTo({top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"});
+    const close = () => { sh.hidden = true; panel.scrollTop = 0; up.classList.remove("show"); sheetMsg = ""; inviteLink = ""; prefDraft = null; aboutOpen = false; };
     // "toggle" does not bubble, so listen in the capture phase
     $("mwBody").addEventListener("toggle", e => { if(e.target.id === "mwAbout") aboutOpen = e.target.open; }, true);
     $("mwClose").onclick = close;
