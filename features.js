@@ -14,6 +14,7 @@
     {e: "📝", t: "Proefnotities", d: "Kleur, aroma's, structuur en rijpheid in een paar tikken, met je score. Een notitieboekje in de lijst toont welke wijnen je al proefde."},
     {e: "🗓️", t: "Gedronken", d: "Een tijdlijn van elke fles die je opende, per maand. Verkeerd getikt? Pas de datum of de status aan.", since: "2026-11-14"},
     {e: "🧬", t: "Kelder-DNA", d: "Je kelder in één ring: tik op een kleur voor de landen, op een land voor de druiven."},
+    {e: "👅", t: "Jouw smaakprofiel", d: "Een wolk met de smaken die terugkomen in de wijnen die je goed scoort, zoals vanille of perzik. Nog in bèta: hoe meer je scoort, hoe beter.", since: "2026-11-15"},
     {e: "🗺️", t: "Inzichten", d: "Een wereldkaart van je wijnen, je wijnjaar, je beste glas, verborgen parels en wat je opnieuw moet kopen."},
     {e: "🏡", t: "Het wijnhuis", d: "Geschiedenis, eigenaars en werkwijze van de producent, opgezocht door Claude."},
     {e: "🍽️", t: "Wat eet je erbij", d: "Gerechten met recept die bij de wijn passen, plus de juiste temperatuur, decanteren en het beste glas."},

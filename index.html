@@ -381,6 +381,12 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .insgrp{font:700 .72rem var(--body);letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin:8px 2px -6px;display:flex;align-items:center;gap:10px}
 .insgrp::after{content:"";flex:1;height:1px;background:var(--line)}
 .insline{margin:0;font-size:.92rem}
+.beta{font:700 .62rem var(--body);letter-spacing:.12em;text-transform:uppercase;padding:2px 8px;border-radius:999px;border:1px dashed var(--accent);color:var(--accent);background:var(--accent-soft)}
+.tcloud{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:4px 14px;padding:10px 4px;line-height:1.15}
+.tcloud span{font-family:var(--display);font-weight:500;display:inline-block;cursor:default}
+.tlegend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.74rem;color:var(--muted)}
+.tlegend span{display:inline-flex;align-items:center;gap:5px}
+.tlegend i{width:9px;height:9px;border-radius:3px;display:inline-block}
 .insline b{font-weight:700}
 .wcols{display:flex;align-items:flex-end;gap:6px;height:130px;margin-top:2px}
 .wcols div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;min-width:0;height:100%}
@@ -1876,6 +1882,58 @@ Antwoord met ALLEEN één JSON-object in deze vorm: ${HOUSE_FIELDS}`;
       <div class="heat" style="grid-template-columns:minmax(70px,1.2fr) repeat(${cols.length},minmax(0,1fr))"><span></span>${cols.map(c=>`<span class="h"><span class="dot ${c}"></span>${COLORS[c]}</span>`).join("")}${grid}</div>
       <p class="hint">Je gemiddelde score per streek en kleur, ook van flessen die al op zijn. Tik op een vakje voor de wijnen.</p></div>`;
   }
+  // ---------- your taste profile (beta) ----------
+  // Which aromas show up in the wines you scored well: the aromas you ticked when tasting (count double)
+  // and the ones named in the wine's description from the scan.
+  const AROMA_FAM = {"Rood fruit":"#c2334d","Zwart fruit":"#6d2f86","Wit & geel fruit":"#b8901c","Tropisch":"#d9731a","Bloemen":"#c2569a",
+    "Kruiden & specerijen":"#4f8a3c","Hout & rijping":"#8a5a2b","Aards & mineraal":"#6b6f5a","Groen & plantaardig":"#5f9a2a","Gedroogd & zoet":"#b0702a"};
+  const AROMA_ALIAS = {framboos:["frambozen"], abrikoos:["abrikozen"], roos:["rozen","rozenblaadjes"], "zwarte peper":["peper","peperig"],
+    "groene appel":["appel","appels","groene appels"], citroen:["citrus","citroenschil"], vanille:["vanilla"], kruidnagel:["kruidnagels"],
+    "gedroogde abrikoos":["gedroogde abrikozen"], "rode bes":["rode bessen"], noten:["noot","hazelnoot","amandel","amandelen","walnoot"],
+    toast:["geroosterd","toastig"], rook:["rokerig"], boter:["boterig"], drop:["zoethout"], "natte steen":["natte stenen","steen"], krijt:["krijtachtig"]};
+  let aromaRx = null;
+  function aromaRegexes(){
+    if(aromaRx) return aromaRx;
+    const low = t => t.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
+    const words = a => [a, ...(AROMA_ALIAS[a]||[])].map(x => low(x).replace(/[.*+?^${}()|[\]\\]/g,"\\$&") + "(en|s|jes)?");
+    aromaRx = Object.entries(AROMAS).flatMap(([g, l]) => l.map(a => ({a, g, rx: new RegExp("(^|[^a-z])(" + words(a).join("|") + ")(?![a-z])")})));
+    return aromaRx;
+  }
+  function tasteCard(kelder){
+    const me = window.mwCloud?.me?.uid, mine = t => !t.uid || t.uid===me;
+    const low = t => String(t||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
+    const fam = new Map(Object.entries(AROMAS).flatMap(([g,l]) => l.map(a=>[a,g])));
+    const acc = new Map(); let used = 0;
+    kelder.filter(w => w.score > 0).forEach(w => {
+      const hits = new Map();
+      w.tastings.filter(mine).forEach(t => (t.aromas||[]).forEach(a => { if(fam.has(a)) hits.set(a, 2); }));
+      const txt = low(w.taste); if(txt) aromaRegexes().forEach(x => { if(!hits.has(x.a) && x.rx.test(txt)) hits.set(x.a, 1); });
+      // "zwarte kers" also says "kers": keep only the longer one
+      ["zwarte kers","gedroogde abrikoos"].forEach(l => { if(hits.has(l)) hits.delete(l.split(" ").pop()); });
+      if(!hits.size) return; used++;
+      hits.forEach((wt, a) => { const x = acc.get(a) || {a, g: fam.get(a), n:0, w:0, s:0, love:0}; x.n++; x.w += wt; x.s += wt*w.score; if(w.score >= 4) x.love += wt; acc.set(a, x); });
+    });
+    const head = `<h2 class="sec" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">Jouw smaakprofiel <span class="beta">bèta</span></h2>`;
+    const note = `<p class="hint">Dit wordt pas echt betrouwbaar als je meerdere wijnen gescoord hebt${used ? `: nu telt het ${used} wijn${used===1?"":"en"} mee` : ""}. Tik bij het proeven aroma's aan, die tellen dubbel.</p>`;
+    if(used < 3) return `<div class="box">${head}<p class="insline">Hier zie je straks welke smaken terugkomen in de wijnen die je goed scoort, zoals vanille of perzik.</p>${note}</div>`;
+    const all = [...acc.values()].map(x => ({...x, avg: x.s/x.w}));
+    const cloud = all.sort((a,b)=>b.love-a.love || b.n-a.n || a.a.localeCompare(b.a,"nl")).slice(0,18);
+    const maxLove = Math.max(1, ...cloud.map(x=>x.love));
+    const liked = all.filter(x=>x.n>=2 && x.avg>=3.75).sort((a,b)=>b.love-a.love || b.avg-a.avg).slice(0,3);
+    const less = all.filter(x=>x.n>=2 && x.avg<=2.75).sort((a,b)=>a.avg-b.avg || b.n-a.n).slice(0,2);
+    const list = xs => xs.map(x=>`<b>${esc(x.a)}</b>`).join(xs.length > 2 ? ", " : " en ").replace(/, (<b>[^<]*<\/b>)$/, " en $1");
+    const line = liked.length ? `Je scoort hoog bij ${list(liked)}.${less.length ? ` Wijnen met ${list(less)} vallen vaker tegen.` : ""}`
+      : less.length ? `Wijnen met ${list(less)} vallen vaker tegen.` : "Nog geen duidelijke favoriet: scoor nog wat wijnen.";
+    // a gentle shuffle so the big words do not all sit together
+    const order = cloud.map((x,i)=>({x, k: (i*7919) % cloud.length})).sort((a,b)=>a.k-b.k).map(o=>o.x);
+    const fams = [...new Set(cloud.map(x=>x.g))];
+    return `<div class="box">${head}
+      <p class="insline">${line}</p>
+      <div class="tcloud">${order.map((x,i)=>`<span style="font-size:${(.82 + .95*x.love/maxLove).toFixed(2)}rem;color:color-mix(in srgb,${AROMA_FAM[x.g]} 78%,var(--ink));opacity:${(.45 + .55*Math.min(1, Math.max(0,(x.avg-1.5)/3))).toFixed(2)};transform:rotate(${[-4,2,0,-2,3,0][i%6]}deg)" title="${esc(x.a)}: ${x.n} wijn${x.n===1?"":"en"}, gemiddeld ${f1(x.avg)} ★">${esc(x.a)}</span>`).join("")}</div>
+      <div class="tlegend">${fams.map(g=>`<span><i style="background:${AROMA_FAM[g]}"></i>${esc(g)}</span>`).join("")}</div>
+      <p class="hint" style="margin:0">Hoe groter het woord, hoe vaker het voorkomt in wijnen die je 4 of 5 sterren gaf. Vager = lagere scores.</p>
+      ${note}</div>`;
+  }
   // Hidden gems and disappointments: price against score
   function gemsCard(kelder){
     const pts = kelder.filter(w=>w.score && priceNum(w)>0);
@@ -1973,6 +2031,7 @@ Antwoord met ALLEEN één JSON-object in deze vorm: ${HOUSE_FIELDS}`;
       ${vintageCard(kelder)}
       <div class="insgrp">Na het openen</div>
       ${heatCard(kelder)}
+      ${tasteCard(kelder)}
       ${gemsCard(kelder)}
       ${againCard(kelder)}
       ${matchCard(kelder)}
