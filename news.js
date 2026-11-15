@@ -17,7 +17,8 @@
       items: [
         "Het notitieboekje in de compacte lijst staat nu bij elke wijn met een proefmoment, ook als je alleen een score of aroma's invulde en geen tekst schreef.",
         "Inzichten is wat korter: “Beter met de tijd?” is weg.",
-        "Nieuw in Inzichten (nog in bèta): Jouw smaakprofiel. Een wolk met de smaken die terugkomen in de wijnen die je goed scoort, zoals vanille of perzik, en welke smaken vaker tegenvallen. Hoe meer wijnen je scoort, hoe beter het klopt. Aroma's die je zelf aantikt bij het proeven tellen dubbel."
+        "Nieuw in Inzichten (nog in bèta): Jouw smaakprofiel. Een wolk met de smaken die terugkomen in de wijnen die je goed scoort, zoals vanille of perzik, en welke smaken vaker tegenvallen. Hoe meer wijnen je scoort, hoe beter het klopt. Aroma's die je zelf aantikt bij het proeven tellen dubbel.",
+        "De gerechten bij een wijn staan nu dichtgeklapt: tik op “A tavola” om ze te zien. Zo staan je proefmomenten hoger op het scherm."
       ]},
     {date: "2026-11-14",
       items: [

@@ -357,7 +357,12 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .tsum{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
 .tsum span{font-size:.72rem;padding:1px 7px;border-radius:999px;background:var(--bg);color:var(--muted)}
 .tastings li .tn{display:flex;flex-direction:column}
-.pair{display:flex;flex-direction:column;gap:10px;background:var(--bg);border-radius:12px;padding:14px}
+.pair{background:var(--bg);border-radius:12px;padding:14px}
+.pair summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.pair summary::-webkit-details-marker{display:none}
+.pair summary .chev{color:var(--muted);transition:transform .2s}
+.pair[open] summary .chev{transform:rotate(180deg)}
+.pair .pbody{display:flex;flex-direction:column;gap:10px;margin-top:10px}
 .pair .out p{margin:0 0 6px}.pair .out ul{margin:2px 0 8px;padding-left:18px}.pair .out b{font-family:var(--display);font-size:1.02rem}
 .sharedhead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .links a{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;font-size:.84rem;font-weight:600;text-decoration:none}
@@ -2379,7 +2384,9 @@ Sleutels (streek|land): ${JSON.stringify(keys.slice(0,60))}`;
   }
 
   // ---------- food pairing ----------
-  const pairRes = new Map(), pairCtl = new Map();
+  const pairRes = new Map(), pairCtl = new Map(), pairOpen = new Set();
+  // folded by default: you open it yourself; remember it across redraws
+  document.addEventListener("toggle", e => { const d = e.target; if(d.classList?.contains("pair") && d.dataset.id) d.open ? pairOpen.add(d.dataset.id) : pairOpen.delete(d.dataset.id); }, true);
   function pairHTML(w){
     if(!sample && !w.pairing) return "";
     const r = pairRes.get(w.id), saved = w.pairing?.text;
@@ -2388,7 +2395,8 @@ Sleutels (streek|land): ${JSON.stringify(keys.slice(0,60))}`;
     else if(r?.err) body = `<p class="hint">${esc(r.err)}</p>`;
     else if(saved) body = `<div class="out">${mdLite(saved)}</div>`;
     const btn = r?.busy ? "" : `<div><button class="btn ${saved?"ghost ":""}sm" type="button" data-act="pair" data-id="${w.id}">${saved?"Andere gerechten":"Wat eet ik bij deze fles?"}</button></div>`;
-    return `<section class="pair"><div class="eyebrow">A tavola · gerechten bij deze wijn</div>${body}${sample?btn:""}</section>`;
+    const open = pairOpen.has(w.id) || r?.busy;
+    return `<details class="pair" data-id="${w.id}"${open ? " open" : ""}><summary><span class="eyebrow">A tavola · gerechten bij deze wijn</span><span class="chev" aria-hidden="true">▾</span></summary><div class="pbody">${body}${sample?btn:""}</div></details>`;
   }
   async function fetchPair(w){
     if(!sample || pairRes.get(w.id)?.busy) return;
