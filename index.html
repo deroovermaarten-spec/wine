@@ -438,13 +438,8 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .again .it:last-child{border-bottom:0}
 .again .it .drink{border:0;padding:0;flex:1;min-width:0}
 .again .it .btn{flex:none}
-.again .drink .t,.trend .drink .t{white-space:normal}
+.again .drink .t{white-space:normal}
 .again small{display:block;color:var(--gold);font-size:.8rem;letter-spacing:.05em}
-.trend{display:flex;flex-direction:column}
-.trend .drink{padding:8px 0}
-.trend svg{width:84px;height:26px;flex:none;overflow:visible}
-.trend .up{color:var(--ok)}.trend .down{color:var(--late)}.trend .eq{color:var(--muted)}
-.trend em{font-style:normal;font-size:.78rem;font-weight:700;white-space:nowrap;min-width:70px;text-align:right}
 .matchrow{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--line)}
 .matchrow:last-child{border-bottom:0}
 .matchrow .ring{width:54px;height:54px;flex:none}
@@ -1920,20 +1915,6 @@ Antwoord met ALLEEN één JSON-object in deze vorm: ${HOUSE_FIELDS}`;
         ${wish.has(nrm(w.name)) ? `<span class="badge b-young">op verlanglijst</span>` : canEdit() && col ? `<button class="btn ghost sm" type="button" data-again="${w.id}">♡ Bewaar</button>` : ""}</div>`).join("")}</div>
       <p class="hint">Bewaar zet een kopie op je verlanglijst, zodat je hem in de winkel terugvindt.</p></div>`;
   }
-  // Better with time? Your scores for a wine you tasted more than once
-  function trendCard(){
-    const me = window.mwCloud?.me?.uid, mine = t => !t.uid || t.uid===me;
-    const rows = wines.filter(w=>w.status==="kelder").map(w=>({w, t: w.tastings.filter(t=>t.score && mine(t) && t.date).sort((a,b)=>String(a.date).localeCompare(String(b.date)))}))
-      .filter(x=>x.t.length>=2).map(x=>({...x, d: x.t.at(-1).score - x.t[0].score})).sort((a,b)=>Math.abs(b.d)-Math.abs(a.d) || b.t.length-a.t.length).slice(0,5);
-    if(!rows.length) return `<div class="box"><h2 class="sec">Beter met de tijd?</h2><p class="hint">Proef je een wijn meer dan eens en geef je telkens een score, dan zie je hier of hij nog groeit of al terugvalt.</p></div>`;
-    const spark = t => { const n = t.length, x = i => 4 + i*(76/(n-1)), y = v => 22 - (v-1)/4*18;
-      return `<svg viewBox="0 0 84 26" aria-hidden="true"><polyline points="${t.map((p,i)=>`${x(i).toFixed(1)},${y(p.score).toFixed(1)}`).join(" ")}" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>${t.map((p,i)=>`<circle cx="${x(i).toFixed(1)}" cy="${y(p.score).toFixed(1)}" r="2.6" fill="currentColor"/>`).join("")}</svg>`; };
-    return `<div class="box"><h2 class="sec">Beter met de tijd?</h2>
-      <div class="trend">${rows.map(({w,t,d})=>{ const k = d>0 ? "up" : d<0 ? "down" : "eq";
-        return `<button class="drink" type="button" data-goto="${w.id}"><span class="t"><b>${esc(w.name)}</b>${w.vintage?` <span class="vint">${esc(w.vintage)}</span>`:""}<small style="display:block;color:var(--muted);font-size:.78rem">${t.length}× geproefd · ${t.map(x=>x.score).join(" → ")}</small></span>
-          <span class="${k}" style="display:flex;align-items:center;gap:8px">${spark(t)}<em>${d>0 ? "↑ groeit" : d<0 ? (w.stock ? "↓ drink op" : "↓ minder") : "= stabiel"}</em></span></button>`; }).join("")}</div>
-      <p class="hint">Je eigen scores bij elk proefmoment, van eerste naar laatste.</p></div>`;
-  }
   // Taste match in a shared cellar: how often you and each other member agree
   function matchCard(kelder){
     const c = window.mwCloud?.cellar, me = window.mwCloud?.me?.uid;
@@ -1994,7 +1975,6 @@ Antwoord met ALLEEN één JSON-object in deze vorm: ${HOUSE_FIELDS}`;
       ${heatCard(kelder)}
       ${gemsCard(kelder)}
       ${againCard(kelder)}
-      ${trendCard()}
       ${matchCard(kelder)}
       ${yearHTML()}
       <div class="insgrp">Meer</div>

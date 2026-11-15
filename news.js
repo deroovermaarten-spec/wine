@@ -15,7 +15,8 @@
   const NEWS = [
     {date: "2026-11-15",
       items: [
-        "Het notitieboekje in de compacte lijst staat nu bij elke wijn met een proefmoment, ook als je alleen een score of aroma's invulde en geen tekst schreef."
+        "Het notitieboekje in de compacte lijst staat nu bij elke wijn met een proefmoment, ook als je alleen een score of aroma's invulde en geen tekst schreef.",
+        "Inzichten is wat korter: “Beter met de tijd?” is weg."
       ]},
     {date: "2026-11-14",
       items: [
