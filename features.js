@@ -11,7 +11,7 @@
     {e: "💬", t: "Vraag het aan je kelder", d: "Wat drink ik bij stoofvlees? Welke fles moet eerst op? Je kelder antwoordt, met je eigen flessen."},
     {e: "⏳", t: "Klaar om te drinken", d: "Elke wijn krijgt een drinkvenster. De app zegt welke flessen nu op hun best zijn en welke dringend op moeten."},
     {e: "🍾", t: "Vegen om te openen", d: "Veeg een wijn naar rechts om een fles te openen, naar links om er een af te boeken. Een half vol flesje toont wat open staat."},
-    {e: "📝", t: "Proefnotities", d: "Kleur, aroma's, structuur en rijpheid in een paar tikken, met je score. Een notitieboekje in de lijst toont wat je al proefde."},
+    {e: "📝", t: "Proefnotities", d: "Kleur, aroma's, structuur en rijpheid in een paar tikken, met je score. Een notitieboekje in de lijst toont welke wijnen je al proefde."},
     {e: "🗓️", t: "Gedronken", d: "Een tijdlijn van elke fles die je opende, per maand. Verkeerd getikt? Pas de datum of de status aan.", since: "2026-11-14"},
     {e: "🧬", t: "Kelder-DNA", d: "Je kelder in één ring: tik op een kleur voor de landen, op een land voor de druiven."},
     {e: "🗺️", t: "Inzichten", d: "Een wereldkaart van je wijnen, je wijnjaar, je beste glas, verborgen parels en wat je opnieuw moet kopen."},

@@ -13,6 +13,10 @@
  */
 (() => {
   const NEWS = [
+    {date: "2026-11-15",
+      items: [
+        "Het notitieboekje in de compacte lijst staat nu bij elke wijn met een proefmoment, ook als je alleen een score of aroma's invulde en geen tekst schreef."
+      ]},
     {date: "2026-11-14",
       items: [
         "Een fles die open staat, herken je nu meteen aan een half vol flesje naast de naam: in je kelder (beide weergaven) en bij Open flessen.",

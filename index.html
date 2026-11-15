@@ -1227,11 +1227,12 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
 
   // a half-full bottle: shown next to the name while a bottle is open
   const openIco = w => w.openedAt ? `<svg class="openico" viewBox="0 0 24 28" role="img" aria-label="Fles is open"><title>Open sinds ${esc(shortDate(w.openedAt))}</title><path class="wine" d="M6.6 15h10.8v9.6a1.4 1.4 0 0 1-1.4 1.4H8a1.4 1.4 0 0 1-1.4-1.4z"/><path d="M10 1.5h4v6.2c0 1.3 3.4 2.4 3.4 6v10.9a1.4 1.4 0 0 1-1.4 1.4H8a1.4 1.4 0 0 1-1.4-1.4V13.7c0-3.6 3.4-4.7 3.4-6z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>` : "";
-  // a little tasting notebook with a wine ring on it: you already wrote something about this wine
+  // a little tasting notebook with a wine ring on it: you already tasted this wine (with or without a written note)
   function noteIco(w){
-    const ns = w.tastings.filter(t => String(t.note||"").trim()); if(!ns.length) return "";
-    const last = ns.reduce((a,b) => String(b.date||"") >= String(a.date||"") ? b : a), txt = String(last.note).trim();
-    const lbl = ns.length === 1 ? "1 proefnotitie" : ns.length + " proefnotities";
+    const ns = w.tastings; if(!ns.length) return "";
+    const last = ns.reduce((a,b) => String(b.date||"") >= String(a.date||"") ? b : a);
+    const txt = String(last.note||"").trim() || `Geproefd op ${fmtDate(String(last.date||"").slice(0,10))}${last.score ? ` · ${last.score} ★` : ""}`;
+    const lbl = ns.length === 1 ? "1 proefmoment" : ns.length + " proefmomenten";
     return `<span class="cnote" role="img" aria-label="${lbl}" title="“${esc(txt.length > 90 ? txt.slice(0,88) + "…" : txt)}”"><svg viewBox="0 0 22 22" aria-hidden="true"><rect x="3" y="2.5" width="14" height="17" rx="2" fill="var(--surface)" stroke="currentColor" stroke-width="1.5"/><path d="M6.5 7.5h7M6.5 10.5h7M6.5 13.5h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><circle cx="15.5" cy="15.5" r="4.2" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="20 3" opacity=".75"/></svg>${ns.length > 1 ? `<b>${ns.length}</b>` : ""}</span>`;
   }
   function compactHTML(w){
