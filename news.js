@@ -13,6 +13,13 @@
  */
 (() => {
   const NEWS = [
+    {date: "2026-11-18",
+      big: {icon: "glass", title: "Wijn gedronken op restaurant?", text: "Noteer hem in het nieuwe tabblad Geproefd: etiket, restaurant, je score en één zin. Hij telt niet mee in je kelder, maar je vindt hem altijd terug."},
+      items: [
+        "Nieuw: het tabblad Geproefd, voor wijnen die je op restaurant dronk. Tik op Scan en kies “Op restaurant”, of noteer zonder foto. Je vult het restaurant, de datum, je score en één zin in; het gerecht, de prijs op de kaart (per glas of fles) en met wie je aan tafel zat, mag erbij. Zonder bereik bewaar je gewoon: het etiket wordt herkend zodra je weer online bent.",
+        "In Geproefd zie je je wijnen per bezoek of per restaurant, met je gemiddelde score en je beste fles. Onder “Wil ik kopen” staat wat je op restaurant 4 of 5 sterren gaf en nog niet in huis hebt; met één tik zet je hem op je verlanglijst.",
+        "Heb je dezelfde wijn al in je kelder, dan zie je dat in Geproefd, en staat het restaurantmoment ook bij de proefmomenten van die fles. Restaurantwijnen tellen niet mee in je voorraad of je inzichten."
+      ]},
     {date: "2026-11-15",
       items: [
         "Het notitieboekje in de compacte lijst staat nu bij elke wijn met een proefmoment, ook als je alleen een score of aroma's invulde en geen tekst schreef.",
