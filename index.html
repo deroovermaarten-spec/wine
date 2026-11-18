@@ -498,6 +498,54 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
 .actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
 .err{color:var(--accent);font-size:.88rem}
 .confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:.85rem}
+/* Geproefd: wines you drank at a restaurant (status "proef"), not part of the cellar */
+#form.proef .np{display:none}
+.rfields{display:flex;flex-direction:column;gap:10px}
+.rfields .rg{grid-template-columns:1.25fr 1fr}
+@media (max-width:420px){.rfields .rg{grid-template-columns:1.25fr 1fr}}
+/* At the table: what the wine is, your score and one line first; the restaurant details after */
+#form.proef>div:first-child>*{order:6}
+#form.proef>div:first-child>#f_target{order:0}
+#form.proef>div:first-child>label:has(#f_name){order:1}
+#form.proef>div:first-child>label:has(#f_stars){order:2}
+#form.proef>div:first-child>label:has(#f_note){order:3}
+#form.proef>div:first-child>#f_rest{order:4}
+#form.proef>div:first-child>.grid2:not(.np){order:5}
+.rprice{display:flex;gap:6px;align-items:center}.rprice input{min-width:0;flex:1}
+.rwish{display:flex!important;flex-direction:row!important;align-items:center;justify-content:space-between;gap:10px;font-size:.9rem;color:var(--ink)!important;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);cursor:pointer}
+.rwish input{position:absolute;opacity:0;width:1px;height:1px}
+.rwish i{width:40px;height:24px;border-radius:999px;background:var(--line);position:relative;flex:none;transition:background .15s}
+.rwish i::after{content:"";position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .15s}
+.rwish input:checked+i{background:var(--accent)}.rwish input:checked+i::after{transform:translateX(16px)}
+.rwish input:focus-visible+i{outline:2px solid var(--accent);outline-offset:2px}
+.rvisit{display:flex;flex-direction:column;gap:10px}
+.rvh{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:0 2px}
+.rvh h3{margin:0;font:600 1.25rem/1.15 var(--display);min-width:0}
+.rvh h3 small{font:400 .85rem var(--body);color:var(--muted);margin-left:4px}
+.rvh time{font:500 .78rem var(--mono);color:var(--muted);white-space:nowrap}
+.rcard{background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);padding:12px 14px;display:grid;grid-template-columns:40px 1fr auto;gap:12px;align-items:start}
+.rcard .thumb{width:40px;height:54px}
+.rcard .rn{font:600 1.05rem/1.2 var(--display)}
+.rcard .rn .vint{margin-right:5px}
+.rcard .rs{color:var(--muted);font-size:.8rem;display:flex;gap:6px;align-items:center;margin-top:2px}
+.rrow{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;margin-top:6px;font-size:.82rem;color:var(--muted)}
+.rst{color:var(--gold);letter-spacing:.04em}.rst s{text-decoration:none;color:var(--line)}
+.rprice2{font:500 .8rem var(--mono);color:var(--ink)}
+.rdish{display:inline-flex;gap:4px;align-items:center}
+.rq{margin:6px 0 0;font-size:.88rem;font-style:italic}
+.racts{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.rlink{display:inline-flex;align-items:center;gap:5px;font-size:.78rem;font-weight:600;padding:3px 9px;border-radius:999px;background:var(--ok-soft);color:var(--ok);border:0;font-family:inherit}
+.rwishb{display:inline-flex;align-items:center;gap:5px;font-size:.78rem;font-weight:600;padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--ink);background:none;font-family:inherit}
+.rwishb[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.rcard .cmore{position:static}
+.rcard .cmenu{grid-column:1/-1}
+.rrest{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);font-size:.9rem}
+.rrest:last-child{border-bottom:0}
+.rrest h4{margin:0;font:600 1.02rem var(--display)}
+.rrest small{display:block;color:var(--muted);font-size:.78rem}
+.rrest .rnum{font:500 .8rem var(--mono);color:var(--muted);white-space:nowrap}
+.tastings li .rat{display:flex;gap:5px;align-items:flex-start;font-size:.8rem;color:var(--muted)}
+.tastings li .rat svg{flex:none;margin-top:3px}
 /* phones: the tabs become a bar at the bottom, within reach of your thumb; "Scan een fles" floats just above it */
 @media (max-width:600px){
   .tabs,.tabs.stuck{position:fixed;top:auto;bottom:0;left:0;right:0;margin:0;z-index:7;gap:0;border-bottom:0;border-top:1px solid var(--line);background:var(--surface);
@@ -597,6 +645,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
   <nav class="tabs" role="tablist" aria-label="Weergave">
     <button role="tab" id="t_kelder" data-tab="kelder" aria-selected="true"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2h4v4c0 1.2 3 2.2 3 6v9a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1v-9c0-3.8 3-4.8 3-6zM7 14h10"/></svg><span class="tl">Kelder</span><span class="n" id="n_kelder"></span></button>
     <button role="tab" id="t_wens" data-tab="wens" aria-selected="false"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg><span class="tl">Verlanglijst</span><span class="n" id="n_wens"></span></button>
+    <button role="tab" id="t_proef" data-tab="proef" aria-selected="false"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="13" cy="13" r="6.5"/><circle cx="13" cy="13" r="3"/><path d="M3 3v5.5a1.5 1.5 0 0 0 3 0V3M4.5 9v12"/></svg><span class="tl">Geproefd</span><span class="n" id="n_proef"></span></button>
     <button role="tab" id="t_stats" data-tab="stats" aria-selected="false"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20v-8M12 20V5M19 20v-5M3 20h18"/></svg><span class="tl">Inzichten</span></button>
   </nav>
   <div class="status" id="status">Je wijnen worden geladen…</div>
@@ -641,6 +690,8 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
     <p class="hint swipehint" id="swipeHint" hidden><span>Tip: veeg een wijn naar links om een fles af te boeken, naar rechts om er een open te zetten.</span><button class="link" type="button" id="swipeHintOk">Begrepen</button></p>
     <div class="list" id="list"></div>
   </section>
+
+  <section id="v_proef" hidden style="display:flex;flex-direction:column;gap:18px"></section>
 
   <section id="v_stats" hidden style="display:flex;flex-direction:column;gap:18px"></section>
 
@@ -705,7 +756,16 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
       <div style="display:flex;flex-direction:column;gap:10px">
         <div class="seg" id="f_target" role="group" aria-label="Bewaren in">
           <button type="button" data-t="kelder" aria-pressed="true">In mijn kelder</button>
-          <button type="button" data-t="wens" aria-pressed="false">Op verlanglijst</button>
+          <button type="button" data-t="wens" aria-pressed="false">Verlanglijst</button>
+          <button type="button" data-t="proef" aria-pressed="false">Op restaurant</button>
+        </div>
+        <div class="rfields" id="f_rest" hidden>
+          <div class="grid2 rg"><label>Restaurant<input id="f_rname" list="f_rlist" placeholder="bv. Bistro Bolero, Gent" autocomplete="off"></label><label>Datum<input id="f_rdate" type="date"></label></div>
+          <datalist id="f_rlist"></datalist>
+          <label>Gerecht<input id="f_dish" placeholder="bv. zeebaars, beurre blanc"></label>
+          <div class="grid2 rg"><label>Prijs op de kaart<span class="rprice"><input id="f_mprice" inputmode="decimal" placeholder="bv. €12"><span class="seg mini" id="f_per" role="group" aria-label="Prijs per"><button type="button" data-per="glas" aria-pressed="true">glas</button><button type="button" data-per="fles" aria-pressed="false">fles</button></span></span></label>
+            <label>Met wie<input id="f_with" placeholder="bv. Sofie"></label></div>
+          <label class="rwish" id="l_wish"><span>Zet ook op mijn verlanglijst</span><input type="checkbox" id="f_wish"><i aria-hidden="true"></i></label>
         </div>
         <label>Naam<input id="f_name" required></label>
         <div class="grid2">
@@ -716,8 +776,8 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
           <label>Druif<input id="f_grape"></label>
           <label>Type<select id="f_color"><option value="rood">Rood</option><option value="wit">Wit</option><option value="rose">Rosé</option><option value="mousserend">Mousserend</option><option value="dessert">Dessert / versterkt</option></select></label>
         </div>
-        <label>Beschrijving<textarea id="f_desc" rows="4"></textarea></label>
-        <div class="grid2">
+        <label class="np">Beschrijving<textarea id="f_desc" rows="4"></textarea></label>
+        <div class="grid2 np">
           <label>Aroma's &amp; smaak<input id="f_taste"></label>
           <label>Past bij<input id="f_food"></label>
           <label>Schenktemperatuur<input id="f_temp"></label>
@@ -735,7 +795,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
           <label id="l_qty">Aantal gekocht<input id="f_qty" type="number" min="0" inputmode="numeric"></label>
         </div>
         <label>Jouw score<div class="stars" id="f_stars"></div></label>
-        <label>Eigen notitie<textarea id="f_note" rows="2" placeholder="Waar gedronken, met wie, wat viel op…"></textarea></label>
+        <label><span id="f_notel">Eigen notitie</span><textarea id="f_note" rows="2" placeholder="Waar gedronken, met wie, wat viel op…"></textarea></label>
         <label>Tags<input id="f_tags" placeholder="bv. tip van Jan, kerst, bbq" autocomplete="off"></label>
         <div class="tagsugg" id="f_tagsugg"></div>
       </div>
@@ -845,7 +905,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
   let TODAY = localDay();
   const TIERS = {1:"Budget",2:"Middenklasse",3:"Premium",4:"Topwijn"};
   const COLORS = {rood:"Rood",wit:"Wit",rose:"Rosé",mousserend:"Mousserend",dessert:"Dessert"};
-  let db=null, sample=null, col=null, wines=[], openIds=new Set();
+  let db=null, sample=null, col=null, wines=[], proefs=[], openIds=new Set();
   let searchOpen = false;
   let viewMode = "cards"; try{ if(localStorage.getItem("mw_view")==="compact") viewMode = "compact"; }catch(e){}
   let compareIds=[], dupFor=null;
@@ -915,7 +975,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
 
   // Normalize older records (status, stock, drink window years)
   function norm(w){
-    w.status = w.status==="wens" ? "wens" : "kelder";
+    w.status = w.status==="wens" || w.status==="proef" ? w.status : "kelder";
     w.stock = Number.isFinite(+w.stock) ? Math.max(0,+w.stock) : (w.status==="kelder"?1:0);
     w.tastings = Array.isArray(w.tastings) ? w.tastings : [];
     w.openedAt = typeof w.openedAt==="string" ? w.openedAt : "";
@@ -1016,11 +1076,12 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
     $("collapseAll").hidden = true;
     const kelder = wines.filter(w=>w.status==="kelder"), wens = wines.filter(w=>w.status==="wens");
     const bottles = kelder.reduce((s,w)=>s+w.stock,0);
-    $("count").textContent = wines.length ? `${bottles} fles${bottles===1?"":"sen"} in huis` : "";
+    $("count").textContent = tab==="proef" ? proefCount() : wines.length ? `${bottles} fles${bottles===1?"":"sen"} in huis` : "";
     $("n_kelder").textContent = kelder.length ? kelder.length : "";
     $("n_wens").textContent = wens.length ? wens.length : "";
+    $("n_proef").textContent = proefs.length ? proefs.length : "";
     document.querySelectorAll(".tabs button").forEach(b=>b.setAttribute("aria-selected", b.dataset.tab===tab));
-    $("v_list").hidden = tab!=="kelder" && tab!=="wens"; $("v_stats").hidden = tab!=="stats";
+    $("v_list").hidden = tab!=="kelder" && tab!=="wens"; $("v_stats").hidden = tab!=="stats"; $("v_proef").hidden = tab!=="proef";
     if($("v_events")) $("v_events").hidden = tab!=="events";
     const listTab = tab==="kelder" || tab==="wens", canSearch = listTab && (tab==="kelder" ? kelder : wens).length >= 2;
     if(!canSearch){ searchOpen = false; $("q").value = ""; }
@@ -1032,6 +1093,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
     if(ro){ const c = window.mwCloud.cellar, on = (c.members?.[c.owner] || {}).name || "de eigenaar"; $("roHint").textContent = `Je bekijkt de kelder van ${on}. Alleen ${on} voegt wijnen toe of past ze aan.`; }
     if(tab==="events"){ updateCollapse(); return window.mwEvents?.render(); }
     if(tab==="stats"){ updateCollapse(); return renderStats(); }
+    if(tab==="proef"){ updateCollapse(); return renderProef(); }
 
     const pool = tab==="kelder" ? kelder : wens;
     $("tonight").hidden = !(tab==="kelder" && kelder.length && sample);
@@ -1265,7 +1327,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
       ["Prijsklasse",[w.tier?TIERS[w.tier]:"",w.price].filter(Boolean).join(" · ")],["Zelf betaald",w.paid],
       ["Aroma's & smaak",w.taste],["Past bij",w.food],["Schenken op",w.temp],["Decanteren",w.decant],["Glas",w.glass],["Drinkvenster",windowText(w)],
       ["Plaats in kelder", isK ? w.loc : ""],["Gekocht",[w.shop, w.bought?fmtDate(w.bought):"", w.boughtQty?w.boughtQty+" fl.":""].filter(Boolean).join(" · ")]].filter(f=>f[1]);
-    const ts = [...w.tastings].sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+    const ts = [...w.tastings, ...proefsOf(w).map(p => ({date:p.restDate, score:p.score, note:p.note, rest:p}))].sort((a,b)=>String(b.date).localeCompare(String(a.date)));
     const menu = menuFor===w.id ? `<div class="cmenu" role="group" aria-label="Meer voor ${esc(w.name)}">
         <button class="btn ghost sm" data-act="edit" data-id="${w.id}" type="button">Bewerken</button>
         <button class="btn ghost sm" data-act="share" data-id="${w.id}" type="button">Delen of tippen</button>
@@ -1322,7 +1384,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
         <div class="tastings">
           <div class="eyebrow">Proefmomenten${ts.length?` · ${ts.length}`:""}</div>
           ${tastingProfile(w)}
-          ${ts.length?`<ol>${ts.map(t=>`<li><time>${esc(fmtDate(t.date))}${t.by?`<br>${esc(t.by)}`:""}</time>${starsHTML(t.score||0,true)}<span class="tn">${t.note?`<span>${esc(t.note)}</span>`:""}${tastingSummary(t)}</span></li>`).join("")}</ol>`:`<p class="hint">Nog geen proefmomenten. Voeg er een toe telkens je deze wijn drinkt.</p>`}
+          ${ts.length?`<ol>${ts.map(t=>`<li><time>${esc(fmtDate(t.date))}${t.by?`<br>${esc(t.by)}`:""}</time>${starsHTML(t.score||0,true)}<span class="tn">${t.note?`<span>${esc(t.note)}</span>`:""}${t.rest ? restLine(t.rest) : tastingSummary(t)}</span></li>`).join("")}</ol>`:`<p class="hint">Nog geen proefmomenten. Voeg er een toe telkens je deze wijn drinkt.</p>`}
           ${tform}
         </div>
         <div class="cardfoot">
@@ -1331,6 +1393,134 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
       </div></div></div>
     </article>`;
   }
+
+  // ---------- Geproefd: wines you drank at a restaurant ----------
+  // A restaurant note is a wine with status "proef": no stock, never counted in the cellar or the insights.
+  // Extra fields: restaurant ("Bistro Bolero, Gent"), restDate, dish, menuPrice, pricePer ("glas"|"fles"), company.
+  const PLATE = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="13" cy="13" r="7"/><circle cx="13" cy="13" r="3"/><path d="M3 3v5a1.5 1.5 0 0 0 3 0V3M4.5 9v12"/></svg>`;
+  const HEART = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>`;
+  let proefView = "bezoek", proefMenu = null;
+  const sameWine = (a, b) => !!a.name && nrm(a.name) === nrm(b.name) && (!a.producer || !b.producer || nrm(a.producer) === nrm(b.producer));
+  const proefsOf = w => proefs.filter(p => sameWine(p, w));
+  const restSplit = r => { const s = String(r || "").trim(), i = s.indexOf(","); return i < 0 ? [s, ""] : [s.slice(0, i).trim(), s.slice(i + 1).trim()]; };
+  const restKey = p => nrm(restSplit(p.restaurant)[0]) || "_";
+  const priceText = p => p.menuPrice ? `${/^\s*€/.test(p.menuPrice) ? "" : "€"}${String(p.menuPrice).trim()} / ${p.pricePer === "fles" ? "fles" : "glas"}` : "";
+  const dayText = d => !d ? "" : d === TODAY ? "vandaag" : d.slice(0, 4) === String(YEAR) ? shortDate(d) : fmtDate(d);
+  const inKelder = p => wines.find(w => w.status === "kelder" && sameWine(p, w));
+  const onWish = p => wines.find(w => w.status === "wens" && (w.id === p.wishId || sameWine(p, w)));
+  function proefCount(){
+    if(!proefs.length) return "";
+    const n = new Set(proefs.map(restKey)).size;
+    return `${proefs.length} wijn${proefs.length === 1 ? "" : "en"} geproefd · ${n} restaurant${n === 1 ? "" : "s"}`;
+  }
+  // The line under a restaurant moment in a cellar card's tastings
+  function restLine(p){
+    const [r, place] = restSplit(p.restaurant);
+    const bits = [[r, place].filter(Boolean).join(", "), p.dish && "bij " + p.dish, priceText(p)].filter(Boolean);
+    return `<span class="rat">${PLATE}<span>${esc(bits.join(" · ") || "Op restaurant")}</span></span>`;
+  }
+  const rStars = n => { n = Math.round(n || 0); return n ? `<span class="rst" aria-label="${n} van 5 sterren">${"★".repeat(n)}<s>${"★".repeat(5 - n)}</s></span>` : ""; };
+  function proefCardHTML(p){
+    const k = inKelder(p), wish = onWish(p), sub = [p.producer, p.region || p.country].filter(Boolean).join(" · ");
+    const menu = proefMenu === p.id ? `<div class="cmenu" style="padding:0">
+        <button class="btn ghost sm" data-ract="edit" data-id="${p.id}" type="button">Bewerken</button>
+        <button class="btn ghost sm danger" data-ract="del" data-id="${p.id}" type="button">Verwijderen</button></div>` : "";
+    return `<article class="rcard" id="r_${p.id}">
+      ${thumb(p)}
+      <div style="min-width:0">
+        <div class="rn">${p.vintage ? `<span class="vint">${esc(p.vintage)}</span>` : ""}${esc(p.name)}</div>
+        ${sub ? `<div class="rs"><span class="dot ${esc(p.color)}"></span><span>${esc(sub)}</span></div>` : ""}
+        ${p.pending ? `<div style="margin-top:4px"><span class="badge b-young">Wacht op herkenning</span></div>` : ""}
+        <div class="rrow">${rStars(p.score)}${priceText(p) ? `<span class="rprice2">${esc(priceText(p))}</span>` : ""}${p.dish ? `<span class="rdish">${PLATE} ${esc(p.dish)}</span>` : ""}${p.company ? `<span>met ${esc(p.company)}</span>` : ""}</div>
+        ${p.note ? `<p class="rq">“${esc(p.note)}”</p>` : ""}
+        <div class="racts">${k ? `<button class="rlink" type="button" data-goto="${k.id}">In je kelder · ${k.stock} fl.</button>` : ""}
+          ${wish ? `<button class="rwishb" type="button" aria-pressed="true" data-goto="${wish.id}">${HEART} Op verlanglijst</button>`
+            : k ? "" : `<button class="rwishb" type="button" aria-pressed="false" data-ract="wish" data-id="${p.id}">${HEART} Wil ik kopen</button>`}</div>
+      </div>
+      <button class="cmore" type="button" data-ract="menu" data-id="${p.id}" aria-expanded="${proefMenu === p.id}" aria-label="Meer acties" title="Meer">⋯</button>
+      ${menu}
+    </article>`;
+  }
+  const byDateDesc = (a, b) => String(b.restDate || "").localeCompare(String(a.restDate || "")) || (b.createdAt || 0) - (a.createdAt || 0);
+  function renderProef(){
+    const box = $("v_proef");
+    const views = [["bezoek", "Per bezoek"], ["rest", "Per restaurant"], ["wish", "Wil ik kopen"]];
+    const head = `<div style="display:flex;flex-direction:column;gap:10px">
+      <div class="chips" style="display:flex">${views.map(([v, l]) => `<button class="chip" type="button" data-rview="${v}" aria-pressed="${proefView === v}">${l}</button>`).join("")}</div>
+      <p class="hint">${proefView === "rest" ? "Waar dronk je wat, en hoe goed was het?" : proefView === "wish" ? "Wat je op restaurant lekker vond (4 sterren of meer) en nog niet in je kelder hebt." : "Wijnen die je buitenshuis dronk. Ze tellen niet mee in je voorraad of je inzichten."}
+        ${canEdit() && col ? ` <button class="link" type="button" data-ract="nophoto">Noteer zonder foto</button>` : ""}</p></div>`;
+    if(!proefs.length){
+      box.innerHTML = `<div class="empty"><div class="big">Nog niets geproefd op restaurant</div><p>Drink je ergens een wijn die je wil onthouden? Tik op "Scan", fotografeer het etiket en kies "Op restaurant". Zonder bereik bewaar je hem gewoon; het etiket wordt herkend zodra je weer online bent.</p>${canEdit() && col ? `<div><button class="btn ghost sm" type="button" data-ract="nophoto">Noteer zonder foto</button></div>` : ""}</div>`;
+      return;
+    }
+    const sorted = [...proefs].sort(byDateDesc);
+    let body = "";
+    if(proefView === "bezoek"){
+      const visits = []; const at = new Map();
+      sorted.forEach(p => { const k = (p.restDate || "") + "|" + restKey(p); if(!at.has(k)){ at.set(k, {p, ws: []}); visits.push(at.get(k)); } at.get(k).ws.push(p); });
+      body = visits.map(v => { const [r, place] = restSplit(v.p.restaurant);
+        return `<section class="rvisit"><div class="rvh"><h3>${esc(r || "Restaurant")}${place ? `<small>${esc(place)}</small>` : ""}</h3><time>${esc(dayText(v.p.restDate))}</time></div>${v.ws.map(proefCardHTML).join("")}</section>`; }).join("");
+    } else if(proefView === "rest"){
+      const m = new Map();
+      sorted.forEach(p => { const k = restKey(p), x = m.get(k) || {p, ws: [], days: new Set()}; x.ws.push(p); x.days.add(p.restDate || ""); m.set(k, x); });
+      const rows = [...m.values()].map(x => { const sc = x.ws.filter(w => w.score); return {...x, avg: sc.length ? sc.reduce((s, w) => s + w.score, 0) / sc.length : 0, best: [...sc].sort((a, b) => b.score - a.score)[0]}; })
+        .sort((a, b) => b.ws.length - a.ws.length || b.avg - a.avg);
+      body = `<div class="box" style="gap:0">${rows.map(x => { const [r, place] = restSplit(x.p.restaurant), n = x.days.size;
+        return `<div class="rrest"><div><h4>${esc(r || "Restaurant")}</h4><small>${esc([place, `${n} bezoek${n === 1 ? "" : "en"}`].filter(Boolean).join(" · "))}</small>${x.best ? `<small>Beste: ${esc([x.best.name, x.best.vintage].filter(Boolean).join(" "))}</small>` : ""}</div>
+          <span class="rnum">${x.ws.length} wijn${x.ws.length === 1 ? "" : "en"}</span><span class="rst">${x.avg ? "★ " + x.avg.toLocaleString("nl-BE", {maximumFractionDigits: 1}) : ""}</span></div>`; }).join("")}</div>${proefInsight()}`;
+    } else {
+      const seen = new Set();
+      const ws = sorted.filter(p => p.score >= 4 && !inKelder(p) && !seen.has(nrm(p.name) + nrm(p.producer)) && seen.add(nrm(p.name) + nrm(p.producer)));
+      body = ws.length ? ws.map(proefCardHTML).join("") : `<div class="empty"><p>Alles wat je op restaurant 4 of 5 sterren gaf, heb je al in huis. Proost!</p></div>`;
+    }
+    box.innerHTML = head + body;
+  }
+  // A short summary under "Per restaurant": which kind of wine you score best when eating out
+  function proefInsight(){
+    const sc = proefs.filter(p => p.score); if(sc.length < 3) return "";
+    const g = new Map();
+    sc.forEach(p => { const k = p.region || p.country; if(!k) return; const x = g.get(k) || {k, s: 0, n: 0}; x.s += p.score; x.n++; g.set(k, x); });
+    const top = [...g.values()].filter(x => x.n >= 2).sort((a, b) => b.s / b.n - a.s / a.n)[0];
+    const loved = new Set(sc.filter(p => p.score >= 4 && !inKelder(p)).map(p => nrm(p.name) + nrm(p.producer))).size;
+    const parts = [top && `Wijnen uit <b>${esc(top.k)}</b> scoor je op restaurant het hoogst (gemiddeld ${(top.s / top.n).toLocaleString("nl-BE", {maximumFractionDigits: 1})} ★).`,
+      loved ? `${loved === 1 ? "Eén wijn" : `<b>${loved}</b> wijnen`} met 4 of 5 sterren heb je nog niet in huis.` : `Alles wat je op restaurant echt lekker vond, staat al in je kelder.`].filter(Boolean);
+    return `<div class="box"><div class="eyebrow">Wat je buitenshuis het best vindt</div><p style="margin:0">${parts.join(" ")}</p></div>`;
+  }
+  // "Wil ik kopen": a copy on the wish list, so you find it back in the shop
+  async function proefToWish(p){
+    if(!col || !canEdit()) return;
+    const [r] = restSplit(p.restaurant);
+    const keep = ["name","producer","vintage","region","country","grape","color","desc","taste","food","temp","decant","glass","from","to","tier","price","photo","house"];
+    const w = {}; keep.forEach(k => { if(p[k] !== undefined && p[k] !== "") w[k] = p[k]; });
+    Object.assign(w, {status: "wens", stock: 0, score: p.score || 0, tags: ["restaurant"], window: "", loc: "", shop: "", bought: "", boughtQty: 0,
+      note: ["Gedronken" + (r ? " bij " + r : ""), p.restDate && fmtDate(p.restDate), p.dish && "bij " + p.dish, priceText(p)].filter(Boolean).join(" · ")});
+    const {ref, done} = newWine(w);
+    p.wishId = ref.id; render();
+    await done; await save(p.id, {wishId: ref.id});
+    $("status").textContent = `${p.name} staat op je verlanglijst.`;
+  }
+  function openProefManual(){
+    if(!canEdit() || !col) return;
+    draft = {photo: ""}; editingId = null; openSheet("", false);
+    $("thinking").hidden = true; $("cancelOnly").hidden = true; $("form").hidden = false; fillForm({status: "proef"});
+  }
+  $("v_proef").addEventListener("click", async e => {
+    const v = e.target.closest("[data-rview]"); if(v){ proefView = v.dataset.rview; proefMenu = null; render(); return; }
+    const t = e.target.closest("[data-ract]"); if(!t) return;
+    const act = t.dataset.ract, p = proefs.find(x => x.id === t.dataset.id);
+    if(act === "nophoto") return openProefManual();
+    if(act === "menu"){ proefMenu = proefMenu === p?.id ? null : p?.id; render(); return; }
+    proefMenu = null;
+    if(!p || !canEdit()) return render();
+    if(act === "wish") return proefToWish(p);
+    if(act === "edit"){ render(); editingId = p.id; draft = {...p}; openSheet(p.photo, true); fillForm(p); return; }
+    if(act === "del"){
+      const keep = {...p}; delete keep.id;
+      try{ await col.doc(p.id).delete(); undo(`Verwijderd: ${p.name}`, () => col.doc(p.id).set(keep)); }
+      catch{ $("status").textContent = "Verwijderen lukte niet."; }
+    }
+  });
+  document.addEventListener("click", e => { if(proefMenu && !e.target.closest(".rcard .cmenu,.rcard .cmore")){ proefMenu = null; render(); } });
 
   // ---------- serving advice (temperature, decanting, glass) ----------
   const serveBusy = new Map();
@@ -2264,13 +2454,13 @@ Sleutels (streek|land): ${JSON.stringify(keys.slice(0,60))}`;
   let expNote = "";
   const setExpMsg = t => { expNote = t; const m = $("expMsg"); if(m) m.textContent = t; };
   function exportRows(){
-    return wines.map(w=>({ "Lijst": w.status==="wens"?"Verlanglijst":"Kelder", "Naam": w.name||"", "Producent": w.producer||"", "Jaargang": w.vintage||"",
+    return [...wines, ...proefs].map(w=>({ "Lijst": w.status==="wens"?"Verlanglijst":w.status==="proef"?"Geproefd op restaurant":"Kelder", "Naam": w.name||"", "Producent": w.producer||"", "Jaargang": w.vintage||"",
       "Type": COLORS[w.color]||"", "Druif": w.grape||"", "Streek": w.region||"", "Land": w.country||"", "Score": w.score||"",
       "Flessen in huis": w.status==="kelder"?w.stock:"", "Geopend sinds": w.openedAt||"", "Plaats": w.loc||"",
       "Drinken vanaf": w.from||"", "Drinken tot": w.to||"", "Prijsklasse": w.tier?TIERS[w.tier]:"", "Geschatte prijs": w.price||"",
       "Zelf betaald": w.paid||"", "Gekocht bij": w.shop||"", "Aankoopdatum": w.bought||"", "Aantal gekocht": w.boughtQty||"",
       "Tags": w.tags.join(", "), "Aroma's & smaak": w.taste||"", "Past bij": w.food||"", "Schenktemperatuur": w.temp||"", "Decanteren": w.decant||"", "Glas": w.glass||"",
-      "Beschrijving": w.desc||"", "Eigen notitie": w.note||"", "Proefmomenten": w.tastings.map(t=>[`${t.date} ${t.score||"-"}/5`, t.note, t.color, (t.aromas||[]).join(", "), Object.entries(t.struct||{}).map(([k,v])=>k+" "+v).join(", ")].filter(Boolean).join(" · ")).join(" | "),
+      "Beschrijving": w.desc||"", "Eigen notitie": w.note||"", "Restaurant": w.status==="proef" ? [w.restaurant, w.restDate, w.dish, priceText(w), w.company && "met " + w.company].filter(Boolean).join(" · ") : "", "Proefmomenten": w.tastings.map(t=>[`${t.date} ${t.score||"-"}/5`, t.note, t.color, (t.aromas||[]).join(", "), Object.entries(t.struct||{}).map(([k,v])=>k+" "+v).join(", ")].filter(Boolean).join(" · ")).join(" | "),
       "Toegevoegd": w.createdAt ? localDay(new Date(w.createdAt)) : "" }));
   }
   $("v_stats").addEventListener("click", async e => {
@@ -2280,9 +2470,9 @@ Sleutels (streek|land): ${JSON.stringify(keys.slice(0,60))}`;
     const rows = exportRows(); const name = `mijn-wijnkelder-${TODAY}`;
     try{
       if(b.dataset.exp==="json"){
-        const payload = {app:"meerstraat-wines", version:1, exportedAt:new Date().toISOString(), wines: wines.map(w=>({...w}))};
+        const payload = {app:"meerstraat-wines", version:1, exportedAt:new Date().toISOString(), wines: [...wines, ...proefs].map(w=>({...w}))};
         await downloads.save({filename: name+".json", data: new Blob([JSON.stringify(payload)], {type:"application/json"})});
-        setExpMsg(`${wines.length} wijn${wines.length===1?"":"en"} in het back-upbestand gezet.`);
+        setExpMsg(`${wines.length+proefs.length} wijn${wines.length+proefs.length===1?"":"en"} in het back-upbestand gezet.`);
       } else if(b.dataset.exp==="xlsx"){
         try{ msg.textContent = "Excel wordt klaargemaakt…"; await loadXlsx(); msg.textContent = ""; }catch{ msg.textContent = "De Excel-module kon niet laden. Probeer opnieuw."; return; }
         const ws = XLSX.utils.json_to_sheet(rows); ws["!cols"] = Object.keys(rows[0]||{}).map(k=>({wch: Math.min(40, Math.max(10, k.length+2))}));
@@ -2306,7 +2496,7 @@ Sleutels (streek|land): ${JSON.stringify(keys.slice(0,60))}`;
     catch{ setExpMsg("Dit bestand kon niet gelezen worden. Kies het back-upbestand (.json) uit Mijn wijnkelder."); return; }
     const valid = list.filter(w => w && typeof w==="object" && typeof w.name==="string" && w.name.trim());
     if(!valid.length){ setExpMsg("Geen wijnen gevonden in dit bestand."); return; }
-    const known = new Set(wines.map(w=>w.id)); let added = 0, updated = 0, failed = 0;
+    const known = new Set([...wines, ...proefs].map(w=>w.id)); let added = 0, updated = 0, failed = 0;
     setExpMsg(`Bezig met terugzetten… (0 van ${valid.length})`);
     for(const w of valid){
       const {id, ...data} = w;
@@ -2963,7 +3153,14 @@ ${data}`;
   $("f_tagsugg").addEventListener("click", e => { const b=e.target.closest("[data-sugg]"); if(!b) return;
     const cur = $("f_tags").value.trim().replace(/,\s*$/,""); $("f_tags").value = (cur?cur+", ":"") + b.dataset.sugg; paintTagSugg(); });
   $("f_tags").addEventListener("input", paintTagSugg);
-  function setTarget(t){ target=t; $("f_target").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.t===t)); ["l_stock","l_loc","l_shop","l_bought","l_qty"].forEach(id=>$(id).hidden = t!=="kelder"); }
+  function setTarget(t){ target=t; $("f_target").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.t===t)); ["l_stock","l_loc","l_shop","l_bought","l_qty"].forEach(id=>$(id).hidden = t!=="kelder");
+    const pr = t==="proef"; $("f_rest").hidden = !pr; $("form").classList.toggle("proef", pr);
+    $("f_notel").textContent = pr ? "Indruk in één zin" : "Eigen notitie"; $("save").textContent = pr ? "Bewaar notitie" : "Bewaar wijn";
+    $("f_note").placeholder = pr ? "bv. Honing, kweepeer, strak en zilt" : "Waar gedronken, met wie, wat viel op…";
+    if(pr && !$("f_rdate").value) $("f_rdate").value = TODAY; }
+  let pricePer = "glas";
+  function setPer(v){ pricePer = v==="fles" ? "fles" : "glas"; $("f_per").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.per===pricePer)); }
+  $("f_per").addEventListener("click", e => { const b=e.target.closest("[data-per]"); if(b) setPer(b.dataset.per); });
   $("f_target").addEventListener("click", e => { const b=e.target.closest("[data-t]"); if(b) setTarget(b.dataset.t); });
 
   function openSheet(photo, editing){
@@ -2985,7 +3182,11 @@ ${data}`;
     v("f_stock", w.stock ?? 1);
     v("f_tags", (w.tags||[]).join(", ")); paintTagSugg();
     v("f_loc", w.loc); v("f_shop", w.shop); v("f_bought", w.bought || (editingId ? "" : TODAY)); v("f_qty", w.boughtQty || (editingId ? "" : (w.stock ?? 1)));
-    setTarget(w.status || (tab==="wens"?"wens":"kelder"));
+    v("f_rname", w.restaurant); $("f_rdate").value = w.restDate || TODAY; v("f_dish", w.dish); v("f_mprice", w.menuPrice); v("f_with", w.company); setPer(w.pricePer);
+    $("f_wish").checked = false; $("l_wish").hidden = !!(w.wishId && wines.some(x=>x.id===w.wishId));
+    $("f_rlist").innerHTML = [...new Set(proefs.map(p=>String(p.restaurant||"").trim()).filter(Boolean))].slice(0,40).map(r=>`<option value="${esc(r)}">`).join("");
+    // From the Geproefd tab a new scan is a restaurant note; editing keeps where the wine already is.
+    setTarget(w.status || (tab==="wens"?"wens":tab==="proef"?"proef":"kelder"));
     formScore=w.score||0; paintFormStars();
   }
 
@@ -3043,6 +3244,7 @@ Zet "recognized" op false als er geen wijnetiket op de foto staat.`;
       loc:g("f_loc"), shop:g("f_shop"), bought:g("f_bought"), boughtQty:Math.max(0,parseInt(g("f_qty"))||0),
       score:formScore, status:target, stock: target==="kelder" ? Math.max(0,parseInt(g("f_stock"))||0) : 0, photo:draft?.photo||"" };
     if(w.status!=="kelder"){ w.loc=""; w.shop=""; w.bought=""; w.boughtQty=0; }
+    if(w.status==="proef") Object.assign(w, {restaurant:g("f_rname"), restDate:g("f_rdate") || TODAY, dish:g("f_dish"), menuPrice:g("f_mprice"), pricePer, company:g("f_with")});
     return w;
   }
   const saveErr = err => { $("err").textContent = err?.code==="quota_exceeded" ? "Je kelder zit vol. Verwijder eerst een paar wijnen." : "Bewaren lukte niet. Probeer opnieuw."; $("err").hidden=false; };
@@ -3064,12 +3266,19 @@ Zet "recognized" op false als er geen wijnetiket op de foto staat.`;
       if(editingId){
         w.pendingErr = "";
         // The score in the form is yours: in a shared cellar it goes to your own place, not the owner's.
-        const cur = wines.find(x=>x.id===editingId), {score, ...rest} = w;
+        const cur = wines.find(x=>x.id===editingId) || proefs.find(x=>x.id===editingId), {score, ...rest} = w;
         if(scoreCtx()){ if(score !== (cur ? cur.score : 0)) Object.assign(rest, scorePatch(cur || {}, score)); }
         else rest.score = score;
+        const wish = w.status==="proef" && $("f_wish").checked && !$("l_wish").hidden;
         await commit(col.doc(editingId).update(rest));
+        if(wish) proefToWish({...cur, ...w, id: editingId});
       }
-      else { const {ref, done} = newWine(w); await done; openIds.add(ref.id); tab = w.status; }
+      else {
+        const wish = w.status==="proef" && $("f_wish").checked;
+        const {ref, done} = newWine(w); await done; openIds.add(ref.id); tab = w.status;
+        if(wish) proefToWish({...w, id: ref.id});
+        if(w.status==="proef") proefView = "bezoek";
+      }
       closeSheet(); render();
     }catch(err){ saveErr(err); }
     finally{ $("save").disabled=false; }
@@ -3103,6 +3312,8 @@ Zet "recognized" op false als er geen wijnetiket op de foto staat.`;
     $("later").disabled = true;
     try{
       const blob = await shrink(draft.file);
+      // A restaurant note waiting for its label goes on the wish list once Claude knows its name.
+      if(w.status==="proef" && $("f_wish").checked) w.wantWish = true;
       const {ref, done} = newWine(w);
       await queue.put({id: ref.id, col: col.path, blob, at: Date.now()});
       await done; tab = w.status; closeSheet(); render();
@@ -3120,7 +3331,7 @@ Zet "recognized" op false als er geen wijnetiket op de foto staat.`;
       const items = (await queue.all()).filter(x => x.col === col.path);
       let left = items.length;
       for(const it of items){
-        const w = wines.find(x => x.id === it.id);
+        const w = wines.find(x => x.id === it.id) || proefs.find(x => x.id === it.id);
         if(!w){
           // Not in the list (yet): a fresh save can arrive a moment later. Only drop the photo once the wine is really gone.
           const s = await col.doc(it.id).get().catch(() => null);
@@ -3147,6 +3358,7 @@ Zet "recognized" op false als er geen wijnetiket op de foto staat.`;
           if(r.house && !w.house) patch.house = r.house;
         }
         Object.assign(w, patch); render(); await save(w.id, patch); await queue.del(it.id); left--;
+        if(w.status==="proef" && w.wantWish && !w.wishId && !patch.pendingErr){ await save(w.id, {wantWish:false}); await proefToWish(w); }
       }
       if(!left) $("status").textContent = items.length ? "Je offline scans zijn aangevuld." : $("status").textContent;
     }catch{}
@@ -3168,7 +3380,9 @@ Zet "recognized" op false als er geen wijnetiket op de foto staat.`;
     const timer = setTimeout(()=>{ $("status").textContent="Je wijnen zijn nog niet bereikbaar. Even geduld…"; }, 10000);
     let snapDraw = 0;
     col.onSnapshot(snap => {
-      wines = snap.docs.map(x => norm({id:x.id, ...x.data()}));
+      const all = snap.docs.map(x => norm({id:x.id, ...x.data()}));
+      // Wines you drank at a restaurant live in the same list, but are kept apart from the cellar and wish list.
+      wines = all.filter(w => w.status !== "proef"); proefs = all.filter(w => w.status === "proef");
       if(!factStarted && (snap.size || !snap.metadata.fromCache)){ factStarted = true; setTimeout(() => loadFact(false), 0); }
       // Wines from the offline copy are good enough: only warn when nothing could be shown at all.
       // Clear the loading message once; later updates must not wipe messages shown since.
