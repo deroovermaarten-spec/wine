@@ -12,6 +12,7 @@
     {e: "⏳", t: "Klaar om te drinken", d: "Elke wijn krijgt een drinkvenster. De app zegt welke flessen nu op hun best zijn en welke dringend op moeten."},
     {e: "🍾", t: "Vegen om te openen", d: "Veeg een wijn naar rechts om een fles te openen, naar links om er een af te boeken. Een half vol flesje toont wat open staat."},
     {e: "📝", t: "Proefnotities", d: "Kleur, aroma's, structuur en rijpheid in een paar tikken, met je score. Een notitieboekje in de lijst toont welke wijnen je al proefde."},
+    {e: "💬", t: "Reageer op een tip", d: "Iemand tipte je een fles? Zeg iets terug, recht vanaf de wijn. Wie je tipte, krijgt het meteen te zien.", since: "2026-11-19"},
     {e: "🍷", t: "Geproefd op restaurant", d: "Lekker glas buitenshuis? Etiket, restaurant, score en één zin, ook zonder bereik. Per bezoek of per restaurant terug te vinden, en met één tik op je verlanglijst.", since: "2026-11-18"},
     {e: "🗓️", t: "Gedronken", d: "Een tijdlijn van elke fles die je opende, per maand. Verkeerd getikt? Pas de datum of de status aan.", since: "2026-11-14"},
     {e: "🧬", t: "Kelder-DNA", d: "Je kelder in één ring: tik op een kleur voor de landen, op een land voor de druiven."},
