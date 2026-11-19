@@ -105,7 +105,7 @@
         .sort((a, b) => (isPast(a) - isPast(b)) || (isPast(a) ? String(b.date).localeCompare(String(a.date)) : String(a.date || "9999").localeCompare(String(b.date || "9999"))));
       loaded = true;
       if(current && !ev()){ current = null; msg = "Dit event bestaat niet meer, of je bent er geen gast meer."; }
-      watchWines(); paint(); paintNext();
+      watchWines(); paint(); paintNext(); cloud.redraw && cloud.redraw();
     }, err => { loaded = true; msg = err && err.code === "permission-denied" ? errText(err, true) : "Je events konden niet geladen worden."; paint(); });
   }
   function watchWines(){
@@ -450,21 +450,38 @@
       <path class="gl" d="M6 3h12c0 8-2 11.5-6 12C8 14.5 6 11 6 3zM12 15v6M8.5 21h7"/></svg>`;
   }
 
+  // ---------- in Settings › Voor mij ----------
+  // A short block: your next event, how many are coming, and the way in. head = the sheet's own section heading.
+  function settingsHtml(head){
+    const today = TODAY(), up = events.filter(e => e.date && e.date >= today).sort((x, y) => x.date.localeCompare(y.date));
+    const next = up[0], past = events.length - up.length;
+    const line = !loaded ? "Even laden…"
+      : next ? `Volgende: <b>${ui.esc(next.name)}</b>, ${ui.esc(fmtDay(next.date))}${up.length > 1 ? ` · nog ${up.length - 1} gepland` : ""}.`
+      : events.length ? `Geen event gepland. Je hebt ${past} voorbij event${past === 1 ? "" : "s"}.`
+      : "Organiseer een etentje of proefavond: elke gast voegt wijnen uit de eigen kelder toe.";
+    return `<section class="mwsec">${head}<p>${line}</p>
+      <div class="line"><button class="btn sm" type="button" data-a="events">${ui.ico("calendar")}${events.length ? "Bekijk je events" : "Bekijk events"}</button>
+        <button class="btn ghost sm" type="button" data-a="events" data-new="1">${ui.ico("plus")}Nieuw event</button></div></section>`;
+  }
+  function show(neu){
+    current = null; editing = false; picking = false; confirmDel = false; msg = ""; creating = !!neu; watchWines();
+    window.mwSetTab && window.mwSetTab("events");
+    if(neu) setTimeout(() => $("evNewName")?.focus(), 0);
+  }
+
   // ---------- boot ----------
   cloud.ready.then(async () => {
     fs = cloud.fs; F = firebase.firestore.FieldValue; ui = cloud.ui; me = cloud.me;
     if(!fs || !ui) return;
     const st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
-    const tab = document.createElement("button");
-    tab.setAttribute("role", "tab"); tab.id = "t_events"; tab.dataset.tab = "events"; tab.setAttribute("aria-selected", "false");
-    tab.innerHTML = `<svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 6h14a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1zM4 10h16M8 3v4M16 3v4"/></svg><span class="tl">Events</span>`;
-    document.querySelector(".tabs")?.appendChild(tab);
+    // No tab in the bottom bar (that stays calm): you reach events from Settings › Voor mij,
+    // from the "next event" pill in the header, or from "Naar event" on a wine.
     const sec = document.createElement("section"); sec.id = "v_events"; sec.hidden = true; sec.style.cssText = "display:flex;flex-direction:column;gap:14px";
     $("v_stats").after(sec);
     sec.addEventListener("click", onClick);
     sec.addEventListener("submit", onSubmit);
     sec.addEventListener("input", e => { if(e.target.id === "evPickQ"){ pickQ = e.target.value; paint(); } });
-    window.mwEvents = {render: paint, pickFor: pickEventFor, ready: true};
+    window.mwEvents = {render: paint, pickFor: pickEventFor, settingsHtml, show, ready: true};
     listenEvents();
 
     // invite link: ?event=CODE
