@@ -917,7 +917,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
     if(goParam || wineParam){ q.delete("go"); q.delete("wine"); history.replaceState(null, "", location.pathname + (q.toString() ? "?" + q : "") + location.hash); } }catch{}
   // where you were on each tab (scroll), the tab on screen, and where "Terug naar Inzichten" leads
   const tabScroll = {}; let shownTab = null, backTo = null;
-  let tab = goParam==="wens" || goParam==="stats" ? goParam : "kelder", typeFilter="", draft=null, scanCtl=null, editingId=null, tastingFor=null, tastingScore=0, target="kelder";
+  let tab = goParam==="wens" || goParam==="stats" ? goParam : "kelder", typeFilter="", draft=null, scanCtl=null, editingId=null, tastingFor=null, tipReplyFor=null, tastingScore=0, target="kelder";
   const houseBusy=new Map();
   let mcp=null;
   let menuFor=null; // the wine whose ⋯ actions are open
@@ -1321,6 +1321,20 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
     </article>`;
   }
 
+  // A tip you got: the message of whoever sent it, the reactions you sent back, and a button to react (tips.js sends it).
+  function tipHTML(w){
+    const tp = w.tip; if(!tp) return "";
+    const day = at => at ? " · " + fmtDate(localDay(new Date(at))) : "";
+    const reps = Array.isArray(tp.replies) ? tp.replies : [];
+    const can = tp.uid && window.mwTips?.reply && canEdit();
+    const form = tipReplyFor===w.id ? `<div class="tipform">
+        <textarea id="tr_msg" rows="3" maxlength="300" placeholder="Bv. Gekocht! Die proeven we samen." aria-label="Je reactie aan ${esc(tp.from || "wie je tipte")}"></textarea>
+        <div class="cardfoot"><button class="link" type="button" data-act="tip-cancel">Annuleren</button><button class="btn sm" type="button" data-act="tip-send" data-id="${w.id}">Stuur reactie</button></div></div>` : "";
+    return `<div class="tipnote"><p>${tp.message ? `“${esc(tp.message)}”` : "Een tip"}<small>${esc(tp.from || "")}${day(tp.at)}</small></p>
+      ${reps.map(r => `<p class="tiprep">${esc(r.text)}<small>Jouw reactie${day(r.at)}</small></p>`).join("")}
+      ${form || (can ? `<button class="tipbtn" type="button" data-act="tip-reply" data-id="${w.id}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>${reps.length ? "Nog iets terugzeggen" : `Reageer naar ${esc(tp.from || "de afzender")}`}</button>` : "")}</div>`;
+  }
+
   function cardHTML(w){
     const open = openIds.has(w.id), d = drinkState(w), isK = w.status==="kelder";
     const facts = [["Druif",w.grape],["Streek",[w.region,w.country].filter(Boolean).join(", ")],
@@ -1354,7 +1368,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
             ${w.tier?`<span class="tier" title="Prijsklasse">${"€".repeat(w.tier)}<s>${"€".repeat(4-w.tier)}</s></span>`:""}
           </div>
           ${w.tags.length?`<div class="tags">${w.tags.map(t=>`<button class="tag" type="button" data-act="tagf" data-tag="${esc(t)}" aria-pressed="${tagFilter===t}">#${esc(t)}</button>`).join("")}</div>`:""}
-          ${w.tip ? `<p class="tipnote">${w.tip.message ? `“${esc(w.tip.message)}”` : "Een tip"}<small>${esc(w.tip.from || "")}${w.tip.at ? " · " + fmtDate(localDay(new Date(w.tip.at))) : ""}</small></p>` : ""}
+          ${tipHTML(w)}
           ${isK && w.loc ? `<span class="loc"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>${esc(w.loc)}</span>`:""}
           ${d && isK ? `<div><span class="badge ${d.cls}">${d.label}</span></div>`:""}
           ${w.pending ? `<div><span class="badge b-young" title="Claude vult deze wijn aan zodra het toestel waarmee je scande online is.">Wacht op herkenning</span></div>`
@@ -2944,7 +2958,7 @@ ${data}`;
     return c.owner === me.uid || !!c.membersEdit;
   }
   window.mwCanEdit = canEdit;
-  const READONLY_ACTS = new Set(["minus","plus","opentoggle","t-new","t-save","tstar","tg","tg-add","bought","edit","del"]);
+  const READONLY_ACTS = new Set(["minus","plus","opentoggle","t-new","t-save","tstar","tg","tg-add","bought","edit","del","tip-reply","tip-send"]);
 
   async function save(id, patch, msg){
     if(!Object.keys(patch).length) return;
@@ -3011,6 +3025,19 @@ ${data}`;
     else if(act==="share"){ if(w) openShare(w); }
     else if(act==="house"){ if(w && houseBusy.get(id)!==true) fetchHouse(w); }
     else if(act==="t-cancel"){ tastingFor=null; render(); }
+    else if(act==="tip-reply"){ tipReplyFor=id; render(); $("tr_msg")?.focus(); }
+    else if(act==="tip-cancel"){ tipReplyFor=null; render(); }
+    else if(act==="tip-send"){
+      if(!w?.tip) return;
+      const text = ($("tr_msg")?.value || "").trim(); if(!text){ $("tr_msg")?.focus(); return; }
+      t.disabled = true;
+      try{ await window.mwTips.reply(w, text); }
+      catch(err){ t.disabled = false; $("status").textContent = err.nice || "Je reactie versturen lukte niet. Probeer opnieuw."; return; }
+      const entry = {text, at: Date.now()}, fv = FV();
+      w.tip = {...w.tip, replies: [...(w.tip.replies || []), entry]};
+      tipReplyFor = null; render(); save(id, {"tip.replies": fv ? fv.arrayUnion(entry) : w.tip.replies});
+      $("status").textContent = `Je reactie is verstuurd naar ${w.tip.from || "de afzender"}.`;
+    }
     else if(act==="t-save"){
       if(!w) return;
       const entry = {date: $("tf_date").value || TODAY, score: tastingScore, note: $("tf_note").value.trim()};

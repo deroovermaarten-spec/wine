@@ -15,6 +15,7 @@
   const NEWS = [
     {date: "2026-11-19",
       items: [
+        "Kreeg je een wijn getipt? Onder de boodschap bij die wijn staat nu “Reageer”. Je reactie gaat naar wie je tipte: die krijgt hem te zien zodra die de app opent. Wat je terugzei, blijft bij de tip staan.",
         "De balk onderaan is rustiger: Events heeft daar geen eigen knop meer. Je vindt je events nu bij Instellingen › Voor mij, waar je ook meteen een nieuw event maakt. Je volgende event blijft bovenaan in beeld, en “Naar event” bij een wijn werkt zoals voorheen."
       ]},
     {date: "2026-11-18",
