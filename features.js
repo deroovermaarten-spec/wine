@@ -20,7 +20,7 @@
     {e: "🏡", t: "Het wijnhuis", d: "Geschiedenis, eigenaars en werkwijze van de producent, opgezocht door Claude."},
     {e: "🍽️", t: "Wat eet je erbij", d: "Gerechten met recept die bij de wijn passen, plus de juiste temperatuur, decanteren en het beste glas."},
     {e: "👥", t: "Samen één kelder", d: "Deel je kelder met wie je wilt. Iedereen geeft zijn eigen score, en je ziet wat de anderen ervan vonden."},
-    {e: "🎉", t: "Events", d: "Een etentje waar elke gast wijnen uit zijn eigen kelder meebrengt, netjes in de volgorde om te schenken."},
+    {e: "🎉", t: "Events", d: "Een etentje waar elke gast wijnen uit zijn eigen kelder meebrengt, netjes in de volgorde om te schenken. Te vinden bij Instellingen › Voor mij."},
     {e: "♡", t: "Verlanglijst", d: "Bewaar wijnen die je nog wilt kopen. Een topwijn die op is, zet je met Koop opnieuw meteen terug."},
     {e: "💡", t: "Weetje van de dag", d: "Elke dag iets nieuws over wijn, kort en zonder moeilijke woorden."},
     {e: "📄", t: "Delen als fiche", d: "Stuur een nette pdf van een wijn door, met foto, beschrijving en info over het wijnhuis."},

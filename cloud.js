@@ -657,6 +657,8 @@
       </div>` : ""}
 
       ${tab === "mij" ? `
+      ${window.mwEvents?.settingsHtml ? window.mwEvents.settingsHtml(head("calendar", "Events", `<small>etentjes en proefavonden</small>`)) : ""}
+
       ${prefsHtml()}
 
       ${window.mwRemind ? window.mwRemind.settingsHtml(head("bell", "Herinneringen", `<small>dit toestel</small>`)) : ""}` : ""}
@@ -736,6 +738,7 @@
     const a = b.dataset.a, c = cloud.cellar, F = firebase.firestore.FieldValue;
     sheetMsg = "";
     try{
+      if(a === "events"){ $("mwClose").click(); window.mwEvents?.show(b.dataset.new === "1"); return; }
       if(a === "tab"){ sheetTab = b.dataset.id; drawSheet(); $("mwTab-" + sheetTab)?.focus(); return; }
       if(a === "skin"){ window.mwSkin?.set(b.dataset.id || ""); drawSheet(); return; }
       if(a === "switch"){ if(b.dataset.id !== c.id){ store.set("mw_cellar_" + cloud.me.uid, b.dataset.id); location.reload(); } return; }

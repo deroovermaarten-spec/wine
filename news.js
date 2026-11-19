@@ -13,6 +13,10 @@
  */
 (() => {
   const NEWS = [
+    {date: "2026-11-19",
+      items: [
+        "De balk onderaan is rustiger: Events heeft daar geen eigen knop meer. Je vindt je events nu bij Instellingen › Voor mij, waar je ook meteen een nieuw event maakt. Je volgende event blijft bovenaan in beeld, en “Naar event” bij een wijn werkt zoals voorheen."
+      ]},
     {date: "2026-11-18",
       big: {icon: "glass", title: "Wijn gedronken op restaurant?", text: "Noteer hem in het nieuwe tabblad Geproefd: etiket, restaurant, je score en één zin. Hij telt niet mee in je kelder, maar je vindt hem altijd terug."},
       items: [
