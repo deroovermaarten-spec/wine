@@ -208,6 +208,10 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .cnote b{font:700 .66rem var(--body);color:var(--accent);margin-top:-8px}
 .crow:hover .cnote{transform:rotate(6deg) scale(1.12)}
 @media (prefers-reduced-motion:reduce){.cnote{transition:none}}
+.tipb{display:inline-flex;align-items:center;gap:4px;flex:none;font:700 .72rem var(--body);padding:2px 8px 2px 6px;border-radius:999px;white-space:nowrap;
+  color:var(--gold);background:color-mix(in srgb,var(--gold) 15%,transparent);border:1px solid color-mix(in srgb,var(--gold) 45%,transparent)}
+.tipb svg{width:12px;height:12px;flex:none}
+.crow .cs .tipb{font-size:.68rem;padding:1px 7px 1px 5px}
 .crow .cst{font-size:.8rem;color:var(--gold);letter-spacing:.04em;white-space:nowrap}
 .crow .cst s{text-decoration:none;color:var(--line)}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);overflow:hidden;scroll-margin-top:64px}
@@ -1311,7 +1315,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
         ${thumb(w)}
         <div style="min-width:0">
           <div class="cn">${openIco(w)}${w.vintage?`<span class="vint">${esc(w.vintage)}</span>`:""}${esc(w.name)}</div>
-          <div class="cs"><span class="dot ${esc(w.color)}"></span><span>${esc(sub || COLORS[w.color] || "Wijn")}</span></div>
+          <div class="cs">${tipBadge(w)}<span class="dot ${esc(w.color)}"></span><span>${esc(sub || COLORS[w.color] || "Wijn")}</span></div>
         </div>
         <div class="cr">
           ${isK || noteIco(w) ? `<span class="crt">${noteIco(w)}${isK ? `<span class="cq${w.stock?"":" zero"}">${w.stock} fl.</span>` : ""}</span>` : ""}
@@ -1321,6 +1325,9 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
     </article>`;
   }
 
+  // A wine someone tipped you: a little gift badge "Tip van Anna", so it stands out from the wines you added yourself.
+  const tipTag = w => w.tip ? "tip van " + (w.tip.from || "iemand") : "";
+  const tipBadge = w => w.tip ? `<span class="tipb" title="${esc(w.tip.message ? "“" + w.tip.message + "”" : "Getipt door " + (w.tip.from || "iemand"))}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="8" width="17" height="4" rx="1"/><path d="M5 12v8h14v-8M12 8v12M12 8S10.5 3.5 8 4.2C6 4.8 7 8 12 8zm0 0s1.5-4.5 4-3.8C18 4.8 17 8 12 8z"/></svg>Tip van ${esc(w.tip.from || "iemand")}</span>` : "";
   // A tip you got: the message of whoever sent it, the reactions you sent back, and a button to react (tips.js sends it).
   function tipHTML(w){
     const tp = w.tip; if(!tp) return "";
@@ -1362,12 +1369,13 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:60
           ${w.producer?`<div class="prod">${esc(w.producer)}</div>`:""}
           <h3 class="name">${openIco(w)}${esc(w.name)}</h3>
           <div class="sub">
+            ${tipBadge(w)}
             ${w.vintage?`<span class="vint">${esc(w.vintage)}</span>`:""}
             <span class="pill"><span class="dot ${esc(w.color)}"></span>${COLORS[w.color]||"Wijn"}</span>
             ${w.region?`<span>${esc(w.region)}</span>`:""}
             ${w.tier?`<span class="tier" title="Prijsklasse">${"€".repeat(w.tier)}<s>${"€".repeat(4-w.tier)}</s></span>`:""}
           </div>
-          ${w.tags.length?`<div class="tags">${w.tags.map(t=>`<button class="tag" type="button" data-act="tagf" data-tag="${esc(t)}" aria-pressed="${tagFilter===t}">#${esc(t)}</button>`).join("")}</div>`:""}
+          ${w.tags.some(t=>t!==tipTag(w))?`<div class="tags">${w.tags.filter(t=>t!==tipTag(w)).map(t=>`<button class="tag" type="button" data-act="tagf" data-tag="${esc(t)}" aria-pressed="${tagFilter===t}">#${esc(t)}</button>`).join("")}</div>`:""}
           ${tipHTML(w)}
           ${isK && w.loc ? `<span class="loc"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>${esc(w.loc)}</span>`:""}
           ${d && isK ? `<div><span class="badge ${d.cls}">${d.label}</span></div>`:""}

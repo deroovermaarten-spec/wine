@@ -13,6 +13,10 @@
  */
 (() => {
   const NEWS = [
+    {date: "2026-11-20",
+      items: [
+        "Op je verlanglijst zie je nu meteen welke wijnen iemand je tipte: ze dragen een goudkleurig kaartje met een cadeautje, bv. “Tip van Anna”. Ook in de compacte lijst. Wat je zelf toevoegde, heeft dat kaartje niet."
+      ]},
     {date: "2026-11-19",
       items: [
         "Kreeg je een wijn getipt? Onder de boodschap bij die wijn staat nu “Reageer”. Je reactie gaat naar wie je tipte: die krijgt hem te zien zodra die de app opent. Wat je terugzei, blijft bij de tip staan.",
