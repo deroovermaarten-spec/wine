@@ -15,7 +15,8 @@
   const NEWS = [
     {date: "2026-11-20",
       items: [
-        "Op je verlanglijst zie je nu meteen welke wijnen iemand je tipte: ze dragen een goudkleurig kaartje met een cadeautje, bv. “Tip van Anna”. Ook in de compacte lijst. Wat je zelf toevoegde, heeft dat kaartje niet."
+        "Op je verlanglijst zie je nu meteen welke wijnen iemand je tipte: ze dragen een goudkleurig kaartje met een cadeautje, bv. “Tip van Anna”. Ook in de compacte lijst. Wat je zelf toevoegde, heeft dat kaartje niet.",
+        "Je verlanglijst heeft nu een zoekveld, vlak boven de filters. Typ een naam, domein, streek, druif of wie je de wijn tipte (bv. “Anna”). Hoofdletters en accenten maken niet uit: “cotes du rhone” vindt ook Côtes du Rhône. Met het kruisje wis je je zoekterm."
       ]},
     {date: "2026-11-19",
       items: [
