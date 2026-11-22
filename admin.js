@@ -10,6 +10,9 @@
  *  - Only the person writes their own record; only an admin reads them all (firestore.rules). Who is an admin
  *    is set by hand in the Firebase console: a document admins/{uid} (any content). The app cannot create it.
  *  - For an admin, Settings gets a fourth tab, "Beheer", with the totals and the heaviest users first.
+ *  - The owner also sees the AI budget there: what the smart features cost this month, from the AI relay
+ *    (worker/worker.js, GET /usage), with a forecast for the month. Over 75% or on course to overspend, the
+ *    app says so once a day when the owner opens it.
  */
 (() => {
   const cloud = window.mwCloud;
@@ -46,6 +49,32 @@
 .mwaibar .bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
 .mwaibar .bar i{display:block;height:100%;background:var(--gold);border-radius:3px}
 .mwaibar small{color:var(--muted);font-size:.76rem;line-height:1.3}
+.mwbudtop{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.mwbudtop b{font:600 2rem/1 var(--display);color:var(--ink)}
+.mwbudtop span{color:var(--muted);font-size:.9rem}
+.mwbudbar{position:relative;height:12px;border-radius:6px;background:var(--line);margin:10px 0 4px}
+.mwbudbar i{display:block;height:100%;border-radius:6px;background:#3f8f5a}
+.mwbudbar em{position:absolute;top:-4px;bottom:-4px;width:2px;margin-left:-1px;background:var(--ink);opacity:.55}
+.mwbud.warn .mwbudbar i{background:var(--gold)}
+.mwbud.bad .mwbudbar i{background:var(--accent)}
+.mwbudmsg{font-weight:700;color:var(--ink)}
+.mwbud.warn .mwbudmsg{color:var(--gold)}
+.mwbud.bad .mwbudmsg{color:var(--accent)}
+.mwbuddays{display:flex;align-items:flex-end;gap:3px;height:64px;margin-top:4px}
+.mwbuddays span{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;gap:2px;min-width:0}
+.mwbuddays i{display:block;width:100%;background:var(--gold);border-radius:3px 3px 0 0}
+.mwbuddays small{font-size:.62rem;color:var(--muted)}
+.mwbudnote{position:fixed;z-index:24;left:16px;right:16px;bottom:calc(88px + env(safe-area-inset-bottom));max-width:420px;margin:0 auto;box-sizing:border-box;
+  display:flex;flex-direction:column;gap:6px;padding:14px 16px;border-radius:16px;background:var(--surface);color:var(--ink);
+  border:1px solid var(--gold);border-left:5px solid var(--gold);box-shadow:0 10px 30px rgba(0,0,0,.18)}
+.mwbudnote.bad{border-color:var(--accent)}
+.mwbudnote b{display:flex;align-items:center;gap:6px;font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
+.mwbudnote.bad b{color:var(--accent)}
+.mwbudnote b .mwi{width:16px;height:16px}
+.mwbudnote span{font-size:.92rem;line-height:1.35}
+.mwbudnote div{display:flex;justify-content:flex-end;align-items:center;gap:14px}
+.mwbudform{display:flex;flex-direction:column;gap:8px}
+.mwbudform label{display:flex;flex-direction:column;gap:4px;font-size:.82rem;color:var(--muted)}
 .mwadmh{margin:14px 0 2px;font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 .mwadmseg{display:flex;gap:6px;margin:2px 0 6px}
 .mwadmseg button{font:inherit;font-size:.8rem;font-weight:600;padding:5px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
@@ -57,7 +86,7 @@
   const sum = o => Object.values(o || {}).reduce((a, n) => a + (+n || 0), 0);
   const ms = t => (t && t.toMillis ? t.toMillis() : 0);
 
-  let fs, F, uid, ref, admin = false, rows = null, loading = false, err = "", aiAll = false;
+  let fs, F, uid, ref, admin = false, rows = null, loading = false, err = "", aiAll = false, spend = null, spendErr = "", budgetEdit = false;
 
   // ---------- counting (everyone) ----------
   // What kind of question someone asks in "Vraag het aan je kelder". Only the kind is kept, never the question.
@@ -119,6 +148,7 @@
       const s = await fs.collection("stats").get();
       rows = s.docs.map(x => ({id: x.id, ...x.data()}));
     }catch(e){ err = "De gegevens konden niet geladen worden. Kloppen de regels in Firebase?"; }
+    await loadSpend();
     loading = false;
     cloud.redraw && cloud.redraw();
   }
@@ -132,8 +162,89 @@
     return d.toLocaleDateString("nl-BE", {day: "numeric", month: "short", year: d.getFullYear() === new Date().getFullYear() ? undefined : "numeric"});
   }
 
+  // ---------- AI budget (owner only, from the AI relay) ----------
+  async function usageCall(body){
+    const url = String(window.MW_AI_URL || "").replace(/\/+$/, "");
+    if(!url) throw {nice: "De slimme functies staan uit (geen AI-server ingesteld)."};
+    const token = await firebase.auth().currentUser.getIdToken();
+    const res = await fetch(url + "/usage", {method: body ? "POST" : "GET", headers: {"Authorization": "Bearer " + token, ...(body ? {"Content-Type": "application/json"} : {})}, body: body ? JSON.stringify(body) : undefined});
+    if(res.status === 403) throw {nice: "Alleen de eigenaar van de AI-server ziet het budget."};
+    if(res.status === 404 || res.status === 405 || (res.ok && !(res.headers.get("Content-Type") || "").includes("json"))) throw {nice: "De AI-server telt de kosten nog niet. Zet eerst de nieuwe worker.js op Cloudflare."};
+    const j = await res.json().catch(() => ({}));
+    if(!res.ok || j.usd === undefined) throw {nice: j.error?.code === "no_storage" ? "Koppel eerst de opslag (PUSH) aan de AI-server in Cloudflare." : "De AI-server telt de kosten nog niet. Zet eerst de nieuwe worker.js op Cloudflare."};
+    return j;
+  }
+  async function loadSpend(){
+    try{ spend = await usageCall(); spendErr = ""; }catch(e){ spend = null; spendErr = e.nice || "Het budget kon niet geladen worden."; }
+  }
+  // This month so far, and where it ends if the coming days look like the past ones.
+  function forecast(sp){
+    const now = new Date(), days = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const used = (sp.usd || 0) + (sp.before || 0), dayNow = now.getDate() - 1 + (now.getHours() * 60 + now.getMinutes()) / 1440;
+    const perDay = dayNow > 0.5 ? (sp.usd || 0) / dayNow : 0; // the counted part only; "before" is a one-off
+    const end = used + perDay * (days - dayNow), b = sp.budget || 0;
+    let outDay = 0;
+    if(b && perDay > 0 && end > b) outDay = Math.min(days, Math.ceil(dayNow + Math.max(0, b - used) / perDay));
+    return {used, perDay, end, b, pct: b ? used / b : 0, endPct: b ? end / b : 0, outDay, days};
+  }
+  const usd = n => "$" + (n >= 100 ? String(Math.round(n)) : n > 0 && n < 0.1 ? n.toFixed(3) : n.toFixed(2)).replace(".", ",");
+  function budgetHtml(monthName){
+    const ui = cloud.ui, esc = ui.esc;
+    if(!spend) return `<section class="mwsec adm">${ui.head("chart", "AI-budget")}<p>${esc(spendErr || "Laden…")}</p></section>`;
+    const f = forecast(spend), lvl = !f.b ? "" : (f.pct >= 0.9 || f.endPct > 1.05) ? "bad" : (f.pct >= 0.75 || f.endPct > 0.9) ? "warn" : "ok";
+    const tasks = Object.fromEntries(Object.entries(spend.tasks || {}).map(([k, v]) => [k, v.usd || 0]));
+    const msg = !f.b ? "Stel je budget in om te zien hoe ver je staat."
+      : f.pct >= 1 ? `Je budget voor ${monthName} is op.`
+      : f.outDay ? `Aan dit tempo is je budget op rond ${f.outDay} ${monthName}.`
+      : `Aan dit tempo eindig je ${monthName} rond ${usd(f.end)}, binnen je budget.`;
+    const days = Object.entries(spend.days || {}).sort().slice(-14), dmax = Math.max(0.01, ...days.map(([, v]) => v));
+    return `<section class="mwsec adm mwbud ${lvl}">${ui.head("chart", "AI-budget", `<small>${esc(monthName)}</small>`)}
+      <div class="mwbudtop"><b>${usd(f.used)}</b><span>${f.b ? `van ${usd(f.b)} · ${Math.round(f.pct * 100)}%` : "verbruikt"}</span></div>
+      ${f.b ? `<div class="mwbudbar" role="img" aria-label="${Math.round(f.pct * 100)}% van je budget verbruikt"><i style="width:${Math.min(100, f.pct * 100).toFixed(1)}%"></i><em style="left:${Math.min(100, f.endPct * 100).toFixed(1)}%" title="Verwacht einde van de maand"></em></div>` : ""}
+      <p class="mwbudmsg">${esc(msg)}</p>
+      <div class="mwadm">
+        <div><b>${usd(f.perDay)}</b><small>per dag gemiddeld</small></div>
+        <div><b>${usd(f.end)}</b><small>verwacht eind ${esc(monthName)}</small></div>
+        <div><b>${spend.n || 0}</b><small>vragen geteld</small></div>
+        <div><b>${spend.last ? usd(spend.last.usd) : "–"}</b><small>vorige maand</small></div>
+      </div>
+      ${days.length ? `<p class="mwadmh">Per dag</p><div class="mwbuddays">${days.map(([d, v]) => `<span title="${esc(+d + " " + monthName + ": " + usd(v))}"><i style="height:${Math.max(4, Math.round(v / dmax * 100))}%"></i><small>${+d}</small></span>`).join("")}</div>` : ""}
+      <p class="mwadmh">Wat kost het meest</p>${bars(tasks, t => TASKS[t] || t, t => { const x = spend.tasks[t]; return x && x.n ? `${x.n} vragen · ${usd(x.usd / x.n)} per vraag` : ""; }, Object.keys(TASKS), usd)}
+      ${budgetEdit ? `<div class="mwbudform"><label>Budget per maand ($)<input id="mwBudUsd" type="number" min="0" step="1" inputmode="decimal" value="${f.b || ""}"></label>
+          <label>Al verbruikt in ${esc(monthName)} vóór de teller liep ($)<input id="mwBudBefore" type="number" min="0" step="0.01" inputmode="decimal" value="${spend.before || ""}"></label>
+          <div class="cardfoot"><button class="link" type="button" data-adm="budcancel">Annuleren</button><button class="btn sm" type="button" data-adm="budsave">Bewaar</button></div></div>`
+        : `<div><button class="btn ghost sm" type="button" data-adm="budedit">${f.b ? "Budget aanpassen" : "Budget instellen"}</button></div>`}
+      <p>${ico("shield")} Een schatting op basis van de tokens die elke vraag gebruikte en de prijzen van Anthropic, in dollar zoals Anthropic factureert. De factuur in de Anthropic Console blijft de echte stand.${spend.stored ? "" : " Let op: de AI-server heeft geen opslag (PUSH), dus de teller begint opnieuw na een herstart."}</p>
+    </section>`;
+  }
+  // Once a day, when the owner opens the app: a word if the budget is nearly used or on course to run out.
+  async function budgetNudge(){
+    let day = ""; try{ day = localStorage.getItem("mw_budnudge") || ""; }catch{}
+    const today = dayOf(new Date()); if(day === today) return;
+    let sp; try{ sp = await usageCall(); }catch{ return; }
+    spend = sp; spendErr = "";
+    const f = forecast(sp); if(!f.b) return;
+    const monthName = new Date().toLocaleDateString("nl-BE", {month: "long"});
+    let t = "";
+    if(f.pct >= 1) t = `Je AI-budget voor ${monthName} is op: ${usd(f.used)} van ${usd(f.b)}.`;
+    else if(f.pct >= 0.75) t = `Je hebt ${Math.round(f.pct * 100)}% van je AI-budget gebruikt (${usd(f.used)} van ${usd(f.b)}).`;
+    else if(f.outDay) t = `Aan dit tempo is je AI-budget op rond ${f.outDay} ${monthName}.`;
+    if(!t) return;
+    try{ localStorage.setItem("mw_budnudge", today); }catch{}
+    const lvl = f.pct >= 0.9 || f.endPct > 1.05 ? "bad" : "warn";
+    const el = document.createElement("div"); el.className = "mwbudnote " + lvl; el.setAttribute("role", "status");
+    el.innerHTML = `<b>${ico("chart")}AI-budget</b><span>${cloud.ui.esc(t)}</span>
+      <div><button class="link" type="button" data-bn="ok">Oké</button><button class="btn sm" type="button" data-bn="open">Bekijk</button></div>`;
+    el.onclick = e => {
+      const b = e.target.closest("[data-bn]"); if(!b) return;
+      el.remove();
+      if(b.dataset.bn === "open"){ document.getElementById("mwGear")?.click(); setTimeout(() => document.getElementById("mwTab-beheer")?.click(), 150); }
+    };
+    document.body.appendChild(el);
+  }
+
   const TASKS = {ask: "Vraag het aan je kelder", scan: "Etiket scannen", fact: "Weetje van de dag", factMore: "Nog een weetje",
-    pairing: "Gerechten bij een wijn", serve: "Schenkadvies", house: "Over het wijnhuis", geo: "Wijnkaart (streken plaatsen)", legacy: "Oude app-versie"};
+    pairing: "Gerechten bij een wijn", pick: "Wat drink ik vanavond", serve: "Schenkadvies", house: "Over het wijnhuis", geo: "Wijnkaart (streken plaatsen)", legacy: "Oude app-versie"};
   const AUTO = new Set(["fact", "geo"]); // the app asks these by itself
   const PLACES = {kelder: "Kelder", wens: "Verlanglijst", proef: "Geproefd", stats: "Inzichten", later: "Achteraf (offline gescand)", app: "Elders in de app"};
   const KIND_L = {eten: "Welke wijn bij eten", drinken: "Wat drink ik (eerst)", kopen: "Wat koop ik", kennis: "Wijnkennis", kelder: "Over mijn kelder", anders: "Iets anders"};
@@ -157,12 +268,12 @@
     }
     return {n, split, follow, users: users.size, byTask, byPlace, cross, kind};
   }
-  function bars(obj, label, sub, order){
+  function bars(obj, label, sub, order, fmt){
     const at = k => { const i = (order || []).indexOf(k); return i < 0 ? 99 : i; };
     const rows = Object.entries(obj).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1] || at(a[0]) - at(b[0]));
     if(!rows.length) return `<p class="hint">Nog niets geteld.</p>`;
     const tot = rows.reduce((a, [, v]) => a + v, 0), top = rows[0][1], esc = cloud.ui.esc;
-    return `<div class="mwaibars">${rows.map(([k, v]) => `<div class="mwaibar"><div class="t"><b>${esc(label(k))}</b><span>${v} · ${Math.round(v / tot * 100)}%</span></div>
+    return `<div class="mwaibars">${rows.map(([k, v]) => `<div class="mwaibar"><div class="t"><b>${esc(label(k))}</b><span>${fmt ? fmt(v) : v} · ${Math.round(v / tot * 100)}%</span></div>
       <span class="bar" aria-hidden="true"><i style="width:${Math.max(2, Math.round(v / top * 100))}%"></i></span>${sub && sub(k) ? `<small>${sub(k)}</small>` : ""}</div>`).join("")}</div>`;
   }
   function aiHtml(list, month, monthName){
@@ -204,7 +315,7 @@
       [list.reduce((a, r) => a + r.aiM, 0), `slimme vragen in ${monthName}`]
     ];
     const top = Math.max(1, ...list.map(r => r.m));
-    return `${only()}<section class="mwsec adm">${ui.head("chart", "Gebruik van de app", `<button class="btn ghost sm" type="button" data-adm="reload">Ververs</button>`)}
+    return `${only()}${budgetHtml(monthName)}<section class="mwsec adm">${ui.head("chart", "Gebruik van de app", `<button class="btn ghost sm" type="button" data-adm="reload">Ververs</button>`)}
         <div class="mwadm">${tiles.map(([n, l]) => `<div><b>${n}</b><small>${esc(l)}</small></div>`).join("")}</div>
         <p>${ico("shield")} Alleen jij ziet dit. Er worden enkel tellingen bewaard, geen wijnen, notities of e-mailadressen.${since < Infinity ? ` Geteld sinds ${esc(new Date(since).toLocaleDateString("nl-BE", {day: "numeric", month: "long", year: "numeric"}))}.` : ""}</p>
       </section>
@@ -227,6 +338,18 @@
     if(e.target.closest("[data-adm='reload']")) load(true);
     const p = e.target.closest("[data-adm='aimonth'],[data-adm='aiall']");
     if(p){ aiAll = p.dataset.adm === "aiall"; cloud.redraw && cloud.redraw(); }
+    const bd = e.target.closest("[data-adm='budedit'],[data-adm='budcancel'],[data-adm='budsave']");
+    if(bd){
+      const a = bd.dataset.adm;
+      if(a === "budsave"){
+        const v = id => document.getElementById(id)?.value || "0";
+        bd.disabled = true;
+        usageCall({usd: v("mwBudUsd"), before: v("mwBudBefore")}).then(j => { spend = j; spendErr = ""; budgetEdit = false; })
+          .catch(err => { spendErr = err.nice || "Bewaren lukte niet."; }).finally(() => cloud.redraw && cloud.redraw());
+        return;
+      }
+      budgetEdit = a === "budedit"; cloud.redraw && cloud.redraw();
+    }
   });
 
   cloud.ready.then(() => {
@@ -234,6 +357,6 @@
     const st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
     countOpen();
     // Are you an admin? Only you can read your own admins/{uid}; nobody can write it from the app.
-    fs.doc("admins/" + uid).get().then(s => { if(s.exists){ admin = true; cloud.redraw && cloud.redraw(); } }).catch(() => {});
+    fs.doc("admins/" + uid).get().then(s => { if(s.exists){ admin = true; cloud.redraw && cloud.redraw(); setTimeout(budgetNudge, 4000); } }).catch(() => {});
   });
 })();

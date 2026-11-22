@@ -19,9 +19,21 @@
  *   PUSH                KV namespace binding (Settings → Bindings), holds who to wake up when
  *   Cron trigger        0 * * * *  (Settings → Triggers), sends the reminders that are due
  * The push keys (VAPID) are made by the worker itself on first use and kept in PUSH.
+ *
+ * AI budget (Beheer › AI-budget in the app, owner only):
+ *   MONTHLY_BUDGET      text     optional, the starting budget in dollars per month (the owner can change it in the app)
+ * Every answer's token counts are priced with PRICES below and added up per month in PUSH ("cost:YYYY-MM").
+ * It is an estimate from the same numbers Anthropic bills; the invoice in the Anthropic Console is the truth.
+ * GET /usage gives the owner this month's total, per feature and per day; POST /usage sets the budget.
  */
 const ORIGINS = ["https://deroovermaarten-spec.github.io", "http://localhost:8765", "http://localhost:8000"];
 const MODELS = {default: "claude-opus-5-5", mid: "claude-sonnet-5-5", quick: "claude-haiku-5-5"};
+// Dollars per million tokens: input, output, cache read, cache write (5 minutes). Update when prices change.
+const PRICES = {
+  "claude-opus-5-5":   {in: 4,   out: 20,  read: 0.20, write: 5},
+  "claude-sonnet-5-5": {in: 2,   out: 10,  read: 0.10, write: 2.5},
+  "claude-haiku-5-5":  {in: 0.1, out: 0.5, read: 0.01, write: 0.125}
+};
 
 // The app's features. Each one has its own model, output cap and daily limit per person; anything
 // else is refused, so the key cannot be used as a general Claude. Only the label scan may send photos,
@@ -126,10 +138,11 @@ function cors(req){
 const reply = (req, status, obj) => new Response(JSON.stringify(obj), {status, headers: {...cors(req), "Content-Type": "application/json"}});
 
 export default {
-  async fetch(req, env){
+  async fetch(req, env, ctx){
     if(req.method === "OPTIONS") return new Response(null, {status: 204, headers: cors(req)});
     const path = new URL(req.url).pathname;
     if(path.startsWith("/push")) return pushRoute(req, env, path);
+    if(path.startsWith("/usage")) return usageRoute(req, env, path);
     if(req.method !== "POST") return reply(req, 200, {ok: true, service: "meerstraat-wines ai"});
     if(!env.ANTHROPIC_API_KEY || !env.OWNER_UID || !env.FIREBASE_PROJECT) return reply(req, 500, {error: {code: "not_configured"}});
 
@@ -159,7 +172,10 @@ export default {
     if(model !== MODELS.quick){ body.fallbacks = "default"; headers["anthropic-beta"] = "server-side-fallback-2026-07-01"; }
 
     const res = await fetch("https://api.anthropic.com/v1/messages", {method: "POST", headers, body: JSON.stringify(body)});
-    return new Response(res.body, {status: res.status, headers: {...cors(req), "Content-Type": res.headers.get("Content-Type") || "application/json"}});
+    // A copy of the answer goes to the cost counter, which reads only the token counts from it.
+    let out = res.body;
+    if(res.ok && res.body){ const [a, b] = res.body.tee(); out = a; ctx.waitUntil(tally(env, taskName, model, b, !!inb.stream).catch(() => {})); }
+    return new Response(out, {status: res.status, headers: {...cors(req), "Content-Type": res.headers.get("Content-Type") || "application/json"}});
   },
 
   // Hourly (cron "0 * * * *"): wake up the phones that have a reminder due.
@@ -167,6 +183,64 @@ export default {
     if(env.PUSH) ctx.waitUntil(sendDue(env));
   }
 };
+
+// ---------- AI budget ----------
+const monthOf = () => new Date().toISOString().slice(0, 7);
+const memCost = new Map(); // month -> record, only used when PUSH is not bound
+
+// Read the token counts from an answer (a JSON body, or the stream's message_start and message_delta).
+async function usageOf(body, stream){
+  const text = await new Response(body).text();
+  if(!stream){ try{ return JSON.parse(text).usage || null; }catch{ return null; } }
+  const u = {};
+  for(const line of text.split("\n")){
+    if(!line.startsWith("data:")) continue;
+    let ev; try{ ev = JSON.parse(line.slice(5)); }catch{ continue; }
+    if(ev.type === "message_start" && ev.message && ev.message.usage) Object.assign(u, ev.message.usage);
+    else if(ev.type === "message_delta" && ev.usage) Object.assign(u, ev.usage); // counts here are running totals
+  }
+  return Object.keys(u).length ? u : null;
+}
+function priceOf(model, u){
+  const p = PRICES[model] || PRICES["claude-opus-5-5"], n = k => +u[k] || 0;
+  return (n("input_tokens") * p.in + n("output_tokens") * p.out + n("cache_read_input_tokens") * p.read + n("cache_creation_input_tokens") * p.write) / 1e6;
+}
+async function tally(env, taskName, model, body, stream){
+  const u = await usageOf(body, stream);
+  if(!u) return;
+  const usd = priceOf(model, u), month = monthOf(), day = new Date().toISOString().slice(8, 10), key = "cost:" + month;
+  let rec = env.PUSH ? await env.PUSH.get(key, "json").catch(() => null) : memCost.get(month);
+  rec = rec && typeof rec === "object" ? rec : {usd: 0, n: 0, t: {}, d: {}};
+  rec.usd += usd; rec.n++;
+  const t = rec.t[taskName] ||= {usd: 0, n: 0}; t.usd += usd; t.n++;
+  rec.d[day] = (rec.d[day] || 0) + usd;
+  if(env.PUSH) await env.PUSH.put(key, JSON.stringify(rec), {expirationTtl: 400 * 86400});
+  else memCost.set(month, rec);
+}
+// Only the owner: this month's cost (and last month's), and the budget, which the owner can change.
+async function usageRoute(req, env, path){
+  if(!env.FIREBASE_PROJECT || !env.OWNER_UID) return reply(req, 500, {error: {code: "not_configured"}});
+  const token = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
+  let uid;
+  try{ uid = await verify(token, env.FIREBASE_PROJECT); }catch{ return reply(req, 401, {error: {code: "not_signed_in"}}); }
+  if(uid !== env.OWNER_UID) return reply(req, 403, {error: {code: "owner_only"}});
+  const get = async k => env.PUSH ? await env.PUSH.get(k, "json").catch(() => null) : null;
+  let budget = (await get("budget")) || {usd: parseFloat(env.MONTHLY_BUDGET) || 0, before: {}};
+  if(req.method === "POST"){
+    let inb; try{ inb = await req.json(); }catch{ return reply(req, 400, {error: {code: "bad_request"}}); }
+    const num = v => Math.max(0, Math.min(100000, Math.round((parseFloat(v) || 0) * 100) / 100));
+    if(inb.usd !== undefined) budget.usd = num(inb.usd);
+    // What was already spent this month before the counter ran (from the Anthropic Console).
+    if(inb.before !== undefined) budget.before = {[monthOf()]: num(inb.before)};
+    if(!env.PUSH) return reply(req, 501, {error: {code: "no_storage"}});
+    await env.PUSH.put("budget", JSON.stringify(budget));
+  }else if(req.method !== "GET") return reply(req, 404, {error: {code: "not_found"}});
+  const month = monthOf(), prev = new Date(); prev.setUTCDate(0);
+  const cur = (env.PUSH ? await get("cost:" + month) : memCost.get(month)) || {usd: 0, n: 0, t: {}, d: {}};
+  const last = await get("cost:" + prev.toISOString().slice(0, 7));
+  return reply(req, 200, {month, budget: budget.usd || 0, before: (budget.before || {})[month] || 0, stored: !!env.PUSH,
+    usd: cur.usd, n: cur.n, tasks: cur.t, days: cur.d, last: last ? {usd: last.usd, n: last.n} : null});
+}
 
 // ---------- drink reminders (Web Push without payload) ----------
 // Each phone is stored as "s:<hash of its push address>" -> {endpoint, when:[ms], uid}, with the
