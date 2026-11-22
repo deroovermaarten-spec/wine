@@ -180,7 +180,7 @@ service cloud.firestore {
       allow read: if signedIn() && (me() == uid || isAdmin());
       allow create, update: if signedIn() && me() == uid
         && request.resource.data.keys().hasOnly(['name', 'first', 'last', 'day', 'opens', 'daysTotal', 'days',
-             'cellars', 'wines', 'scored', 'ai', 'aiTotal'])
+             'cellars', 'wines', 'scored', 'ai', 'aiTotal', 'aiUse', 'askKind'])
         && (!('name' in request.resource.data) || (request.resource.data.name is string && request.resource.data.name.size() <= 80));
     }
   }

@@ -2825,7 +2825,7 @@ Gegevens (JSON):
 ${data}`;
     const hist = chat.filter(m=>!m.pending && !m.err && m.content).slice(-12).map(m=>({role:m.role, content:m.content}));
     try{
-      const r = await sample(hist, {system, cache:false, task:"ask", signal:askCtl.signal, onText:({text})=>{ reply.content = text; renderChat(); scrollChat(); }});
+      const r = await sample(hist, {system, cache:false, task:"ask", stat:{kind:window.mwStats?.askKind?.(q), follow:chat.filter(m=>m.role==="user").length>1}, signal:askCtl.signal, onText:({text})=>{ reply.content = text; renderChat(); scrollChat(); }});
       reply.content = r.text; if(r.truncated) reply.content += "\n\n(Antwoord afgebroken. Stel een kleinere vraag.)";
       const mk = reply.content.match(askMark);
       if(mk) reply.ids = [...new Set(mk[1].split(/[\s,]+/).filter(Boolean))].slice(0,5);
@@ -3256,7 +3256,7 @@ ${data}`;
     if(!navigator.onLine) return showManual("Je bent offline, dus Claude kan het etiket nu niet lezen." + LATER, true);
     scanCtl = new AbortController();
     try{
-      const r = await sample.json(scanPrompt(), {images:[file], signal:scanCtl.signal, task:"scan"});
+      const r = await sample.json(scanPrompt(), {images:[file], signal:scanCtl.signal, task:"scan", stat:{where:target}});
       if(!draft) return;
       if(!r || r.recognized===false){ showManual("Geen wijnetiket herkend. Probeer een scherpere foto van het etiket, of vul de gegevens zelf in."); return; }
       Object.assign(draft, cleanScan(r), {photo});
@@ -3392,7 +3392,7 @@ Zet "recognized" op false als er geen wijnetiket op de foto staat.`;
         if(!w.pending){ await queue.del(it.id); left--; continue; }
         $("status").textContent = `Claude leest ${left===1 ? "een etiket" : left + " etiketten"} die je offline scande…`;
         let r;
-        try{ r = await sample.json(scanPrompt(), {images:[it.blob], task:"scan"}); }
+        try{ r = await sample.json(scanPrompt(), {images:[it.blob], task:"scan", stat:{where:"later"}}); }
         catch(e){
           if(e?.code==="image_rejected"){ await save(w.id, {pending:false, pendingErr:"De foto kon niet gelezen worden. Vul de gegevens zelf in."}); await queue.del(it.id); left--; continue; }
           // offline again, busy or not allowed: try again later
